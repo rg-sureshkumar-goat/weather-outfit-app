@@ -17,3 +17,6 @@ test-selfie/
 # Original phone photos (HEIC) keep GPS metadata; commit cleaned JPEG copies instead
 *.HEIC
 *.heic
+
+# Saved feasibility-test pages: in the submission zip only, kept off the public repo
+reference/feasibility/
