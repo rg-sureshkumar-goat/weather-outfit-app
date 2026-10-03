@@ -1,0 +1,920 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Outfit App Wireframes</title>
+<style>
+/* Layout: a gallery of fixed-size boards (frame + numbered notes), scaled to fit the window.
+   ?board=<id> shows one board at full size for PNG export. Single light "paper" theme on purpose: these are wireframes. */
+:root{
+  --paper:#f2f1ec; --sheet:#ffffff; --ink:#23272e; --ink-2:#646b76; --wire:#b8bdc6; --fill:#e8eaee; --fill-2:#d9dde3; --sky:#e4ecf4;
+  --note:#c84a2f; --drawn:#2e5f8a; --drawn-bg:#e1ecf6; --prop-bg:#fbe7e1;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.4 var(--font);padding-inline:16px;padding-block:24px 48px}
+.page{max-width:1700px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:28px}
+.intro{display:grid;gap:10px;max-width:72ch}
+.eyebrow{font:600 12px var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2)}
+.intro h1{font:800 clamp(28px,4vw,40px)/1.05 var(--font);margin:0;letter-spacing:-.01em}
+.intro p{margin:0;color:var(--ink-2)}
+.key{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--ink-2);align-items:center}
+.drawing{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:18px;align-items:start;background:var(--sheet);border:1px solid #d6d4cc;border-radius:16px;padding:16px}
+.drawing img{width:100%;border-radius:8px;display:block}
+.drawing h2{font:700 17px var(--font);margin:0 0 6px}
+.drawing p{margin:0 0 6px;color:var(--ink-2);font-size:14px}
+@media (max-width:560px){.drawing{grid-template-columns:1fr}}
+.toc{display:flex;flex-wrap:wrap;gap:6px}
+.toc a{font:600 12px var(--mono);color:var(--ink);text-decoration:none;border:1px solid var(--wire);border-radius:999px;padding:6px 10px;background:var(--sheet)}
+.toc a:focus-visible{outline:3px solid var(--note);outline-offset:2px}
+.section-title{font:700 22px var(--font);margin:12px 0 0}
+.fit{width:100%;min-width:0;overflow:hidden}
+
+/* Boards */
+.board{width:780px;height:932px;padding:24px;background:var(--sheet);border:1px solid #d6d4cc;border-radius:16px;transform-origin:top left}
+.board.lap{width:1656px;height:888px}
+.board-head{display:flex;align-items:baseline;gap:10px;height:40px}
+.board-head .code{font:600 13px var(--mono);color:var(--note)}
+.board-head h2{font:700 18px var(--font);margin:0}
+.board-body{display:flex;gap:28px;align-items:flex-start}
+.notes{width:314px;margin:0;padding:0;list-style:none;counter-reset:n;display:grid;gap:12px;font-size:13px;line-height:1.45}
+.lap .notes{width:300px}
+.notes li{counter-increment:n;display:grid;grid-template-columns:22px 1fr;gap:3px 10px}
+.notes li::before{content:counter(n);grid-row:span 2;width:22px;height:22px;border-radius:50%;background:var(--note);color:#fff;font:700 12px var(--font);display:grid;place-items:center}
+.notes li p{margin:0;color:var(--ink-2)}
+.tag{font:600 10px var(--mono);letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:1px;white-space:nowrap}
+.tag.d{background:var(--drawn-bg);color:var(--drawn)}
+.tag.p{background:var(--prop-bg);color:var(--note)}
+
+/* Frames */
+.frame{position:relative;flex:none;background:#fff;border:2px solid #8f96a1;overflow:hidden}
+.phone{width:390px;height:844px;border-radius:40px}
+.laptop{width:1280px;height:800px;border-radius:12px}
+.frame .a{position:absolute}
+.status{position:absolute;top:0;left:0;right:0;height:44px;display:flex;justify-content:space-between;align-items:center;padding:6px 30px 0;font:600 14px var(--font)}
+.status i{width:24px;height:11px;border:1.5px solid var(--ink);border-radius:3px;display:block}
+.home{position:absolute;bottom:8px;left:50%;width:134px;height:5px;border-radius:3px;background:var(--ink);transform:translateX(-50%)}
+.n{position:absolute;width:22px;height:22px;border-radius:50%;background:var(--note);color:#fff;font:700 12px var(--font);display:grid;place-items:center;box-shadow:0 0 0 2px #fff;z-index:9}
+.box{border:1.5px solid var(--wire);border-radius:14px;background:#fff}
+.ph{background:var(--fill);border-radius:12px}
+.sky{background:var(--sky);border-radius:18px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 14px 0 12px;border:1.5px solid var(--wire);border-radius:999px;font-weight:650;font-size:15px;background:#fff}
+.circle{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--wire);display:grid;place-items:center;background:#fff}
+.btn{height:52px;border-radius:14px;border:1.5px solid var(--ink-2);display:flex;align-items:center;justify-content:center;gap:8px;font-weight:650;font-size:15px;background:#fff}
+.btn.pri{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.sm{height:44px;font-size:14px;border-radius:12px}
+.link{font-weight:650;font-size:14px;text-decoration:underline;text-underline-offset:3px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:34px;white-space:nowrap;padding:0 12px 0 9px;border-radius:999px;background:var(--fill);font-size:13px;font-weight:650}
+.chip.on{background:var(--ink);color:#fff}
+.lbl{font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.muted{color:var(--ink-2)}
+.t11{font-size:11px}.t12{font-size:12px}.t13{font-size:13px}.t14{font-size:14px}.t15{font-size:15px}.t17{font-size:17px}.t20{font-size:20px}.t24{font-size:24px}.t28{font-size:28px}
+.b{font-weight:700}.xb{font-weight:800;letter-spacing:-.01em}
+.ico{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ico.s{width:18px;height:18px}.ico.l{width:30px;height:30px}
+.row{display:flex;align-items:center;gap:10px}
+.col{display:grid;gap:6px}
+.row.scroll>*{flex:none}
+.tabs{position:absolute;left:0;right:0;bottom:0;height:86px;border-top:1.5px solid var(--wire);display:flex;justify-content:space-around;padding-top:6px;background:#fff}
+.tab{display:grid;justify-items:center;gap:2px;font-size:11px;font-weight:650;color:var(--ink-2);width:90px}
+.tab span{display:grid;place-items:center;height:32px;padding:0 16px;border-radius:999px}
+.tab.on{color:var(--ink)}
+.tab.on span{border:1.6px solid var(--ink)}
+.days{display:flex;justify-content:space-between}
+.day{width:47px;height:76px;border:1.5px solid var(--wire);border-radius:14px;display:grid;justify-items:center;align-content:center;gap:2px;font-size:11px;font-weight:650;background:#fff}
+.day .hi{font-size:14px;font-weight:750}
+.day.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tile{border:1.5px solid var(--wire);border-radius:14px;display:grid;place-items:center;background:#fff;position:relative}
+.tile .ico{stroke:#7d8591;stroke-width:1.4}
+.tile.sel{border:2.5px solid var(--ink)}
+.badge{position:absolute;top:6px;left:6px;font:600 9px var(--mono);text-transform:uppercase;letter-spacing:.05em;background:var(--fill-2);border-radius:4px;padding:2px 5px}
+.input{height:48px;border:1.5px solid var(--ink-2);border-radius:12px;display:flex;align-items:center;gap:8px;padding:0 12px;font-size:15px}
+.sw{width:44px;height:44px;border-radius:12px;border:1.5px solid rgba(0,0,0,.15)}
+.sw.on{box-shadow:0 0 0 2.5px #fff,0 0 0 4.5px var(--ink)}
+.seg{flex:1;height:40px;border:1.5px solid var(--wire);border-radius:10px;display:grid;place-items:center;font-size:12px;font-weight:650}
+.seg.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.dim{position:absolute;inset:0;background:rgba(35,39,46,.45)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0}
+.lbar{position:absolute;top:0;left:0;right:0;height:64px;border-bottom:1.5px solid var(--wire);display:flex;align-items:center;gap:28px;padding:0 24px;background:#fff}
+.logo{font:800 17px var(--font);letter-spacing:-.01em;border:1.5px dashed var(--wire);border-radius:8px;padding:4px 10px}
+.ltab{display:flex;align-items:center;gap:6px;font-weight:650;font-size:15px;color:var(--ink-2);height:64px;border-bottom:3px solid transparent}
+.ltab.on{color:var(--ink);border-bottom-color:var(--ink)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--fill-2)}
+.dot.on{background:var(--ink)}
+.wrow{display:grid;grid-template-columns:60px 28px 1fr 46px;align-items:center;height:56px;padding:0 14px;border-radius:12px;font-size:14px}
+.wrow.on{background:var(--ink);color:#fff}
+
+/* Single-board export mode */
+html.single body{padding:0;background:var(--sheet)}
+html.single .intro,html.single .drawing,html.single .toc,html.single .section-title{display:none}
+html.single .page{display:block;max-width:none}
+html.single .fit{display:none}
+html.single .fit.show{display:block}
+html.single .board{border:0;border-radius:0;transform:none!important}
+</style>
+</head>
+<body>
+<!-- Icon and illustration library -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-suncloud" viewBox="0 0 24 24"><circle cx="15" cy="8" r="3"/><path d="M15 2.5v1.2M19.6 4.4l-.9.9M21 8h-1.2M11.3 4.4l.8.8"/><path d="M7 19h9a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6 1.2A3 3 0 0 0 7 19z"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.5 1.5A3.3 3.3 0 0 0 7 18z"/></symbol>
+  <symbol id="i-rain" viewBox="0 0 24 24"><path d="M7 15h10a4 4 0 0 0 .5-8 6 6 0 0 0-11.5 1.5A3.3 3.3 0 0 0 7 15z"/><path d="M8 21l1-3M12 21l1-3M16 21l1-3"/></symbol>
+  <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M3 7h3.5c2 0 3.2 1 4.3 2.7l2.4 4.6C14.3 16 15.5 17 17.5 17H21M3 17h3.5c1.4 0 2.4-.5 3.2-1.4M14.3 8.4c.8-.9 1.8-1.4 3.2-1.4H21M18 4l3 3-3 3M18 14l3 3-3 3"/></symbol>
+  <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="6" r="3"/><path d="M12 9v7M7 12l5-2 5 2M9 22l3-6 3 6"/></symbol>
+  <symbol id="i-rack" viewBox="0 0 24 24"><path d="M3 4h18M7 4v2M17 4v2M7 6l-3.5 4h7zM17 6l-3.5 4h7zM5 10v9h4v-9M15 10v9h4v-9"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-tee" viewBox="0 0 24 24"><path d="M8 4L3 7l2 4 3-1.5V20h8V9.5l3 1.5 2-4-5-3c-.6 1.5-2 2.4-4 2.4S8.6 5.5 8 4z"/></symbol>
+  <symbol id="i-buttonup" viewBox="0 0 24 24"><path d="M8 4L3 7l2 4 3-1.5V20h8V9.5l3 1.5 2-4-5-3-4 4z"/><path d="M12 8v12M10.5 11h0M10.5 14h0M10.5 17h0"/></symbol>
+  <symbol id="i-longsleeve" viewBox="0 0 24 24"><path d="M8 4L4 6.5 2.5 19H6l2-8.5V20h8v-9.5l2 8.5h3.5L20 6.5 16 4c-.6 1.5-2 2.4-4 2.4S8.6 5.5 8 4z"/></symbol>
+  <symbol id="i-hoodie" viewBox="0 0 24 24"><path d="M8 5c0-2 1.8-3 4-3s4 1 4 3M8 5L4 7 2.5 19H6l2-8V20h8v-9l2 8h3.5L20 7l-4-2c-.5 2-2 3-4 3s-3.5-1-4-3z"/><path d="M10 14h4"/></symbol>
+  <symbol id="i-jacket" viewBox="0 0 24 24"><path d="M9 3h6l5 3.5V20h-4v-9M9 3L4 6.5V20h4v-9M9 3l3 5 3-5M8 11v9h8v-9M12 8v12"/></symbol>
+  <symbol id="i-coat" viewBox="0 0 24 24"><path d="M9 2h6l5 3.5V22h-4v-11M9 2L4 5.5V22h4v-11M9 2l3 5 3-5M8 11v11h8V11M12 7v15"/><path d="M14 13.5h0M14 16.5h0"/></symbol>
+  <symbol id="i-rainjacket" viewBox="0 0 24 24"><path d="M8 6c0-2.4 1.8-4 4-4s4 1.6 4 4M8 6L4 8v12h4v-8M16 6l4 2v12h-4v-8M8 6h8M8 12v8h8v-8M12 6v14"/></symbol>
+  <symbol id="i-pants" viewBox="0 0 24 24"><path d="M6 3h12l1 18h-5l-2-12-2 12H5z"/></symbol>
+  <symbol id="i-shorts" viewBox="0 0 24 24"><path d="M5 5h14l1 11-6 1-2-6-2 6-6-1z"/></symbol>
+  <symbol id="i-skirt" viewBox="0 0 24 24"><path d="M8 5h8l4 14H4z"/><path d="M8 8h8"/></symbol>
+  <symbol id="i-sneaker" viewBox="0 0 24 24"><path d="M3 18v-6l5-1.5 3 2.5 4 1 6 1.5V18z"/><path d="M3 18h18M9 13l1-1M11 14l1-1"/></symbol>
+  <symbol id="i-boot" viewBox="0 0 24 24"><path d="M7 3h6v10l6 2.5V20H7z"/><path d="M7 17h12"/></symbol>
+  <symbol id="i-sunscreen" viewBox="0 0 24 24"><path d="M9 3h6v3H9zM8 6h8l1 3v11a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V9z"/><path d="M10 13h4"/></symbol>
+  <symbol id="i-water" viewBox="0 0 24 24"><path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/></symbol>
+  <symbol id="i-umbrella" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 18 0zM12 12v7a2 2 0 0 1-4 0"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/><circle cx="15.5" cy="8.5" r="1.5"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-cap" viewBox="0 0 24 24"><path d="M5 15a7 7 0 0 1 14 0"/><path d="M5 15h16"/></symbol>
+  <symbol id="i-folded" viewBox="0 0 24 24"><rect x="4" y="13" width="16" height="4" rx="1"/><rect x="5" y="9" width="14" height="4" rx="1"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></symbol>
+  <!-- Wireframe character: head-to-toe, tee and shorts -->
+  <symbol id="avatar" viewBox="0 0 160 300">
+    <g stroke="#7d8591" stroke-width="2" stroke-linejoin="round">
+      <path d="M30 118 L20 176 L31 178 L41 124 Z M130 118 L140 176 L129 178 L119 124 Z" fill="#eceef1"/>
+      <path d="M50 222 L74 222 L72 274 L54 274 Z M86 222 L110 222 L106 274 L88 274 Z" fill="#eceef1"/>
+      <path d="M48 272 L76 272 L78 290 L40 290 Q40 278 48 272 Z M84 272 L112 272 L120 290 L82 290 Z" fill="#9aa1ab"/>
+      <path d="M46 170 L114 170 L118 222 L84 224 L80 198 L76 224 L42 222 Z" fill="#c2c7cf"/>
+      <rect x="70" y="68" width="20" height="18" fill="#eceef1"/>
+      <path d="M48 84 L66 80 Q80 90 94 80 L112 84 L138 104 L128 128 L114 120 L114 172 L46 172 L46 120 L32 128 L22 104 Z" fill="#d6dae0"/>
+      <circle cx="80" cy="44" r="30" fill="#eceef1"/>
+      <path d="M50 44 C48 18 66 8 80 8 C96 8 112 18 110 44 C104 30 94 26 80 26 C66 26 56 30 50 44 Z" fill="#9aa1ab"/>
+    </g>
+    <circle cx="70" cy="46" r="2.8" fill="#4b525c"/><circle cx="90" cy="46" r="2.8" fill="#4b525c"/>
+    <path d="M70 58 Q80 65 90 58" stroke="#4b525c" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </symbol>
+  <!-- Photo of a flat-laid tee, as the camera would see it -->
+  <symbol id="teephoto" viewBox="0 0 200 180">
+    <path d="M60 10 L20 34 L36 70 L58 60 L58 170 L142 170 L142 60 L164 70 L180 34 L140 10 C132 26 118 34 100 34 C82 34 68 26 60 10 Z" fill="#9aa6b8" stroke="#5f6b7d" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="100" cy="102" r="26" fill="none" stroke="#e8ecf1" stroke-width="8"/>
+  </symbol>
+  <!-- Decorative map (placement only) -->
+  <symbol id="map" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice">
+    <rect width="400" height="800" fill="#e9eef2"/>
+    <path d="M0 100h400M0 200h400M0 300h400M0 400h400M0 500h400M0 600h400M0 700h400M100 0v800M200 0v800M300 0v800" stroke="#dfe5ea" stroke-width="2"/>
+    <path d="M20 110 C80 80 160 92 214 124 C262 152 304 140 346 164 C368 214 336 258 304 288 C252 300 222 330 180 320 C140 302 92 312 60 282 C28 242 14 176 20 110Z" fill="#d3dbe3"/>
+    <path d="M86 470 C130 450 172 470 182 522 C192 582 160 650 130 700 C110 722 90 682 84 640 C78 590 58 520 86 470Z" fill="#d3dbe3"/>
+    <path d="M262 560 C302 540 352 560 362 602 C366 642 332 662 300 652 C270 642 252 600 262 560Z" fill="#d3dbe3"/>
+  </symbol>
+  <!-- Closet header: a rail with hangers -->
+  <symbol id="rack" viewBox="0 0 320 150">
+    <g fill="none" stroke="#7d8591" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 30h280"/>
+      <path d="M80 30v8M80 38l-34 20h68z M160 30v8M160 38l-34 20h68z M240 30v8M240 38l-34 20h68z"/>
+    </g>
+    <g fill="#d6dae0" stroke="#7d8591" stroke-width="2" stroke-linejoin="round">
+      <path d="M56 58 L48 64 L52 92 L58 90 L58 138 L102 138 L102 90 L108 92 L112 64 L104 58 Q80 70 56 58Z"/>
+      <path d="M140 58 L134 64 L136 80 L128 138 L192 138 L184 80 L186 64 L180 58 Q160 70 140 58Z"/>
+      <path d="M216 58 L196 68 L204 86 L214 82 L214 134 L266 134 L266 82 L276 86 L284 68 L264 58 Q240 70 216 58Z"/>
+    </g>
+  </symbol>
+</svg>
+
+<main class="page">
+  <header class="intro">
+    <div class="eyebrow">Specification · screen designs</div>
+    <h1>Outfit App Wireframes</h1>
+    <p>Digital wireframes for every proposed screen in phone and laptop layouts. The Developer hand-drew the four phone screens below; the Agent built the rest from them. Grey boxes show placement and content, not the visual design. Example weather and items are illustrative.</p>
+    <div class="key">
+      <span><span class="tag d" style="margin:0">Drawn</span> placed as in the hand drawing</span>
+      <span><span class="tag p" style="margin:0">Proposed</span> Agent's addition, for review</span>
+      <span><b style="color:var(--note)">1 2 3</b> notes match the numbers on each frame</span>
+    </div>
+  </header>
+
+  <section class="drawing" aria-label="Hand drawing">
+    <img src="phone-main-screens.jpg" alt="Hand-drawn phone screens: Main screen, Location setup, Closet, Add item">
+    <div>
+      <h2>Source: the Developer's hand drawing</h2>
+      <p>Four phone screens drawn on paper: Main screen, Location setup, Closet and Add item. Saved as <code>reference/screens/phone-main-screens.jpg</code>, with photo metadata removed.</p>
+      <p>Placement change agreed in the spec session: location stays at the top; Shuffle and the date strip move to the bottom of the phone screen for one-handed use.</p>
+    </div>
+  </section>
+
+  <nav class="toc" aria-label="Boards">
+    <a href="#phone-01a-today">P1a Today</a><a href="#phone-01b-today-scrolled">P1b Today scrolled</a><a href="#phone-02-location">P2 Location</a><a href="#phone-03-closet">P3 Closet</a><a href="#phone-04a-add-camera">P4a Add: camera</a><a href="#phone-04b-add-cutout">P4b Add: cut out</a><a href="#phone-04c-add-type">P4c Add: type</a><a href="#phone-04d-add-confirm">P4d Add: confirm</a><a href="#phone-05-item-detail">P5 Item</a><a href="#phone-06-info">P6 Info</a><a href="#phone-07-setup-selfie">P7 Setup: selfie</a><a href="#phone-08-setup-review">P8 Setup: review</a>
+    <a href="#laptop-01-today">L1 Today</a><a href="#laptop-02-location">L2 Location</a><a href="#laptop-03-closet-detail">L3 Closet + item</a><a href="#laptop-04-add-item">L4 Add item</a><a href="#laptop-06-info">L6 Info</a><a href="#laptop-07-setup-selfie">L7 Setup: selfie</a><a href="#laptop-08-setup-review">L8 Setup: review</a>
+  </nav>
+
+  <h2 class="section-title">Phone · 390 × 844</h2>
+
+  <!-- P1a Today: first view -->
+  <div class="fit"><section class="board" id="phone-01a-today">
+    <header class="board-head"><span class="code">P1a</span><h2>Today, first view</h2></header>
+    <div class="board-body">
+      <div class="frame phone">
+        <div class="status">9:41<i></i></div>
+        <div class="a pill" style="left:16px;top:52px"><svg class="ico s"><use href="#i-pin"/></svg>Austin, TX<svg class="ico s"><use href="#i-chev"/></svg></div>
+        <div class="a circle" style="left:174px;top:52px"><svg class="ico"><use href="#i-info"/></svg></div>
+        <div class="a row t13" style="left:18px;top:106px"><b>Sat, Oct 3</b><span class="chip on" style="height:24px;padding:0 8px;font-size:11px">Now</span></div>
+        <svg class="a ico" style="right:18px;top:48px;width:56px;height:56px;stroke-width:1.3"><use href="#i-sun"/></svg>
+        <div class="a" style="right:18px;top:104px;text-align:right"><div class="xb t28" style="line-height:1">91°F</div><div class="t12 muted">Feels 96° · Sunny</div></div>
+        <div class="a sky" style="left:16px;top:156px;width:258px;height:384px"></div>
+        <svg class="a" style="left:45px;top:166px;width:200px;height:375px"><use href="#avatar"/></svg>
+        <div class="a tile" style="left:286px;top:156px;width:88px;height:88px"><svg class="ico l" style="width:46px;height:46px"><use href="#i-tee"/></svg></div>
+        <div class="a tile" style="left:286px;top:254px;width:88px;height:88px"><svg class="ico l" style="width:46px;height:46px"><use href="#i-shorts"/></svg></div>
+        <div class="a tile" style="left:286px;top:352px;width:88px;height:88px"><svg class="ico l" style="width:46px;height:46px"><use href="#i-sneaker"/></svg></div>
+        <div class="a circle" style="left:310px;top:470px;width:60px;height:60px;border:2px solid var(--ink);background:#fff"><svg class="ico"><use href="#i-shuffle"/></svg></div>
+        <div class="a t17 b" style="left:18px;top:556px;width:354px">Hot all day. Wear a light tee and shorts.</div>
+        <div class="a row" style="left:16px;top:592px;gap:8px"><span class="chip"><svg class="ico s"><use href="#i-sunscreen"/></svg>Sunscreen</span><span class="chip"><svg class="ico s"><use href="#i-water"/></svg>Water bottle</span></div>
+        <div class="a days" style="left:16px;right:16px;top:664px">
+          <div class="day on">Sat<svg class="ico s"><use href="#i-sun"/></svg><span class="hi">91°</span></div>
+          <div class="day">Sun<svg class="ico s"><use href="#i-sun"/></svg><span class="hi">92°</span></div>
+          <div class="day">Mon<svg class="ico s"><use href="#i-suncloud"/></svg><span class="hi">88°</span></div>
+          <div class="day">Tue<svg class="ico s"><use href="#i-rain"/></svg><span class="hi">79°</span></div>
+          <div class="day">Wed<svg class="ico s"><use href="#i-cloud"/></svg><span class="hi">74°</span></div>
+          <div class="day">Thu<svg class="ico s"><use href="#i-sun"/></svg><span class="hi">76°</span></div>
+          <div class="day">Fri<svg class="ico s"><use href="#i-sun"/></svg><span class="hi">80°</span></div>
+        </div>
+        <div class="tabs"><div class="tab on"><span><svg class="ico"><use href="#i-person"/></svg></span>Today</div><div class="tab"><span><svg class="ico"><use href="#i-rack"/></svg></span>Closet</div><div class="tab"><span><svg class="ico"><use href="#i-camera"/></svg></span>Add item</div></div>
+        <div class="home"></div>
+        <span class="n" style="left:8px;top:44px">1</span><span class="n" style="left:204px;top:44px">2</span><span class="n" style="left:156px;top:104px">3</span><span class="n" style="left:356px;top:44px">4</span><span class="n" style="left:8px;top:150px">5</span><span class="n" style="left:358px;top:150px">6</span><span class="n" style="left:356px;top:462px">7</span><span class="n" style="left:8px;top:530px">8</span><span class="n" style="left:8px;top:656px">9</span><span class="n" style="left:22px;top:752px">10</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Location</b><span class="tag d">Drawn</span></div><p>Tap to change the city or ZIP (opens P2). Stays at the top: it's saved and rarely changed.</p></li>
+        <li><div><b>Info button</b><span class="tag p">Proposed</span></div><p>Opens the Info screen (P6). Your drawing had no route to Info.</p></li>
+        <li><div><b>Date and "Now" or "Forecast" label</b><span class="tag p">Proposed</span></div><p>Shows which day is selected and whether the numbers are current conditions or a forecast.</p></li>
+        <li><div><b>Weather icon and temperature</b><span class="tag d">Drawn</span> <span class="tag p">Proposed</span></div><p>Icon placed as drawn. Proposed additions: temperature in °F, feels-like and a one-word condition.</p></li>
+        <li><div><b>Avatar</b><span class="tag d">Drawn</span></div><p>The main focus. It wears the recommended outfit. The backdrop tint follows the weather (sky and daylight direction).</p></li>
+        <li><div><b>What it's wearing</b><span class="tag d">Drawn</span></div><p>Items stacked top to shoes, beside the avatar. Tap one to see it (P5). An outer layer or umbrella would appear here too.</p></li>
+        <li><div><b>Shuffle</b><span class="tag p">Moved</span></div><p>Drawn top left; moved into thumb reach (option C). Picks another outfit for the same weather.</p></li>
+        <li><div><b>Recommendation and reminders</b><span class="tag p">Proposed</span></div><p>One-line summary and reminder chips. Full wording is just below (P1b).</p></li>
+        <li><div><b>7-day strip</b><span class="tag p">Proposed</span></div><p>Today plus six forecast days, in the thumb zone. Each day is at least 44 px wide.</p></li>
+        <li><div><b>Tabs</b><span class="tag d">Drawn</span></div><p>Today, Closet, Add item, as drawn. The active tab is circled like your sketch.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- P1b Today: scrolled -->
+  <div class="fit"><section class="board" id="phone-01b-today-scrolled">
+    <header class="board-head"><span class="code">P1b</span><h2>Today, scrolled down</h2></header>
+    <div class="board-body">
+      <div class="frame phone">
+        <div class="status">9:41<i></i></div>
+        <div class="a box" style="left:16px;top:52px;width:358px;height:112px;padding:14px 16px">
+          <div class="t17 b">Hot all day</div>
+          <div class="t13 muted" style="margin-top:4px">Feels like 96° by 3 pm with strong sun. Your navy tee and khaki shorts keep you cool, so skip the jacket.</div>
+        </div>
+        <div class="a box row" style="left:16px;top:174px;width:358px;height:64px;padding:0 14px;align-items:center"><span class="ph" style="width:40px;height:40px;display:grid;place-items:center;flex:none"><svg class="ico"><use href="#i-sunscreen"/></svg></span><div class="t13"><b>Sunscreen.</b> <span class="muted">UV reaches 9 at noon. Put on SPF 15+ before you leave.</span></div></div>
+        <div class="a box row" style="left:16px;top:246px;width:358px;height:64px;padding:0 14px;align-items:center"><span class="ph" style="width:40px;height:40px;display:grid;place-items:center;flex:none"><svg class="ico"><use href="#i-water"/></svg></span><div class="t13"><b>Water bottle.</b> <span class="muted">It feels like 96° this afternoon. Drink before you're thirsty.</span></div></div>
+        <div class="a box" style="left:16px;top:320px;width:358px;height:84px;padding:12px 14px">
+          <div class="lbl">Today, 9 am–9 pm</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);margin-top:8px" class="t13"><div><b>84–96°</b><div class="t11 muted">Feels like</div></div><div><b>10%</b><div class="t11 muted">Rain</div></div><div><b>UV 9</b><div class="t11 muted">Peak</div></div><div><b>8 mph</b><div class="t11 muted">Wind</div></div></div>
+        </div>
+        <div class="a lbl" style="left:18px;top:418px">Wearing</div>
+        <div class="a col" style="left:16px;top:440px;width:358px;gap:8px">
+          <div class="row"><span class="tile" style="width:48px;height:48px"><svg class="ico"><use href="#i-tee"/></svg></span><div class="t14"><b>Navy graphic tee</b><div class="t12 muted">Your closet</div></div></div>
+          <div class="row"><span class="tile" style="width:48px;height:48px"><svg class="ico"><use href="#i-shorts"/></svg></span><div class="t14"><b>Khaki shorts</b><div class="t12 muted">Your closet</div></div></div>
+          <div class="row"><span class="tile" style="width:48px;height:48px"><svg class="ico"><use href="#i-sneaker"/></svg></span><div class="t14"><b>White sneakers</b><div class="t12 muted">Starter item</div></div></div>
+        </div>
+        <div class="a t12 muted" style="left:18px;top:620px;width:354px">Open-Meteo.com (CC BY 4.0) · Updated 7:42 am</div>
+        <div class="a days" style="left:16px;right:16px;top:664px">
+          <div class="day on">Sat<svg class="ico s"><use href="#i-sun"/></svg><span class="hi">91°</span></div><div class="day">Sun<svg class="ico s"><use href="#i-sun"/></svg><span class="hi">92°</span></div><div class="day">Mon<svg class="ico s"><use href="#i-suncloud"/></svg><span class="hi">88°</span></div><div class="day">Tue<svg class="ico s"><use href="#i-rain"/></svg><span class="hi">79°</span></div><div class="day">Wed<svg class="ico s"><use href="#i-cloud"/></svg><span class="hi">74°</span></div><div class="day">Thu<svg class="ico s"><use href="#i-sun"/></svg><span class="hi">76°</span></div><div class="day">Fri<svg class="ico s"><use href="#i-sun"/></svg><span class="hi">80°</span></div>
+        </div>
+        <div class="tabs"><div class="tab on"><span><svg class="ico"><use href="#i-person"/></svg></span>Today</div><div class="tab"><span><svg class="ico"><use href="#i-rack"/></svg></span>Closet</div><div class="tab"><span><svg class="ico"><use href="#i-camera"/></svg></span>Add item</div></div>
+        <div class="home"></div>
+        <span class="n" style="left:8px;top:46px">1</span><span class="n" style="left:8px;top:168px">2</span><span class="n" style="left:8px;top:314px">3</span><span class="n" style="left:8px;top:430px">4</span><span class="n" style="left:356px;top:614px">5</span><span class="n" style="left:8px;top:656px">6</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Recommendation</b><span class="tag p">Proposed</span></div><p>Full wording for the selected day. It doubles as the text description of the avatar's outfit for screen readers.</p></li>
+        <li><div><b>Reminders</b><span class="tag p">Proposed</span></div><p>Only the ones that apply: umbrella, sunscreen, water, layer for later, wind, snow. Each has at least three wordings.</p></li>
+        <li><div><b>The day at a glance</b><span class="tag p">Proposed</span></div><p>The 9 am–9 pm window the outfit is planned around, so the advice is easy to check.</p></li>
+        <li><div><b>Wearing, with names</b><span class="tag p">Proposed</span></div><p>Says whether each item is from your closet or a starter item that fills a gap.</p></li>
+        <li><div><b>Data source and time</b><span class="tag p">Proposed</span></div><p>Open-Meteo credit (required by its license) and when the data was fetched.</p></li>
+        <li><div><b>Date strip and tabs stay fixed</b><span class="tag p">Proposed</span></div><p>They stay in reach while the page scrolls. Shuffle stays with the avatar above.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- P2 Location -->
+  <div class="fit"><section class="board" id="phone-02-location">
+    <header class="board-head"><span class="code">P2</span><h2>Location setup</h2></header>
+    <div class="board-body">
+      <div class="frame phone">
+        <svg class="a" style="inset:0;width:100%;height:100%"><use href="#map"/></svg>
+        <div class="status">9:41<i></i></div>
+        <div class="a circle" style="right:16px;top:52px"><svg class="ico"><use href="#i-close"/></svg></div>
+        <div class="a box" style="left:24px;top:214px;width:342px;padding:18px;display:grid;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.08)">
+          <div class="t20 xb">Where are you?</div>
+          <div class="input"><svg class="ico s"><use href="#i-search"/></svg>Austin<span style="width:1.5px;height:20px;background:var(--ink)"></span></div>
+          <div class="col t14" style="gap:2px">
+            <div style="background:var(--fill);border-radius:10px;padding:11px 12px"><b>Austin, Texas</b></div>
+            <div style="padding:11px 12px">Austin, Minnesota</div>
+            <div style="padding:11px 12px">Austin, Arkansas</div>
+          </div>
+          <div class="row t12 muted" style="gap:8px"><span style="flex:1;height:1px;background:var(--wire)"></span>or<span style="flex:1;height:1px;background:var(--wire)"></span></div>
+          <div class="btn"><svg class="ico"><use href="#i-pin"/></svg>Use my location</div>
+          <div class="t12 muted">US cities and ZIP codes only.</div>
+        </div>
+        <div class="home"></div>
+        <span class="n" style="left:8px;top:120px">1</span><span class="n" style="left:16px;top:206px">2</span><span class="n" style="left:16px;top:262px">3</span><span class="n" style="left:16px;top:306px">4</span><span class="n" style="left:16px;top:470px">5</span><span class="n" style="left:346px;top:46px">6</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Map background</b><span class="tag d">Drawn</span></div><p>Decoration only, as proposed. A map you can tap would need a separate map provider.</p></li>
+        <li><div><b>Card over the map</b><span class="tag d">Drawn</span></div><p>Mid-screen, so it stays visible above the keyboard.</p></li>
+        <li><div><b>ZIP or city field</b><span class="tag d">Drawn</span></div><p>Search starts as you type. Errors such as "No US place matches" appear under the field.</p></li>
+        <li><div><b>Matching places</b><span class="tag p">Proposed</span></div><p>Shows matches with their state, since many US cities share a name.</p></li>
+        <li><div><b>Use my location</b><span class="tag d">Drawn</span></div><p>Asks the browser for permission. If it's denied, the card says so and the field stays ready.</p></li>
+        <li><div><b>Close</b><span class="tag p">Proposed</span></div><p>Only when opened from Today. Not shown during first setup.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- P3 Closet -->
+  <div class="fit"><section class="board" id="phone-03-closet">
+    <header class="board-head"><span class="code">P3</span><h2>Closet</h2></header>
+    <div class="board-body">
+      <div class="frame phone">
+        <div class="status">9:41<i></i></div>
+        <div class="a t28 xb" style="left:18px;top:56px">Closet</div>
+        <div class="a pill" style="right:16px;top:52px;font-size:14px"><svg class="ico s"><use href="#i-person"/></svg>Edit avatar</div>
+        <div class="a box" style="left:16px;top:108px;width:358px;height:188px">
+          <div class="a" style="left:96px;top:4px;width:166px;display:flex;justify-content:space-around;align-items:flex-end;border-bottom:2px solid #7d8591;padding-bottom:2px;color:#7d8591"><svg class="ico"><use href="#i-cap"/></svg><svg class="ico"><use href="#i-folded"/></svg><svg class="ico"><use href="#i-umbrella"/></svg></div>
+          <svg class="a" style="left:19px;top:34px;width:320px;height:150px"><use href="#rack"/></svg>
+        </div>
+        <div class="a lbl" style="left:18px;top:312px">Tops · 5</div>
+        <div class="a tile" style="left:16px;top:334px;width:110px;height:100px"><svg class="ico l" style="width:52px;height:52px"><use href="#i-tee"/></svg></div>
+        <div class="a tile" style="left:140px;top:334px;width:110px;height:100px"><span class="badge">Starter</span><svg class="ico l" style="width:52px;height:52px"><use href="#i-tee"/></svg></div>
+        <div class="a tile" style="left:264px;top:334px;width:110px;height:100px"><svg class="ico l" style="width:52px;height:52px"><use href="#i-buttonup"/></svg></div>
+        <div class="a tile" style="left:16px;top:446px;width:110px;height:100px"><svg class="ico l" style="width:52px;height:52px"><use href="#i-longsleeve"/></svg></div>
+        <div class="a tile" style="left:140px;top:446px;width:110px;height:100px"><svg class="ico l" style="width:52px;height:52px"><use href="#i-hoodie"/></svg></div>
+        <div class="a lbl" style="left:18px;top:562px">Pants · 3</div>
+        <div class="a tile" style="left:16px;top:584px;width:110px;height:100px"><svg class="ico l" style="width:52px;height:52px"><use href="#i-pants"/></svg></div>
+        <div class="a tile" style="left:140px;top:584px;width:110px;height:100px"><svg class="ico l" style="width:52px;height:52px"><use href="#i-shorts"/></svg></div>
+        <div class="a tile" style="left:264px;top:584px;width:110px;height:100px"><svg class="ico l" style="width:52px;height:52px"><use href="#i-skirt"/></svg></div>
+        <div class="a lbl" style="left:18px;top:700px">Outer layers · 2</div>
+        <div class="a tile" style="left:16px;top:722px;width:110px;height:100px"></div><div class="a tile" style="left:140px;top:722px;width:110px;height:100px"></div>
+        <div class="tabs"><div class="tab"><span><svg class="ico"><use href="#i-person"/></svg></span>Today</div><div class="tab on"><span><svg class="ico"><use href="#i-rack"/></svg></span>Closet</div><div class="tab"><span><svg class="ico"><use href="#i-camera"/></svg></span>Add item</div></div>
+        <div class="home"></div>
+        <span class="n" style="left:356px;top:44px">1</span><span class="n" style="left:8px;top:100px">2</span><span class="n" style="left:116px;top:108px">3</span><span class="n" style="left:8px;top:326px">4</span><span class="n" style="left:132px;top:326px">5</span><span class="n" style="left:256px;top:576px">6</span><span class="n" style="left:146px;top:694px">7</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Edit avatar</b><span class="tag p">Proposed</span></div><p>Where you retake the selfie or adjust the avatar later (P8). Placed here because the closet is "your things".</p></li>
+        <li><div><b>Rack header</b><span class="tag d">Drawn</span></div><p>Shows your most recently added items on hangers. Tap one to open it.</p></li>
+        <li><div><b>Shelf of closet things</b><span class="tag d">Drawn</span></div><p>Caps, folded pants and an umbrella on a shelf: decoration showing what a closet holds. Not buttons.</p></li>
+        <li><div><b>Items grouped by type</b><span class="tag d">Drawn</span></div><p>Tops, then Pants, as drawn. Tap an item to open it (P5).</p></li>
+        <li><div><b>Starter items</b><span class="tag p">Proposed</span></div><p>Drawn templates that fill gaps until you add your own. Marked so they're not mistaken for your clothes.</p></li>
+        <li><div><b>Skirt</b><span class="tag d">Drawn</span></div><p>Your Pants row includes a skirt. Kept as a garment type; it suits Hot and Warm.</p></li>
+        <li><div><b>Outer layers and Shoes</b><span class="tag p">Proposed</span></div><p>Further groups below, matching the garment types.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- P4a Add item: camera -->
+  <div class="fit"><section class="board" id="phone-04a-add-camera">
+    <header class="board-head"><span class="code">P4a</span><h2>Add item, camera</h2></header>
+    <div class="board-body">
+      <div class="frame phone">
+        <div class="status">9:41<i></i></div>
+        <div class="a" style="left:16px;top:52px;width:358px;height:548px;border:2px solid var(--ink-2);border-radius:18px;background:#dfe3e8"></div>
+        <div class="a chip" style="left:50%;transform:translateX(-50%);top:68px;background:#fff">Lay the item flat in good light</div>
+        <svg class="a" style="left:60px;top:200px;width:270px;height:243px"><use href="#teephoto"/></svg>
+        <div class="a" style="left:157px;top:620px;width:76px;height:76px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center"><span style="width:58px;height:58px;border-radius:50%;background:var(--ink)"></span></div>
+        <div class="a" style="left:46px;top:634px;display:grid;justify-items:center;gap:2px"><span class="tile" style="width:48px;height:48px"><svg class="ico"><use href="#i-image"/></svg></span><span class="t11 b">Photos</span></div>
+        <div class="tabs"><div class="tab"><span><svg class="ico"><use href="#i-person"/></svg></span>Today</div><div class="tab"><span><svg class="ico"><use href="#i-rack"/></svg></span>Closet</div><div class="tab on"><span><svg class="ico"><use href="#i-camera"/></svg></span>Add item</div></div>
+        <div class="home"></div>
+        <span class="n" style="left:8px;top:46px">1</span><span class="n" style="left:226px;top:612px">2</span><span class="n" style="left:38px;top:626px">3</span><span class="n" style="left:356px;top:756px">4</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Camera view</b><span class="tag d">Drawn</span></div><p>A live camera inside the page. The browser asks for camera permission the first time.</p></li>
+        <li><div><b>Shutter</b><span class="tag d">Drawn</span></div><p>Large and centered in the thumb zone.</p></li>
+        <li><div><b>Choose from Photos</b><span class="tag p">Proposed</span></div><p>For items you've already photographed. It's also the fallback if camera access is denied or unavailable.</p></li>
+        <li><div><b>Add item tab</b><span class="tag d">Drawn</span></div><p>Adding is a tab of its own, as drawn. The steps after the photo (P4b–P4d) hide the tabs until you save or cancel.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- P4b Add item: cut out -->
+  <div class="fit"><section class="board" id="phone-04b-add-cutout">
+    <header class="board-head"><span class="code">P4b</span><h2>Add item, tap to cut out</h2></header>
+    <div class="board-body">
+      <div class="frame phone">
+        <div class="status">9:41<i></i></div>
+        <div class="a circle" style="left:16px;top:52px"><svg class="ico"><use href="#i-close"/></svg></div>
+        <div class="a t15 b" style="left:0;right:0;top:64px;text-align:center">Add item</div>
+        <div class="a t13 muted" style="right:20px;top:66px">1 of 3</div>
+        <div class="a" style="left:16px;top:108px;width:358px;height:470px;border-radius:18px;background:#dfe3e8;overflow:hidden">
+          <svg class="a" style="left:44px;top:110px;width:270px;height:243px"><use href="#teephoto"/></svg>
+          <svg class="a" style="left:40px;top:106px;width:278px;height:251px" viewBox="-4 -4 208 188"><path d="M60 10 L20 34 L36 70 L58 60 L58 170 L142 170 L142 60 L164 70 L180 34 L140 10 C132 26 118 34 100 34 C82 34 68 26 60 10 Z" fill="none" stroke="#23272e" stroke-width="3" stroke-dasharray="8 6"/></svg>
+          <span class="a" style="left:152px;top:250px;width:44px;height:44px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--ink)"></span>
+        </div>
+        <div class="a" style="left:18px;top:596px;width:354px"><div class="t17 b">Tap the item to cut it out</div><div class="t13 muted">If the outline is wrong, tap a different spot on the item.</div></div>
+        <div class="a btn" style="left:16px;top:756px;width:171px">Retake</div>
+        <div class="a btn pri" style="left:203px;top:756px;width:171px">Next</div>
+        <div class="home"></div>
+        <span class="n" style="left:8px;top:100px">1</span><span class="n" style="left:200px;top:352px">2</span><span class="n" style="left:296px;top:62px">3</span><span class="n" style="left:8px;top:748px">4</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Your photo</b><span class="tag p">Proposed</span></div><p>Follows the add-item flow in research.md: tap to cut out, pick a type, confirm colors and name.</p></li>
+        <li><div><b>Tap point and outline</b><span class="tag p">Proposed</span></div><p>The cut-out runs on the phone. If it fails, the message says to retake in better light or on a plain background.</p></li>
+        <li><div><b>Step count</b><span class="tag p">Proposed</span></div><p>Three short steps, with Close to cancel.</p></li>
+        <li><div><b>Buttons at the bottom</b><span class="tag p">Proposed</span></div><p>In thumb reach. Next is enabled once there's an outline.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- P4c Add item: type -->
+  <div class="fit"><section class="board" id="phone-04c-add-type">
+    <header class="board-head"><span class="code">P4c</span><h2>Add item, what is it?</h2></header>
+    <div class="board-body">
+      <div class="frame phone">
+        <div class="status">9:41<i></i></div>
+        <div class="a circle" style="left:16px;top:52px"><svg class="ico"><use href="#i-back"/></svg></div>
+        <div class="a t15 b" style="left:0;right:0;top:64px;text-align:center">Add item</div>
+        <div class="a t13 muted" style="right:20px;top:66px">2 of 3</div>
+        <div class="a row" style="left:16px;top:110px;width:358px;align-items:flex-start;gap:12px"><span class="tile" style="width:64px;height:64px;flex:none;background:#dfe3e8"><svg style="width:50px;height:45px"><use href="#teephoto"/></svg></span><div><div class="t20 xb">What is it?</div><div class="t13 muted">This sets the avatar's garment shape and the weather it suits.</div></div></div>
+        <div class="a" style="left:16px;top:196px;width:358px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <div class="tile sel" style="height:84px;gap:2px"><svg class="ico l"><use href="#i-tee"/></svg><span class="t12 b">Tee</span></div>
+          <div class="tile" style="height:84px"><svg class="ico l"><use href="#i-buttonup"/></svg><span class="t12 b">Button-up</span></div>
+          <div class="tile" style="height:84px"><svg class="ico l"><use href="#i-longsleeve"/></svg><span class="t12 b">Long sleeve</span></div>
+          <div class="tile" style="height:84px"><svg class="ico l"><use href="#i-hoodie"/></svg><span class="t12 b">Sweater, hoodie</span></div>
+          <div class="tile" style="height:84px"><svg class="ico l"><use href="#i-jacket"/></svg><span class="t12 b">Light jacket</span></div>
+          <div class="tile" style="height:84px"><svg class="ico l"><use href="#i-coat"/></svg><span class="t12 b">Warm coat</span></div>
+          <div class="tile" style="height:84px"><svg class="ico l"><use href="#i-rainjacket"/></svg><span class="t12 b">Rain jacket</span></div>
+          <div class="tile" style="height:84px"><svg class="ico l"><use href="#i-pants"/></svg><span class="t12 b">Pants</span></div>
+          <div class="tile" style="height:84px"><svg class="ico l"><use href="#i-shorts"/></svg><span class="t12 b">Shorts</span></div>
+          <div class="tile" style="height:84px"><svg class="ico l"><use href="#i-sneaker"/></svg><span class="t12 b">Sneakers</span></div>
+          <div class="tile" style="height:84px"><svg class="ico l"><use href="#i-boot"/></svg><span class="t12 b">Boots</span></div>
+          <div class="tile" style="height:84px"><svg class="ico l"><use href="#i-skirt"/></svg><span class="t12 b">Skirt</span></div>
+        </div>
+        <div class="a btn pri" style="left:16px;right:16px;top:756px">Next</div>
+        <div class="home"></div>
+        <span class="n" style="left:8px;top:188px">1</span><span class="n" style="left:356px;top:476px">2</span><span class="n" style="left:8px;top:748px">3</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Garment types</b><span class="tag p">Proposed</span></div><p>The 12 garment templates from the research art estimate. Each type maps to an avatar drawing and to the weather bands it suits.</p></li>
+        <li><div><b>Skirt</b><span class="tag d">Drawn</span></div><p>From your Closet drawing. Kept as a 12th type; it suits Hot and Warm, like shorts.</p></li>
+        <li><div><b>Next</b><span class="tag p">Proposed</span></div><p>Enabled once a type is picked.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- P4d Add item: confirm -->
+  <div class="fit"><section class="board" id="phone-04d-add-confirm">
+    <header class="board-head"><span class="code">P4d</span><h2>Add item, confirm</h2></header>
+    <div class="board-body">
+      <div class="frame phone">
+        <div class="status">9:41<i></i></div>
+        <div class="a circle" style="left:16px;top:52px"><svg class="ico"><use href="#i-back"/></svg></div>
+        <div class="a t15 b" style="left:0;right:0;top:64px;text-align:center">Add item</div>
+        <div class="a t13 muted" style="right:20px;top:66px">3 of 3</div>
+        <div class="a" style="left:16px;top:108px;width:171px"><div class="ph" style="height:200px;display:grid;place-items:center"><svg style="width:140px;height:126px"><use href="#teephoto"/></svg></div><div class="t12 muted" style="margin-top:6px;text-align:center">Your photo</div></div>
+        <div class="a" style="left:203px;top:108px;width:171px"><div class="sky" style="height:200px;overflow:hidden;display:grid;place-items:center"><svg viewBox="10 0 140 190" style="width:150px;height:200px"><use href="#avatar" width="160" height="300"/></svg></div><div class="t12 muted" style="margin-top:6px;text-align:center">On your avatar</div></div>
+        <div class="a lbl" style="left:18px;top:348px">Colors</div>
+        <div class="a row" style="left:16px;top:370px;gap:20px"><div class="row"><span class="sw" style="background:#3d4a66"></span><div class="t13"><b>Base</b><div class="link t12">Change</div></div></div><div class="row"><span class="sw" style="background:#c8372d"></span><div class="t13"><b>Print</b><div class="link t12">Change</div></div></div></div>
+        <div class="a lbl" style="left:18px;top:436px">Name</div>
+        <div class="a input" style="left:16px;top:458px;width:358px">Navy graphic tee</div>
+        <div class="a lbl" style="left:18px;top:526px">Suits</div>
+        <div class="a row" style="left:16px;top:548px;gap:8px"><span class="chip">Hot</span><span class="chip">Warm</span><span class="t12 muted">from its type</span></div>
+        <div class="a btn pri" style="left:16px;right:16px;top:756px">Save to closet</div>
+        <div class="home"></div>
+        <span class="n" style="left:8px;top:100px">1</span><span class="n" style="left:195px;top:100px">2</span><span class="n" style="left:82px;top:342px">3</span><span class="n" style="left:64px;top:430px">4</span><span class="n" style="left:70px;top:520px">5</span><span class="n" style="left:8px;top:748px">6</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>The cut-out photo</b><span class="tag p">Proposed</span></div><p>Exactly what you photographed. It's shown in "Wearing" on Today.</p></li>
+        <li><div><b>The avatar's version</b><span class="tag p">Proposed</span></div><p>The drawn template filled with the sampled colors. This is what the avatar wears.</p></li>
+        <li><div><b>Colors</b><span class="tag p">Proposed</span></div><p>Sampled automatically, and you can change them.</p></li>
+        <li><div><b>Name</b><span class="tag p">Proposed</span></div><p>Suggested from color and type, and you can edit it.</p></li>
+        <li><div><b>Weather it suits</b><span class="tag p">Proposed</span></div><p>Comes from the garment type, per research. Shown for transparency.</p></li>
+        <li><div><b>Save</b><span class="tag p">Proposed</span></div><p>Saved only on this phone. Then it returns to the Closet with the new item on the rack.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- P5 Item detail -->
+  <div class="fit"><section class="board" id="phone-05-item-detail">
+    <header class="board-head"><span class="code">P5</span><h2>Item detail, with delete confirmation</h2></header>
+    <div class="board-body">
+      <div class="frame phone">
+        <div class="status">9:41<i></i></div>
+        <div class="a row t15 b" style="left:10px;top:52px;height:44px"><svg class="ico"><use href="#i-back"/></svg>Closet</div>
+        <div class="a ph" style="left:16px;top:104px;width:358px;height:290px;display:grid;place-items:center"><svg style="width:230px;height:207px"><use href="#teephoto"/></svg></div>
+        <div class="a" style="left:18px;top:410px"><div class="t24 xb">Navy graphic tee</div></div>
+        <div class="a t14" style="left:18px;top:452px;width:354px;display:grid;grid-template-columns:80px 1fr;row-gap:10px;align-items:center">
+          <span class="muted">Type</span><span>Tee</span>
+          <span class="muted">Colors</span><span class="row" style="gap:6px"><span class="sw" style="width:24px;height:24px;border-radius:6px;background:#3d4a66"></span><span class="sw" style="width:24px;height:24px;border-radius:6px;background:#c8372d"></span></span>
+          <span class="muted">Suits</span><span>Hot, Warm</span>
+        </div>
+        <div class="a btn sm" style="left:16px;top:560px;width:171px"><svg class="ico s"><use href="#i-edit"/></svg>Edit</div>
+        <div class="a btn sm" style="left:203px;top:560px;width:171px"><svg class="ico s"><use href="#i-trash"/></svg>Delete</div>
+        <div class="dim"></div>
+        <div class="sheet" style="height:250px;padding:22px 16px">
+          <div class="t20 xb">Delete Navy graphic tee?</div>
+          <div class="t14 muted" style="margin-top:6px">It's removed from this phone. This can't be undone.</div>
+          <div class="a btn" style="left:16px;top:160px;width:171px">Cancel</div>
+          <div class="a btn pri" style="left:203px;top:160px;width:171px">Delete</div>
+        </div>
+        <div class="home" style="background:var(--ink)"></div>
+        <span class="n" style="left:8px;top:98px">1</span><span class="n" style="left:356px;top:446px">2</span><span class="n" style="left:8px;top:554px">3</span><span class="n" style="left:8px;top:588px">4</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Item photo</b><span class="tag p">Proposed</span></div><p>Opened from the Closet, or from "Wearing" on Today.</p></li>
+        <li><div><b>Details</b><span class="tag p">Proposed</span></div><p>Type, colors and the weather it suits.</p></li>
+        <li><div><b>Edit and Delete</b><span class="tag p">Proposed</span></div><p>Edit reopens the confirm step (P4d). Research requires that every item can be deleted.</p></li>
+        <li><div><b>Confirmation step</b><span class="tag p">Proposed</span></div><p>Built into the page, because deleting is permanent.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- P6 Info -->
+  <div class="fit"><section class="board" id="phone-06-info">
+    <header class="board-head"><span class="code">P6</span><h2>Info</h2></header>
+    <div class="board-body">
+      <div class="frame phone">
+        <div class="status">9:41<i></i></div>
+        <div class="a row t15 b" style="left:10px;top:52px;height:44px"><svg class="ico"><use href="#i-back"/></svg>Today</div>
+        <div class="a t28 xb" style="left:18px;top:98px">About</div>
+        <div class="a col t13" style="left:18px;top:146px;width:354px;gap:12px">
+          <div><div class="lbl">Made by</div><div>RG Sureshkumar</div></div>
+          <div><div class="lbl">Data sources</div><div>Weather: Open-Meteo.com, CC BY 4.0, from NOAA models. Place names: © OpenStreetMap contributors, ODbL.</div></div>
+          <div><div class="lbl">How outfits are picked</div>
+            <div style="display:grid;grid-template-columns:90px 1fr;row-gap:2px;margin:4px 0"><b>Hot</b><span>feels like 85°F or more</span><b>Warm</b><span>70–84°F</span><b>Chilly</b><span>55–69°F</span><b>Cold</b><span>35–54°F</span><b>Freezing</b><span>below 35°F</span></div>
+            <div class="muted">From the warmest feels-like hour, 9 am–9 pm. Reminders follow NWS, EPA and CDC guidance.</div></div>
+          <div><div class="lbl">Privacy</div><div>Only your latest location is saved, on this device. Photos and your closet stay on this device. Your selfie is read here and not kept. No accounts, cookies or tracking.</div></div>
+          <div><div class="lbl">Credits</div><div>Original artwork for this project. Google MediaPipe (Apache 2.0). Monk Skin Tone Scale (CC BY 4.0).</div></div>
+          <div class="btn sm" style="margin-top:2px"><svg class="ico s"><use href="#i-trash"/></svg>Delete all my data</div>
+        </div>
+        <div class="tabs"><div class="tab on"><span><svg class="ico"><use href="#i-person"/></svg></span>Today</div><div class="tab"><span><svg class="ico"><use href="#i-rack"/></svg></span>Closet</div><div class="tab"><span><svg class="ico"><use href="#i-camera"/></svg></span>Add item</div></div>
+        <div class="home"></div>
+        <span class="n" style="left:356px;top:56px">1</span><span class="n" style="left:356px;top:146px">2</span><span class="n" style="left:356px;top:264px">3</span><span class="n" style="left:356px;top:478px">4</span><span class="n" style="left:352px;top:596px">5</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Back to Today</b><span class="tag p">Proposed</span></div><p>Opened from the Info button on Today. The tabs stay visible.</p></li>
+        <li><div><b>Creator and data source</b><span class="tag p">Proposed</span></div><p>Required by the brief. Includes the Open-Meteo license.</p></li>
+        <li><div><b>Methods and sources</b><span class="tag p">Proposed</span></div><p>The five bands and reminder rules, with links to the sources in research.md.</p></li>
+        <li><div><b>Privacy and credits</b><span class="tag p">Proposed</span></div><p>Location, photos, selfie, both services' log retention and every license (R34, R36).</p></li>
+        <li><div><b>Delete all my data</b><span class="tag p">Proposed</span></div><p>Clears the location, avatar, closet and saved picks after an in-page confirmation, then restarts setup (R35).</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- P7 Setup: selfie -->
+  <div class="fit"><section class="board" id="phone-07-setup-selfie">
+    <header class="board-head"><span class="code">P7</span><h2>First setup, take a selfie</h2></header>
+    <div class="board-body">
+      <div class="frame phone">
+        <div class="status">9:41<i></i></div>
+        <div class="a row" style="left:18px;top:60px;gap:6px"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="t12 muted" style="margin-left:6px">Step 1 of 3</span></div>
+        <div class="a t28 xb" style="left:18px;top:92px">Make your avatar</div>
+        <div class="a t15 muted" style="left:18px;top:134px;width:340px">Take a selfie and the app matches your skin tone and hair. You can adjust it next.</div>
+        <div class="a" style="left:75px;top:212px;width:240px;height:240px;border-radius:50%;border:2.5px dashed var(--ink-2);overflow:hidden;background:var(--fill)"><svg viewBox="10 0 140 160" style="width:100%;height:100%;margin-top:30px"><use href="#avatar" width="160" height="300"/></svg></div>
+        <div class="a row t13 muted" style="left:30px;right:30px;top:476px;justify-content:center;text-align:center;gap:6px"><svg class="ico s"><use href="#i-lock"/></svg>Read on this phone. Not uploaded or saved.</div>
+        <div class="a btn pri" style="left:16px;right:16px;top:640px"><svg class="ico"><use href="#i-camera"/></svg>Take a selfie</div>
+        <div class="a btn" style="left:16px;right:16px;top:702px"><svg class="ico"><use href="#i-image"/></svg>Choose a photo</div>
+        <div class="a link" style="left:0;right:0;top:770px;text-align:center">Set it up by hand</div>
+        <div class="home"></div>
+        <span class="n" style="left:146px;top:56px">1</span><span class="n" style="left:300px;top:206px">2</span><span class="n" style="left:22px;top:470px">3</span><span class="n" style="left:8px;top:632px">4</span><span class="n" style="left:100px;top:766px">5</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>First-run steps</b><span class="tag p">Proposed</span></div><p>1 selfie, 2 review the avatar, 3 location (P2). Then Today.</p></li>
+        <li><div><b>Face guide</b><span class="tag p">Proposed</span></div><p>Shows how to frame the photo: head and shoulders, hair visible.</p></li>
+        <li><div><b>Privacy promise</b><span class="tag p">Proposed</span></div><p>Matches the test: the selfie is read on the device and then discarded.</p></li>
+        <li><div><b>Take or choose</b><span class="tag p">Proposed</span></div><p>"Take a selfie" opens the front camera. "Choose a photo" uses one you already have.</p></li>
+        <li><div><b>Set it up by hand</b><span class="tag p">Proposed</span></div><p>Skips the photo and goes to P8 with defaults. Also used when no face is found.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- P8 Setup: review -->
+  <div class="fit"><section class="board" id="phone-08-setup-review">
+    <header class="board-head"><span class="code">P8</span><h2>First setup, review the avatar</h2></header>
+    <div class="board-body">
+      <div class="frame phone">
+        <div class="status">9:41<i></i></div>
+        <div class="a row" style="left:18px;top:60px;gap:6px"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="t12 muted" style="margin-left:6px">Step 2 of 3</span></div>
+        <div class="a t24 xb" style="left:18px;top:90px">Does this look like you?</div>
+        <div class="a sky" style="left:115px;top:128px;width:160px;height:160px;overflow:hidden"><svg viewBox="10 0 140 160" style="width:160px;height:183px"><use href="#avatar" width="160" height="300"/></svg></div>
+        <div class="a" style="left:290px;top:132px;width:56px;height:56px;border-radius:50%;background:var(--fill-2);border:2px solid #fff;box-shadow:0 0 0 1.5px var(--wire)"></div>
+        <div class="a lbl" style="left:18px;top:300px">Skin tone</div>
+        <div class="a" style="left:16px;top:318px;display:grid;grid-template-columns:repeat(5,44px);gap:8px 26px"><span class="sw" style="background:#f6ede4"></span><span class="sw" style="background:#f3e7db"></span><span class="sw" style="background:#f7ead0"></span><span class="sw" style="background:#eadaba"></span><span class="sw" style="background:#d7bd96"></span><span class="sw" style="background:#a07e56"></span><span class="sw on" style="background:#825c43"></span><span class="sw" style="background:#604134"></span><span class="sw" style="background:#3a312a"></span><span class="sw" style="background:#292420"></span></div>
+        <div class="a lbl" style="left:18px;top:424px">Hair color</div>
+        <div class="a" style="left:16px;top:442px;display:grid;grid-template-columns:repeat(8,38px);gap:6px"><span class="sw" style="width:38px;height:38px;background:#1d1a18"></span><span class="sw on" style="width:38px;height:38px;background:#3b2a20"></span><span class="sw" style="width:38px;height:38px;background:#61402b"></span><span class="sw" style="width:38px;height:38px;background:#8c6443"></span><span class="sw" style="width:38px;height:38px;background:#c9a467"></span><span class="sw" style="width:38px;height:38px;background:#e2d5b5"></span><span class="sw" style="width:38px;height:38px;background:#8a3a20"></span><span class="sw" style="width:38px;height:38px;background:#9b9a96"></span></div>
+        <div class="a lbl" style="left:18px;top:496px">Hairstyle</div>
+        <div class="a row scroll" style="left:16px;right:0;top:514px;gap:6px;overflow:hidden"><span class="chip">Bald</span><span class="chip">Buzz</span><span class="chip on">Short crop</span><span class="chip">Short curls or coils</span><span class="chip">Afro</span><span class="chip">Medium straight</span><span class="chip">Medium curly</span><span class="chip">Long straight</span><span class="chip">Long curly</span><span class="chip">Braids or locs</span><span class="chip">Bun or ponytail</span></div>
+        <div class="a lbl" style="left:18px;top:566px">Facial hair</div>
+        <div class="a row" style="left:16px;top:584px;width:228px;gap:6px"><span class="seg">None</span><span class="seg on">Stubble</span><span class="seg">Beard</span></div>
+        <div class="a lbl" style="left:262px;top:566px">Glasses</div>
+        <div class="a row" style="left:262px;top:584px;width:112px;gap:6px"><span class="seg on">Off</span><span class="seg">On</span></div>
+        <div class="a btn" style="left:16px;top:756px;width:120px">Retake</div>
+        <div class="a btn pri" style="left:148px;right:16px;top:756px">Looks good</div>
+        <div class="home"></div>
+        <span class="n" style="left:106px;top:120px">1</span><span class="n" style="left:340px;top:124px">2</span><span class="n" style="left:94px;top:294px">3</span><span class="n" style="left:94px;top:490px">4</span><span class="n" style="left:108px;top:560px">5</span><span class="n" style="left:8px;top:748px">6</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Avatar preview</b><span class="tag p">Proposed</span></div><p>Updates as you adjust. Pre-filled from the selfie, as in the selfie test.</p></li>
+        <li><div><b>Selfie thumbnail</b><span class="tag p">Proposed</span></div><p>Shown for comparison during setup only, then discarded.</p></li>
+        <li><div><b>Skin tone and hair color</b><span class="tag p">Proposed</span></div><p>Monk Skin Tone Scale and eight hair colors, with the closest match pre-selected.</p></li>
+        <li><div><b>Hairstyle</b><span class="tag p">Proposed</span></div><p>11 named styles in a row that scrolls sideways. The hair length read from the selfie pre-selects the closest one.</p></li>
+        <li><div><b>Facial hair and glasses</b><span class="tag p">Proposed</span></div><p>Not detected from the photo, so you choose: none, stubble or beard; glasses off or on.</p></li>
+        <li><div><b>Retake or continue</b><span class="tag p">Proposed</span></div><p>"Looks good" goes on to location (P2). The same screen opens later from "Edit avatar" in the Closet.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <h2 class="section-title">Laptop · 1280 × 800</h2>
+
+  <!-- L1 Today -->
+  <div class="fit"><section class="board lap" id="laptop-01-today">
+    <header class="board-head"><span class="code">L1</span><h2>Today</h2></header>
+    <div class="board-body">
+      <div class="frame laptop">
+        <div class="lbar"><span class="logo">Quick Dresser</span><span class="ltab on"><svg class="ico s"><use href="#i-person"/></svg>Today</span><span class="ltab"><svg class="ico s"><use href="#i-rack"/></svg>Closet</span><span class="ltab"><svg class="ico s"><use href="#i-camera"/></svg>Add item</span><span style="flex:1"></span><span class="pill"><svg class="ico s"><use href="#i-pin"/></svg>Austin, TX<svg class="ico s"><use href="#i-chev"/></svg></span><span class="circle"><svg class="ico"><use href="#i-info"/></svg></span></div>
+        <div class="a box" style="left:24px;top:88px;width:300px;height:176px;padding:16px 18px">
+          <div class="row t14"><b>Saturday, Oct 3</b><span class="chip on" style="height:24px;padding:0 8px;font-size:11px">Now</span></div>
+          <div class="row" style="margin-top:10px;gap:14px"><svg class="ico" style="width:60px;height:60px;stroke-width:1.3"><use href="#i-sun"/></svg><div><div class="xb" style="font-size:44px;line-height:1">91°F</div><div class="t13 muted">Feels like 96° · Sunny</div></div></div>
+          <div class="t12 muted" style="margin-top:12px">Updated 7:42 am · Open-Meteo.com</div>
+        </div>
+        <div class="a lbl" style="left:28px;top:284px">This week</div>
+        <div class="a col" style="left:24px;top:304px;width:300px;gap:4px">
+          <div class="wrow on"><b>Sat 3</b><svg class="ico s"><use href="#i-sun"/></svg><span>91° / 77°</span><span class="t12">10%</span></div>
+          <div class="wrow"><b>Sun 4</b><svg class="ico s"><use href="#i-sun"/></svg><span>92° / 78°</span><span class="t12 muted">5%</span></div>
+          <div class="wrow"><b>Mon 5</b><svg class="ico s"><use href="#i-suncloud"/></svg><span>88° / 75°</span><span class="t12 muted">40%</span></div>
+          <div class="wrow"><b>Tue 6</b><svg class="ico s"><use href="#i-rain"/></svg><span>79° / 66°</span><span class="t12 muted">70%</span></div>
+          <div class="wrow"><b>Wed 7</b><svg class="ico s"><use href="#i-cloud"/></svg><span>74° / 58°</span><span class="t12 muted">10%</span></div>
+          <div class="wrow"><b>Thu 8</b><svg class="ico s"><use href="#i-sun"/></svg><span>76° / 57°</span><span class="t12 muted">0%</span></div>
+          <div class="wrow"><b>Fri 9</b><svg class="ico s"><use href="#i-sun"/></svg><span>80° / 60°</span><span class="t12 muted">0%</span></div>
+        </div>
+        <div class="a sky" style="left:348px;top:88px;width:584px;height:620px"></div>
+        <svg class="a" style="left:480px;top:110px;width:320px;height:600px"><use href="#avatar"/></svg>
+        <div class="a btn" style="left:560px;top:724px;width:160px;height:48px;border:2px solid var(--ink)"><svg class="ico"><use href="#i-shuffle"/></svg>Shuffle</div>
+        <div class="a box" style="left:956px;top:88px;width:300px;height:150px;padding:16px">
+          <div class="t20 xb">Hot all day</div>
+          <div class="t13 muted" style="margin-top:6px">Feels like 96° by 3 pm with strong sun. Your navy tee and khaki shorts keep you cool, so skip the jacket.</div>
+        </div>
+        <div class="a lbl" style="left:960px;top:256px">Bring along</div>
+        <div class="a col t13" style="left:956px;top:276px;width:300px;gap:8px">
+          <div class="row" style="align-items:flex-start"><span class="ph" style="width:36px;height:36px;display:grid;place-items:center;flex:none"><svg class="ico s"><use href="#i-sunscreen"/></svg></span><div><b>Sunscreen.</b> <span class="muted">UV reaches 9 at noon. Put on SPF 15+ before you leave.</span></div></div>
+          <div class="row" style="align-items:flex-start"><span class="ph" style="width:36px;height:36px;display:grid;place-items:center;flex:none"><svg class="ico s"><use href="#i-water"/></svg></span><div><b>Water bottle.</b> <span class="muted">It feels like 96° this afternoon. Drink before you're thirsty.</span></div></div>
+        </div>
+        <div class="a lbl" style="left:960px;top:420px">Wearing</div>
+        <div class="a col" style="left:956px;top:440px;width:300px;gap:8px">
+          <div class="row"><span class="tile" style="width:56px;height:56px"><svg class="ico l"><use href="#i-tee"/></svg></span><div class="t14"><b>Navy graphic tee</b><div class="t12 muted">Your closet</div></div></div>
+          <div class="row"><span class="tile" style="width:56px;height:56px"><svg class="ico l"><use href="#i-shorts"/></svg></span><div class="t14"><b>Khaki shorts</b><div class="t12 muted">Your closet</div></div></div>
+          <div class="row"><span class="tile" style="width:56px;height:56px"><svg class="ico l"><use href="#i-sneaker"/></svg></span><div class="t14"><b>White sneakers</b><div class="t12 muted">Starter item</div></div></div>
+        </div>
+        <div class="a t12 muted" style="left:956px;top:744px;width:300px">Weather data by Open-Meteo.com (CC BY 4.0)</div>
+        <span class="n" style="left:150px;top:8px">1</span><span class="n" style="left:1000px;top:6px">2</span><span class="n" style="left:14px;top:80px">3</span><span class="n" style="left:14px;top:296px">4</span><span class="n" style="left:340px;top:80px">5</span><span class="n" style="left:550px;top:716px">6</span><span class="n" style="left:946px;top:80px">7</span><span class="n" style="left:946px;top:432px">8</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Tabs in a top bar</b><span class="tag p">Proposed</span></div><p>Same three sections as the phone, with the app name, Quick Dresser, on the left.</p></li>
+        <li><div><b>Location and Info</b><span class="tag p">Proposed</span></div><p>Top right. Reach isn't a concern on a laptop.</p></li>
+        <li><div><b>Current conditions</b><span class="tag p">Proposed</span></div><p>Date, "Now" or "Forecast", °F, feels-like, source and update time.</p></li>
+        <li><div><b>The week as a list</b><span class="tag p">Proposed</span></div><p>Uses the extra space for highs, lows and rain chance. Click a day, or use the arrow keys.</p></li>
+        <li><div><b>Avatar in the center</b><span class="tag p">Proposed</span></div><p>Per research: the focus, larger than on the phone.</p></li>
+        <li><div><b>Shuffle</b><span class="tag p">Proposed</span></div><p>Under the avatar it changes.</p></li>
+        <li><div><b>Recommendation and reminders</b><span class="tag p">Proposed</span></div><p>Full wording is always visible, with no scrolling.</p></li>
+        <li><div><b>Wearing</b><span class="tag d">Drawn</span></div><p>The phone sketch's item column, with names and where each item comes from.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- L2 Location -->
+  <div class="fit"><section class="board lap" id="laptop-02-location">
+    <header class="board-head"><span class="code">L2</span><h2>Location setup</h2></header>
+    <div class="board-body">
+      <div class="frame laptop">
+        <svg class="a" style="left:0;top:64px;width:1280px;height:736px" viewBox="0 0 400 230" preserveAspectRatio="xMidYMid slice"><use href="#map" width="400" height="800" y="-200"/></svg>
+        <div class="lbar"><span class="logo">Quick Dresser</span><span class="ltab on"><svg class="ico s"><use href="#i-person"/></svg>Today</span><span class="ltab"><svg class="ico s"><use href="#i-rack"/></svg>Closet</span><span class="ltab"><svg class="ico s"><use href="#i-camera"/></svg>Add item</span><span style="flex:1"></span><span class="pill"><svg class="ico s"><use href="#i-pin"/></svg>Austin, TX<svg class="ico s"><use href="#i-chev"/></svg></span><span class="circle"><svg class="ico"><use href="#i-info"/></svg></span></div>
+        <div class="a box" style="left:420px;top:180px;width:440px;padding:22px;display:grid;gap:10px;box-shadow:0 14px 40px rgba(0,0,0,.1)">
+          <div class="row" style="justify-content:space-between"><div class="t24 xb">Where are you?</div><span class="circle"><svg class="ico"><use href="#i-close"/></svg></span></div>
+          <div class="input"><svg class="ico s"><use href="#i-search"/></svg>Austin<span style="width:1.5px;height:20px;background:var(--ink)"></span></div>
+          <div class="col t14" style="gap:2px"><div style="background:var(--fill);border-radius:10px;padding:11px 12px"><b>Austin, Texas</b></div><div style="padding:11px 12px">Austin, Minnesota</div><div style="padding:11px 12px">Austin, Arkansas</div></div>
+          <div class="row t12 muted" style="gap:8px"><span style="flex:1;height:1px;background:var(--wire)"></span>or<span style="flex:1;height:1px;background:var(--wire)"></span></div>
+          <div class="btn"><svg class="ico"><use href="#i-pin"/></svg>Use my location</div>
+          <div class="t12 muted">US cities and ZIP codes only.</div>
+        </div>
+        <span class="n" style="left:40px;top:90px">1</span><span class="n" style="left:410px;top:172px">2</span><span class="n" style="left:410px;top:234px">3</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Map background</b><span class="tag d">Drawn</span></div><p>Same decorative map as the phone, filling the wider window.</p></li>
+        <li><div><b>Dialog</b><span class="tag d">Drawn</span></div><p>The phone card, centered. Close, the Escape key, or clicking outside dismisses it after first setup.</p></li>
+        <li><div><b>Keyboard first</b><span class="tag p">Proposed</span></div><p>The cursor starts in the field. Arrow keys move through matches and Enter picks one.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- L3 Closet + item -->
+  <div class="fit"><section class="board lap" id="laptop-03-closet-detail">
+    <header class="board-head"><span class="code">L3</span><h2>Closet with item detail</h2></header>
+    <div class="board-body">
+      <div class="frame laptop">
+        <div class="lbar"><span class="logo">Quick Dresser</span><span class="ltab"><svg class="ico s"><use href="#i-person"/></svg>Today</span><span class="ltab on"><svg class="ico s"><use href="#i-rack"/></svg>Closet</span><span class="ltab"><svg class="ico s"><use href="#i-camera"/></svg>Add item</span><span style="flex:1"></span><span class="pill"><svg class="ico s"><use href="#i-pin"/></svg>Austin, TX<svg class="ico s"><use href="#i-chev"/></svg></span><span class="circle"><svg class="ico"><use href="#i-info"/></svg></span></div>
+        <div class="a t28 xb" style="left:24px;top:84px">Closet</div>
+        <div class="a pill" style="left:752px;top:82px;font-size:14px"><svg class="ico s"><use href="#i-person"/></svg>Edit avatar</div>
+        <div class="a box" style="left:24px;top:138px;width:876px;height:150px">
+          <div class="a" style="left:355px;top:4px;width:166px;display:flex;justify-content:space-around;align-items:flex-end;border-bottom:2px solid #7d8591;padding-bottom:2px;color:#7d8591"><svg class="ico"><use href="#i-cap"/></svg><svg class="ico"><use href="#i-folded"/></svg><svg class="ico"><use href="#i-umbrella"/></svg></div>
+          <svg class="a" style="left:120px;top:24px;width:640px;height:124px" viewBox="0 0 320 150" preserveAspectRatio="xMidYMid meet"><use href="#rack"/></svg>
+        </div>
+        <div class="a lbl" style="left:28px;top:304px">Tops · 5</div>
+        <div class="a" style="left:24px;top:324px;width:876px;display:grid;grid-template-columns:repeat(6,1fr);gap:16px">
+          <div class="tile sel" style="height:126px"><svg class="ico l" style="width:56px;height:56px"><use href="#i-tee"/></svg></div>
+          <div class="tile" style="height:126px"><span class="badge">Starter</span><svg class="ico l" style="width:56px;height:56px"><use href="#i-tee"/></svg></div>
+          <div class="tile" style="height:126px"><svg class="ico l" style="width:56px;height:56px"><use href="#i-buttonup"/></svg></div>
+          <div class="tile" style="height:126px"><svg class="ico l" style="width:56px;height:56px"><use href="#i-longsleeve"/></svg></div>
+          <div class="tile" style="height:126px"><svg class="ico l" style="width:56px;height:56px"><use href="#i-hoodie"/></svg></div>
+        </div>
+        <div class="a lbl" style="left:28px;top:470px">Pants · 3</div>
+        <div class="a" style="left:24px;top:490px;width:876px;display:grid;grid-template-columns:repeat(6,1fr);gap:16px">
+          <div class="tile" style="height:126px"><svg class="ico l" style="width:56px;height:56px"><use href="#i-pants"/></svg></div>
+          <div class="tile" style="height:126px"><svg class="ico l" style="width:56px;height:56px"><use href="#i-shorts"/></svg></div>
+          <div class="tile" style="height:126px"><svg class="ico l" style="width:56px;height:56px"><use href="#i-skirt"/></svg></div>
+        </div>
+        <div class="a lbl" style="left:28px;top:636px">Outer layers · 2</div>
+        <div class="a" style="left:24px;top:656px;width:876px;display:grid;grid-template-columns:repeat(6,1fr);gap:16px"><div class="tile" style="height:126px"><svg class="ico l" style="width:56px;height:56px"><use href="#i-jacket"/></svg></div><div class="tile" style="height:126px"><svg class="ico l" style="width:56px;height:56px"><use href="#i-rainjacket"/></svg></div></div>
+        <div class="a box" style="left:924px;top:84px;width:332px;height:692px;padding:16px;display:grid;align-content:start;gap:12px">
+          <div class="ph" style="height:250px;display:grid;place-items:center"><svg style="width:220px;height:198px"><use href="#teephoto"/></svg></div>
+          <div class="t24 xb">Navy graphic tee</div>
+          <div class="t14" style="display:grid;grid-template-columns:70px 1fr;row-gap:10px;align-items:center"><span class="muted">Type</span><span>Tee</span><span class="muted">Colors</span><span class="row" style="gap:6px"><span class="sw" style="width:24px;height:24px;border-radius:6px;background:#3d4a66"></span><span class="sw" style="width:24px;height:24px;border-radius:6px;background:#c8372d"></span></span><span class="muted">Suits</span><span>Hot, Warm</span><span class="muted">Added</span><span>Oct 3</span></div>
+          <div class="row" style="margin-top:8px"><div class="btn sm" style="flex:1"><svg class="ico s"><use href="#i-edit"/></svg>Edit</div><div class="btn sm" style="flex:1"><svg class="ico s"><use href="#i-trash"/></svg>Delete</div></div>
+        </div>
+        <span class="n" style="left:14px;top:130px">1</span><span class="n" style="left:390px;top:132px">2</span><span class="n" style="left:14px;top:316px">3</span><span class="n" style="left:914px;top:76px">4</span><span class="n" style="left:744px;top:72px">5</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Rack header</b><span class="tag d">Drawn</span></div><p>Same as the phone, wider.</p></li>
+        <li><div><b>Shelf of closet things</b><span class="tag d">Drawn</span></div><p>Decoration, as on the phone.</p></li>
+        <li><div><b>Wider grids</b><span class="tag p">Proposed</span></div><p>Six items per row instead of three.</p></li>
+        <li><div><b>Item detail beside the grid</b><span class="tag p">Proposed</span></div><p>Replaces the phone's separate detail screen (P5), so you can browse and inspect side by side. Delete still asks to confirm.</p></li>
+        <li><div><b>Edit avatar</b><span class="tag p">Proposed</span></div><p>Same entry point as the phone.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- L4 Add item -->
+  <div class="fit"><section class="board lap" id="laptop-04-add-item">
+    <header class="board-head"><span class="code">L4</span><h2>Add item, all steps on one screen</h2></header>
+    <div class="board-body">
+      <div class="frame laptop">
+        <div class="lbar"><span class="logo">Quick Dresser</span><span class="ltab"><svg class="ico s"><use href="#i-person"/></svg>Today</span><span class="ltab"><svg class="ico s"><use href="#i-rack"/></svg>Closet</span><span class="ltab on"><svg class="ico s"><use href="#i-camera"/></svg>Add item</span><span style="flex:1"></span><span class="pill"><svg class="ico s"><use href="#i-pin"/></svg>Austin, TX<svg class="ico s"><use href="#i-chev"/></svg></span><span class="circle"><svg class="ico"><use href="#i-info"/></svg></span></div>
+        <div class="a" style="left:24px;top:88px;width:672px;height:620px;border-radius:18px;background:#dfe3e8;overflow:hidden">
+          <div class="a chip" style="left:50%;transform:translateX(-50%);top:16px;background:#fff">Click the item to cut it out</div>
+          <svg class="a" style="left:176px;top:150px;width:320px;height:288px"><use href="#teephoto"/></svg>
+          <svg class="a" style="left:171px;top:145px;width:330px;height:298px" viewBox="-4 -4 208 188"><path d="M60 10 L20 34 L36 70 L58 60 L58 170 L142 170 L142 60 L164 70 L180 34 L140 10 C132 26 118 34 100 34 C82 34 68 26 60 10 Z" fill="none" stroke="#23272e" stroke-width="2.4" stroke-dasharray="7 5"/></svg>
+        </div>
+        <div class="a row" style="left:24px;top:724px;gap:10px"><div class="btn sm" style="padding:0 16px"><svg class="ico s"><use href="#i-upload"/></svg>Choose another photo</div><div class="btn sm" style="padding:0 16px"><svg class="ico s"><use href="#i-camera"/></svg>Use camera</div></div>
+        <div class="a" style="left:724px;top:88px;width:532px;display:grid;gap:14px">
+          <div class="row t15"><span class="circle" style="width:28px;height:28px;background:var(--ink);color:#fff;border:0"><svg class="ico s"><use href="#i-check"/></svg></span><b>Cut out</b><span class="muted t13">Done</span></div>
+          <div class="row t15"><span class="circle" style="width:28px;height:28px;font-weight:700">2</span><b>What is it?</b></div>
+          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px">
+            <div class="tile sel" style="height:72px"><svg class="ico"><use href="#i-tee"/></svg><span class="t11 b">Tee</span></div><div class="tile" style="height:72px"><svg class="ico"><use href="#i-buttonup"/></svg><span class="t11 b">Button-up</span></div><div class="tile" style="height:72px"><svg class="ico"><use href="#i-longsleeve"/></svg><span class="t11 b">Long sleeve</span></div><div class="tile" style="height:72px"><svg class="ico"><use href="#i-hoodie"/></svg><span class="t11 b">Hoodie</span></div><div class="tile" style="height:72px"><svg class="ico"><use href="#i-jacket"/></svg><span class="t11 b">Jacket</span></div><div class="tile" style="height:72px"><svg class="ico"><use href="#i-coat"/></svg><span class="t11 b">Coat</span></div>
+            <div class="tile" style="height:72px"><svg class="ico"><use href="#i-rainjacket"/></svg><span class="t11 b">Rain jacket</span></div><div class="tile" style="height:72px"><svg class="ico"><use href="#i-pants"/></svg><span class="t11 b">Pants</span></div><div class="tile" style="height:72px"><svg class="ico"><use href="#i-shorts"/></svg><span class="t11 b">Shorts</span></div><div class="tile" style="height:72px"><svg class="ico"><use href="#i-sneaker"/></svg><span class="t11 b">Sneakers</span></div><div class="tile" style="height:72px"><svg class="ico"><use href="#i-boot"/></svg><span class="t11 b">Boots</span></div><div class="tile" style="height:72px"><svg class="ico"><use href="#i-skirt"/></svg><span class="t11 b">Skirt</span></div>
+          </div>
+          <div class="row t15"><span class="circle" style="width:28px;height:28px;font-weight:700">3</span><b>Colors and name</b></div>
+          <div class="row" style="gap:16px;align-items:flex-start">
+            <div class="sky" style="width:150px;height:170px;overflow:hidden;flex:none"><svg viewBox="10 0 140 170" style="width:150px;height:182px"><use href="#avatar" width="160" height="300"/></svg></div>
+            <div class="col" style="flex:1;gap:10px">
+              <div class="row" style="gap:16px"><div class="row"><span class="sw" style="background:#3d4a66"></span><div class="t13"><b>Base</b><div class="link t12">Change</div></div></div><div class="row"><span class="sw" style="background:#c8372d"></span><div class="t13"><b>Print</b><div class="link t12">Change</div></div></div></div>
+              <div class="input">Navy graphic tee</div>
+              <div class="row" style="gap:8px"><span class="chip">Hot</span><span class="chip">Warm</span><span class="t12 muted">from its type</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="a btn pri" style="left:1076px;top:724px;width:180px">Save to closet</div>
+        <span class="n" style="left:14px;top:80px">1</span><span class="n" style="left:14px;top:716px">2</span><span class="n" style="left:700px;top:80px">3</span><span class="n" style="left:714px;top:520px">4</span><span class="n" style="left:1066px;top:716px">5</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Photo and cut-out</b><span class="tag p">Proposed</span></div><p>Laptop cameras face the user, so this starts with choosing or dropping a photo. Click the item to cut it out.</p></li>
+        <li><div><b>Camera as an option</b><span class="tag d">Drawn</span></div><p>The drawn camera flow remains available, but it's secondary on a laptop.</p></li>
+        <li><div><b>Steps side by side</b><span class="tag p">Proposed</span></div><p>Uses the wide screen: the phone's three steps (P4b–P4d) appear together.</p></li>
+        <li><div><b>Preview, colors, name, suits</b><span class="tag p">Proposed</span></div><p>Same content as P4d.</p></li>
+        <li><div><b>Save</b><span class="tag p">Proposed</span></div><p>Enabled once there's a cut-out and a type.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- L6 Info -->
+  <div class="fit"><section class="board lap" id="laptop-06-info">
+    <header class="board-head"><span class="code">L6</span><h2>Info</h2></header>
+    <div class="board-body">
+      <div class="frame laptop">
+        <div class="lbar"><span class="logo">Quick Dresser</span><span class="ltab"><svg class="ico s"><use href="#i-person"/></svg>Today</span><span class="ltab"><svg class="ico s"><use href="#i-rack"/></svg>Closet</span><span class="ltab"><svg class="ico s"><use href="#i-camera"/></svg>Add item</span><span style="flex:1"></span><span class="pill"><svg class="ico s"><use href="#i-pin"/></svg>Austin, TX<svg class="ico s"><use href="#i-chev"/></svg></span><span class="circle" style="background:var(--ink);color:#fff;border-color:var(--ink)"><svg class="ico"><use href="#i-info"/></svg></span></div>
+        <div class="a col t14" style="left:24px;top:96px;width:220px;gap:4px">
+          <div style="background:var(--fill);border-radius:10px;padding:10px 12px"><b>About</b></div><div style="padding:10px 12px">Weather data</div><div style="padding:10px 12px">How outfits are picked</div><div style="padding:10px 12px">Privacy</div><div style="padding:10px 12px">Credits</div><div style="padding:10px 12px">Your data</div>
+        </div>
+        <div class="a col t15" style="left:300px;top:92px;width:660px;gap:20px">
+          <div><div class="t28 xb">About</div><div class="muted" style="margin-top:4px">Made by RG Sureshkumar. A prototype that suggests what to wear from your own closet, based on the forecast.</div></div>
+          <div><div class="t20 b">Weather data</div><div class="muted" style="margin-top:4px">Open-Meteo.com, licensed CC BY 4.0. Current conditions and a 7-day forecast from NOAA models. Your rounded coordinates go to Open-Meteo, which deletes its logs after 90 days. Place names come from OpenStreetMap Nominatim (© OpenStreetMap contributors, ODbL), which keeps detailed logs for 180 days.</div></div>
+          <div><div class="t20 b">How outfits are picked</div>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px" class="t13"><div class="box" style="padding:10px"><b>Hot</b><div class="muted">≥ 85°F</div></div><div class="box" style="padding:10px"><b>Warm</b><div class="muted">70–84°F</div></div><div class="box" style="padding:10px"><b>Chilly</b><div class="muted">55–69°F</div></div><div class="box" style="padding:10px"><b>Cold</b><div class="muted">35–54°F</div></div><div class="box" style="padding:10px"><b>Freezing</b><div class="muted">&lt; 35°F</div></div></div>
+            <div class="muted t14" style="margin-top:8px">The band comes from the warmest feels-like hour between 9 am and 9 pm. Reminders: umbrella at 40% rain chance or more, sunscreen at UV 3 or more, water at a feels-like of 80° or more, plus layer, wind and snow rules. Sources: NWS, EPA, CDC.</div></div>
+          <div><div class="t20 b">Privacy</div><div class="muted" style="margin-top:4px">Only your latest location is saved, on this device. Your closet photos stay on this device, and you can delete any item. Your selfie is read here and not kept. No accounts, cookies or analytics.</div></div>
+          <div class="row"><div class="btn sm" style="padding:0 16px"><svg class="ico s"><use href="#i-trash"/></svg>Delete all my data</div><span class="t13 muted">Asks to confirm, then starts setup again.</span></div>
+        </div>
+        <span class="n" style="left:14px;top:88px">1</span><span class="n" style="left:290px;top:84px">2</span><span class="n" style="left:288px;top:600px">3</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Section list</b><span class="tag p">Proposed</span></div><p>Jumps to each part. Uses the width instead of one long column.</p></li>
+        <li><div><b>Readable column</b><span class="tag p">Proposed</span></div><p>Same content as P6, at a comfortable line length. Credits continue below.</p></li>
+        <li><div><b>Delete all my data</b><span class="tag p">Proposed</span></div><p>Same as the phone (R35).</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- L7 Setup: selfie -->
+  <div class="fit"><section class="board lap" id="laptop-07-setup-selfie">
+    <header class="board-head"><span class="code">L7</span><h2>First setup, take a selfie</h2></header>
+    <div class="board-body">
+      <div class="frame laptop">
+        <div class="lbar"><span class="logo">Quick Dresser</span><span style="flex:1"></span><span class="row" style="gap:6px"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="t13 muted" style="margin-left:6px">Step 1 of 3</span></span></div>
+        <div class="a box" style="left:190px;top:120px;width:900px;height:560px;padding:32px;display:grid;grid-template-columns:400px 1fr;gap:40px">
+          <div style="border-radius:18px;background:var(--fill);display:grid;place-items:center;position:relative"><div style="width:280px;height:280px;border-radius:50%;border:2.5px dashed var(--ink-2);overflow:hidden"><svg viewBox="10 0 140 160" style="width:100%;height:100%;margin-top:34px"><use href="#avatar" width="160" height="300"/></svg></div></div>
+          <div style="display:grid;align-content:center;gap:16px">
+            <div class="t28 xb">Make your avatar</div>
+            <div class="t15 muted">Take a selfie with your webcam or choose a photo. The app matches your skin tone and hair, and you can adjust it next.</div>
+            <div class="row t13 muted" style="gap:6px"><svg class="ico s"><use href="#i-lock"/></svg>Read on this device. Not uploaded or saved.</div>
+            <div class="btn pri"><svg class="ico"><use href="#i-camera"/></svg>Take a selfie</div>
+            <div class="btn"><svg class="ico"><use href="#i-image"/></svg>Choose a photo</div>
+            <div class="link" style="text-align:center">Set it up by hand</div>
+          </div>
+        </div>
+        <span class="n" style="left:180px;top:112px">1</span><span class="n" style="left:690px;top:112px">2</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Webcam preview</b><span class="tag p">Proposed</span></div><p>On a laptop, the live webcam fits in the page. The browser asks for camera permission. If it's denied, "Choose a photo" still works.</p></li>
+        <li><div><b>Same choices as the phone</b><span class="tag p">Proposed</span></div><p>Take, choose, or set up by hand. Same privacy promise.</p></li>
+      </ol>
+    </div>
+  </section></div>
+
+  <!-- L8 Setup: review -->
+  <div class="fit"><section class="board lap" id="laptop-08-setup-review">
+    <header class="board-head"><span class="code">L8</span><h2>First setup, review the avatar</h2></header>
+    <div class="board-body">
+      <div class="frame laptop">
+        <div class="lbar"><span class="logo">Quick Dresser</span><span style="flex:1"></span><span class="row" style="gap:6px"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="t13 muted" style="margin-left:6px">Step 2 of 3</span></span></div>
+        <div class="a t28 xb" style="left:120px;top:96px">Does this look like you?</div>
+        <div class="a" style="left:120px;top:160px;width:200px"><div class="ph" style="height:240px"></div><div class="t13 muted" style="margin-top:8px">Your selfie, for comparison</div><div class="link t14" style="margin-top:8px">Retake</div></div>
+        <div class="a sky" style="left:350px;top:160px;width:340px;height:520px;overflow:hidden"><svg style="position:absolute;left:40px;top:20px;width:260px;height:488px"><use href="#avatar"/></svg></div>
+        <div class="a" style="left:730px;top:160px;width:430px;display:grid;gap:10px">
+          <div class="lbl">Skin tone</div>
+          <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:6px"><span class="sw" style="width:auto;background:#f6ede4"></span><span class="sw" style="width:auto;background:#f3e7db"></span><span class="sw" style="width:auto;background:#f7ead0"></span><span class="sw" style="width:auto;background:#eadaba"></span><span class="sw" style="width:auto;background:#d7bd96"></span><span class="sw" style="width:auto;background:#a07e56"></span><span class="sw on" style="width:auto;background:#825c43"></span><span class="sw" style="width:auto;background:#604134"></span><span class="sw" style="width:auto;background:#3a312a"></span><span class="sw" style="width:auto;background:#292420"></span></div>
+          <div class="lbl" style="margin-top:6px">Hair color</div>
+          <div style="display:grid;grid-template-columns:repeat(8,44px);gap:8px"><span class="sw" style="background:#1d1a18"></span><span class="sw on" style="background:#3b2a20"></span><span class="sw" style="background:#61402b"></span><span class="sw" style="background:#8c6443"></span><span class="sw" style="background:#c9a467"></span><span class="sw" style="background:#e2d5b5"></span><span class="sw" style="background:#8a3a20"></span><span class="sw" style="background:#9b9a96"></span></div>
+          <div class="lbl" style="margin-top:6px">Hairstyle</div>
+          <div class="row" style="flex-wrap:wrap;gap:6px"><span class="chip">Bald</span><span class="chip">Buzz</span><span class="chip on">Short crop</span><span class="chip">Short curls or coils</span><span class="chip">Afro</span><span class="chip">Medium straight</span><span class="chip">Medium curly</span><span class="chip">Long straight</span><span class="chip">Long curly</span><span class="chip">Braids or locs</span><span class="chip">Bun or ponytail</span></div>
+          <div class="row" style="gap:24px;margin-top:6px;align-items:flex-start"><div class="col" style="flex:1"><div class="lbl">Facial hair</div><div class="row" style="gap:6px"><span class="seg">None</span><span class="seg on">Stubble</span><span class="seg">Beard</span></div></div><div class="col" style="width:130px"><div class="lbl">Glasses</div><div class="row" style="gap:6px"><span class="seg on">Off</span><span class="seg">On</span></div></div></div>
+        </div>
+        <div class="a btn pri" style="left:980px;top:704px;width:180px">Looks good</div>
+        <span class="n" style="left:110px;top:152px">1</span><span class="n" style="left:340px;top:152px">2</span><span class="n" style="left:808px;top:152px">3</span><span class="n" style="left:970px;top:696px">4</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Selfie beside the result</b><span class="tag p">Proposed</span></div><p>Shown during setup only, then discarded. Retake goes back to L7.</p></li>
+        <li><div><b>Full-body avatar</b><span class="tag p">Proposed</span></div><p>Large in the center, like Today.</p></li>
+        <li><div><b>Adjust controls</b><span class="tag p">Proposed</span></div><p>Same choices as the phone: skin tone, hair color, 11 hairstyles, facial hair and glasses.</p></li>
+        <li><div><b>Continue</b><span class="tag p">Proposed</span></div><p>Goes on to location (L2). Opens later from "Edit avatar".</p></li>
+      </ol>
+    </div>
+  </section></div>
+</main>
+
+<script>
+// One-board mode for PNG export: ?board=<id>
+(function () {
+  const id = new URLSearchParams(location.search).get('board');
+  if (!id) return;
+  document.documentElement.classList.add('single');
+  const el = document.getElementById(id);
+  if (el) el.parentElement.classList.add('show');
+})();
+// Gallery mode: scale each fixed-size board down to fit the window width.
+function fitBoards() {
+  if (document.documentElement.classList.contains('single')) return;
+  document.querySelectorAll('.fit').forEach((wrap) => {
+    const board = wrap.firstElementChild;
+    const s = Math.min(1, wrap.clientWidth / board.offsetWidth);
+    board.style.transform = `scale(${s})`;
+    wrap.style.height = board.offsetHeight * s + 'px';
+  });
+}
+fitBoards();
+window.addEventListener('resize', fitBoards);
+</script>
+</body>
+</html>

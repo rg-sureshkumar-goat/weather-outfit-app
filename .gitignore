@@ -10,3 +10,10 @@ secrets.*
 
 # Developer clothing photos used for local tests (kept private)
 test-garments/
+
+# Developer selfie used for the avatar test (kept private)
+test-selfie/
+
+# Original phone photos (HEIC) keep GPS metadata; commit cleaned JPEG copies instead
+*.HEIC
+*.heic
