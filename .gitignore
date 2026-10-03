@@ -7,3 +7,6 @@
 *.pem
 *.key
 secrets.*
+
+# Developer clothing photos used for local tests (kept private)
+test-garments/
