@@ -1,8 +1,9 @@
 // App shell: picks the screen, keeps one forecast per location per visit
 // (plan.md, usage limits), and wires the location dialog.
 //
-// Until C5 builds first setup, the avatar uses a default look; until C6 and
-// C7, Info, Closet and Add item show "coming soon" pages.
+// First run follows R22: avatar setup (female or male, selfie step, review),
+// then location, then Today. Until C6 and C7, Info, Closet and Add item show
+// "coming soon" pages.
 import '@fontsource-variable/nunito';
 import './styles.css';
 import { deviceStorage } from './store/storage.js';
@@ -11,14 +12,12 @@ import { locationKey } from './store/picks.js';
 import { fetchForecast } from './weather/openMeteo.js';
 import { showLocation } from './screens/location.js';
 import { showToday } from './screens/today.js';
-import { MONK_TONES, HAIR_COLORS } from './art/palette.js';
+import { showSetup } from './screens/setup.js';
+import { loadAvatar } from './store/avatar.js';
 import { ICONS } from './screens/icons.js';
 
 const app = document.querySelector('#app');
 const storage = deviceStorage();
-
-// Default avatar until first setup exists (C5).
-const DEFAULT_AVATAR = { gender: 'man', skin: MONK_TONES[5], hair: { style: 'shortCrop', color: HAIR_COLORS.darkBrown }, facialHair: 'none', glasses: false };
 
 // Dev only: ?fixture=<name> shows saved weather (plan.md, Testing).
 const testWeather = import.meta.env.DEV ? new URLSearchParams(location.search).get('fixture') : null;
@@ -52,6 +51,12 @@ function comingSoon(title, text) {
 let screen = 'today';
 function go(name) {
   screen = name;
+  const avatar = loadAvatar(storage);
+  if (!avatar) {
+    screen = 'setup';
+    showSetup(app, { storage, onDone: () => go('today') });
+    return;
+  }
   const place = loadLocation(storage);
   if (!place) {
     showLocation(app, { storage, onChosen: () => go('today') });
@@ -64,7 +69,7 @@ function go(name) {
   showToday(app, {
     storage,
     location: place,
-    avatar: DEFAULT_AVATAR,
+    avatar,
     testWeather,
     getForecast: (opts) => getForecast(place, opts),
     onTab: (tab) => go(tab),

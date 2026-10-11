@@ -35,7 +35,8 @@ function drawItem(item, body, extras) {
   return template.draw(body, itemColors(item), extras);
 }
 
-// look: { body: 'A'|'B', face: 'A'|'B', skin, hair: { style, color }, glasses }
+// look: { body: 'A'|'B', face: 'A'|'B', skin, hair: { style, color },
+//         facialHair: 'none'|'stubble'|'beard', glasses }
 // outfit: { top, bottom, shoes, outer, rain, dress, neckwear, scarf, hat,
 //           eyewear } items (any may be missing)
 export function renderAvatar(look, outfit = {}, { title = '' } = {}) {
@@ -63,7 +64,7 @@ export function renderAvatar(look, outfit = {}, { title = '' } = {}) {
   const layers = [
     h.back,
     skinBase(body, look.skin),
-    face(body.head, look.skin, look.hair.color, look.face),
+    face(body.head, look.skin, look.hair.color, look.face, look.facialHair),
     shoes?.svg,
     bottom?.svg,
     (dress || top)?.torso,

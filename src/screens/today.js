@@ -8,7 +8,7 @@
 // showToday(root, ctx)
 //   ctx.storage            on-device storage (picks, R14)
 //   ctx.location           the saved location (R4)
-//   ctx.avatar             the avatar values (default until C5 setup)
+//   ctx.avatar             the saved avatar values (R24)
 //   ctx.getForecast({ refresh })  returns { forecast, fetchedAt } or throws
 //                          a ForecastError; the shell caches one forecast
 //                          per location per visit, refresh skips the cache
@@ -18,6 +18,7 @@
 import { buildState, shuffle } from '../recommend/state.js';
 import { weekOverview, WEEK_LENGTH } from '../recommend/week.js';
 import { loadPicks, savePicks } from '../store/picks.js';
+import { lookOf } from '../store/avatar.js';
 import { renderAvatar } from '../art/avatar.js';
 import { itemColors } from '../art/palette.js';
 import { GARMENT_TYPES } from '../content/garments.js';
@@ -26,16 +27,6 @@ import { dayLabels, timeLabel, skyFor, outfitDescription } from './format.js';
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const deg = (v) => (v === null || v === undefined ? '—' : `${v}°`);
-
-// The avatar's look from its saved values: one Female/Male choice sets the
-// body and face (R40).
-export const lookOf = (avatar) => ({
-  body: avatar.gender === 'woman' ? 'A' : 'B',
-  face: avatar.gender === 'woman' ? 'A' : 'B',
-  skin: avatar.skin,
-  hair: avatar.hair,
-  glasses: avatar.glasses,
-});
 
 // ---- Pieces --------------------------------------------------------------------
 

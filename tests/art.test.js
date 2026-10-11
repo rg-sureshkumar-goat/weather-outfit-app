@@ -128,3 +128,52 @@ describe('renderAvatar', () => {
     expect(renderAvatar(look('A'), outfits[0])).toContain('aria-hidden="true"');
   });
 });
+
+// C5 art round 2: every hairstyle on both bodies and faces, and the
+// facial-hair options (R24). That facial hair is Male only (R40) is a rule
+// on the saved avatar values, tested with them.
+describe('hair and facial hair (R24, R40)', () => {
+  const STYLES = ['bald', 'buzz', 'shortCrop', 'shortCurls', 'afro', 'mediumStraight', 'mediumCurly', 'longStraight', 'longCurly', 'braids', 'bun'];
+
+  it('offers all 11 hairstyles in the order R24 lists them', async () => {
+    const { HAIRSTYLES } = await import('../src/art/hair.js');
+    expect(Object.keys(HAIRSTYLES)).toEqual(STYLES);
+  });
+
+  it('draws every hairstyle on both bodies in every hair color, with unique ids', () => {
+    for (const style of STYLES) {
+      for (const body of ['A', 'B']) {
+        for (const color of Object.values(HAIR_COLORS)) {
+          const svg = renderAvatar(look(body, { hair: { style, color } }), {});
+          expect(svg.startsWith('<svg')).toBe(true);
+          expect(svg).not.toContain('NaN');
+          const ids = [...svg.matchAll(/ id="([^"]+)"/g)].map((m) => m[1]);
+          expect(new Set(ids).size).toBe(ids.length);
+        }
+      }
+    }
+  });
+
+  it('only bald draws no hair shapes; every other style draws hair in its own color', () => {
+    const color = '#8a3a20';
+    for (const style of STYLES) {
+      const svg = renderAvatar(look('B', { hair: { style, color } }), {});
+      if (style === 'bald') expect(svg).not.toContain(`fill="${color}"`);
+      else expect(svg).toContain(`fill="${color}"`);
+    }
+  });
+
+  it('stubble and beard are drawn in the hair color; none adds nothing', () => {
+    const color = '#61402b';
+    for (const body of ['B']) {
+      const base = renderAvatar(look(body, { hair: { style: 'bald', color }, facialHair: 'none' }), {});
+      const stubble = renderAvatar(look(body, { hair: { style: 'bald', color }, facialHair: 'stubble' }), {});
+      const beard = renderAvatar(look(body, { hair: { style: 'bald', color }, facialHair: 'beard' }), {});
+      expect(base).not.toContain(`fill="${color}"`);
+      expect(stubble).toContain('qd-stubble');
+      expect(stubble).toContain(`fill="${color}"`);
+      expect(beard).toContain('qd-beard');
+      expect(beard).toContain(`fill="${color}"`);
+    }
+  });
+});

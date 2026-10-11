@@ -778,6 +778,448 @@ input {
   margin-bottom: 6px;
 }
 
+/* ---- First setup (P9, P7, P8; L9, L7, L8) ----------------------------------- */
+
+.setup {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.setup-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 0;
+}
+
+.setup-bar .logo {
+  display: none;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-2);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 5px;
+}
+
+.dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+}
+
+.dots i.on {
+  background: var(--ink);
+}
+
+.setup-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 0 16px;
+}
+
+.setup-step {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 18px;
+}
+
+.setup-step h1 {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+/* The heading takes focus on each step for screen readers; no ring. */
+.setup-step h1:focus,
+.setup-step h1:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.lead {
+  color: var(--ink-2);
+  font-size: 17px;
+}
+
+.privacy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--ink-2);
+  font-size: 14px;
+  text-align: center;
+}
+
+.privacy .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Primary actions stay in thumb reach at the bottom (R32). */
+.setup-actions {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  gap: 10px;
+  /* Full width, so content scrolling under it never peeks out the sides. */
+  margin: auto -16px 0;
+  padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+  background: linear-gradient(rgba(243, 238, 231, 0), var(--paper) 28%);
+}
+
+.setup-actions .btn {
+  width: 100%;
+  min-height: 54px;
+  font-size: 17px;
+}
+
+.setup-actions.split {
+  grid-template-columns: 1fr 2fr;
+}
+
+.setup-actions.stack {
+  position: static;
+  background: none;
+}
+
+.setup-actions .note {
+  margin: -2px 0 4px;
+  text-align: center;
+}
+
+.setup .btn:disabled {
+  cursor: not-allowed;
+}
+
+.btn-link {
+  justify-self: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Female or male cards, each with a preview of its body (P9). */
+.gender-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.gender-card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 8px 8px 14px;
+  border: 2px solid var(--line);
+  border-radius: 20px;
+  background: linear-gradient(#dbe7f2, #f6f1e9);
+  cursor: pointer;
+}
+
+.gender-card input,
+.opt input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gender-preview svg {
+  display: block;
+  width: auto;
+  height: min(40vh, 340px);
+}
+
+.gender-name {
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.gender-card:has(input:checked) {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--ink);
+}
+
+.gender-card:has(input:focus-visible) {
+  box-shadow: var(--focus);
+}
+
+/* Selfie step: a face guide until C9 adds the camera (P7). */
+.face-guide {
+  display: grid;
+  place-items: center;
+  height: min(30vh, 240px);
+  border-radius: 20px;
+  background: var(--sky);
+}
+
+.face-guide span {
+  width: min(42%, 150px);
+  aspect-ratio: 3 / 4;
+  border: 3px dashed var(--sky-ink);
+  border-radius: 50%;
+}
+
+/* Review: preview on top, controls below (P8). */
+.review {
+  display: grid;
+  gap: 16px;
+}
+
+.review-preview {
+  display: flex;
+  justify-content: center;
+  height: clamp(210px, 32vh, 300px);
+  overflow: hidden;
+  border-radius: 20px;
+  background: linear-gradient(#dbe7f2, #f6f1e9);
+}
+
+/* On the phone the preview shows head to waist, where the choices show. */
+.review-preview svg {
+  flex: none;
+  width: auto;
+  height: 225%;
+}
+
+.review-controls {
+  display: grid;
+  gap: 16px;
+}
+
+.ctrl {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.ctrl[hidden] {
+  display: none;
+}
+
+.ctrl legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ctrl-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+}
+
+.opt {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.segs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.seg,
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.seg {
+  min-width: 68px;
+  border-radius: 12px;
+}
+
+.chip {
+  border-color: transparent;
+  border-radius: 999px;
+  background: var(--fill);
+}
+
+.opt input:checked + .seg,
+.opt input:checked + .chip {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
+}
+
+.swatches {
+  display: grid;
+  gap: 10px;
+}
+
+.skins {
+  grid-template-columns: repeat(5, 44px);
+}
+
+.hairs {
+  grid-template-columns: repeat(4, 44px);
+}
+
+.sw {
+  display: block;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid rgba(31, 42, 55, 0.25);
+  border-radius: 12px;
+}
+
+.opt input:checked + .sw {
+  box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--ink);
+}
+
+.opt input:focus-visible + .seg,
+.opt input:focus-visible + .chip,
+.opt input:focus-visible + .sw {
+  box-shadow: var(--focus);
+}
+
+/* Hairstyles scroll sideways in one row on the phone (P8). */
+.chips-row {
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px;
+  padding: 4px 16px 8px;
+  overflow-x: auto;
+  scroll-padding: 0 16px;
+  /* The cut-off last chip shows that the row scrolls. */
+  scrollbar-width: none;
+}
+
+.chips-row::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .setup-bar {
+    height: 68px;
+    padding: 0 28px;
+    border-bottom: 1.5px solid var(--line);
+    background: var(--cream);
+  }
+
+  .setup-bar .logo {
+    display: block;
+  }
+
+  .setup-main {
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+
+  .step-gender,
+  .step-start {
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .setup-step {
+    padding-top: 32px;
+  }
+
+  .setup-step h1 {
+    font-size: 34px;
+  }
+
+  .gender-preview svg {
+    height: min(44vh, 420px);
+  }
+
+  .setup-actions {
+    position: static;
+    margin: auto 0 0;
+    padding: 12px 0 32px;
+    background: none;
+  }
+
+  .setup-actions.split {
+    grid-template-columns: auto auto;
+    justify-content: end;
+  }
+
+  .setup-actions.split .btn {
+    width: auto;
+    min-width: 160px;
+  }
+
+  .review {
+    grid-template-columns: minmax(280px, 400px) 1fr;
+    align-items: start;
+    gap: 36px;
+  }
+
+  /* Full body on the laptop (L8). */
+  .review-preview {
+    height: calc(100vh - 250px);
+    min-height: 460px;
+  }
+
+  .review-preview svg {
+    height: 100%;
+  }
+
+  .skins {
+    grid-template-columns: repeat(10, 44px);
+  }
+
+  .hairs {
+    grid-template-columns: repeat(8, 44px);
+  }
+
+  .chips-row {
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 4px 0;
+    overflow: visible;
+  }
+}
+
 /* ---- Laptop layout, 900 px and up (R31) ------------------------------------ */
 
 @media (min-width: 900px) {

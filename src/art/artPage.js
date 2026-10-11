@@ -1,9 +1,13 @@
-// Local-only art review page (art.html, plan.md C2). Shows both bodies in
-// all 10 Monk tones wearing starter items, the new garment types, and both
-// hairstyles in all 8 hair colors.
+// Local-only art review page (art.html, plan.md C2 and C5). Art round 2
+// (C5) comes first: all 11 hairstyles on both bodies and in all 8 hair
+// colors, stubble, beard and glasses. Round 1 follows: both bodies in all 10
+// Monk tones wearing starter items, the new garment types, knitwear,
+// accessories and formal wear.
 
 import '@fontsource-variable/nunito';
 import { renderAvatar } from './avatar.js';
+import { HAIRSTYLES } from './hair.js';
+import { HAIRSTYLE_NAMES } from '../content/avatarOptions.js';
 import { MONK_TONES, HAIR_COLORS } from './palette.js';
 import { STARTER_SETS } from '../content/starters.js';
 
@@ -84,11 +88,55 @@ const FORMAL_LOOKS = showcase([
   [looks.A(9, HAIR_COLORS.black), { dress: o('banquetDress', '#7c2436'), shoes: o('heels', '#7c2436') }, 'Banquet gown'],
 ]);
 
+// ---- Art round 2 (C5): hairstyles, facial hair, glasses ----------------------
+
+const STYLE_NAMES = HAIRSTYLE_NAMES;
+const HEAD_VIEW = 'viewBox="85 15 230 250"';
+const headOnly = (look) => renderAvatar(look, {}).replace('viewBox="40 30 320 940"', HEAD_VIEW);
+const lookFor = (gender, tone, style, color, extra = {}) => ({
+  body: gender === 'woman' ? 'A' : 'B', face: gender === 'woman' ? 'A' : 'B', skin: MONK_TONES[tone], hair: { style, color }, ...extra,
+});
+
+// Every style on both bodies, in a starter outfit, so long hair over the
+// shoulders can be checked.
+const womanItems = starterItemOutfits('woman');
+const manItems = starterItemOutfits('man');
+const STYLE_FIGURES = Object.keys(HAIRSTYLES).map((style, i) => {
+  const color = HAIR_CYCLE[(i * 3) % 8];
+  return [['woman', womanItems], ['man', manItems]].map(([g, items]) => {
+    const tone = (i * 7 + (g === 'man' ? 4 : 1)) % 10;
+    return `<figure>${renderAvatar(lookFor(g, tone, style, color), items[(i + (g === 'man' ? 3 : 0)) % 10])}<figcaption><b>${STYLE_NAMES[style]}</b>${g === 'woman' ? 'Female' : 'Male'} · Monk ${tone + 1}</figcaption></figure>`;
+  }).join('');
+}).join('');
+
+// Each style in all 8 colors, alternating faces and skin tones.
+const STYLE_COLOR_ROWS = Object.keys(HAIRSTYLES).map((style, i) => `
+  <h3>${STYLE_NAMES[style]}</h3>
+  <section class="heads">${Object.entries(HAIR_COLORS).map(([name, color], k) => {
+    const g = (i + k) % 2 ? 'man' : 'woman';
+    return `<figure class="head">${headOnly(lookFor(g, (k * 3 + i) % 10, style, color))}<figcaption>${name}</figcaption></figure>`;
+  }).join('')}</section>`).join('');
+
+// Stubble and beard (Male only, R40) and glasses (both).
+const FACIAL = [
+  ['man', 1, 'shortCrop', 'black', 'none', false], ['man', 1, 'shortCrop', 'black', 'stubble', false], ['man', 1, 'shortCrop', 'black', 'beard', false],
+  ['man', 6, 'buzz', 'darkBrown', 'stubble', true], ['man', 8, 'afro', 'black', 'beard', false], ['man', 3, 'mediumStraight', 'auburn', 'beard', true],
+  ['man', 9, 'bald', 'grey', 'beard', true], ['man', 4, 'braids', 'brown', 'stubble', false],
+  ['woman', 2, 'longStraight', 'blonde', 'none', true], ['woman', 7, 'bun', 'black', 'none', true], ['woman', 5, 'shortCurls', 'darkBrown', 'none', true], ['woman', 0, 'mediumCurly', 'platinum', 'none', true],
+].map(([g, tone, style, color, facialHair, glasses]) => `<figure class="head">${headOnly(lookFor(g, tone, style, HAIR_COLORS[color], { facialHair, glasses }))}<figcaption>${g === 'woman' ? 'Female' : 'Male'} · ${facialHair}${glasses ? ' · glasses' : ''}</figcaption></figure>`).join('');
+
 document.querySelector('#art').innerHTML = `
   <header>
-    <h1>Quick Dresser · art round 1</h1>
+    <h1>Quick Dresser · art rounds 1 and 2</h1>
     <p>Original artwork created for this project. Monk Skin Tone Scale by Ellis Monk (CC BY 4.0). Local review page only.</p>
   </header>
+  <h2>Round 2 · All 11 hairstyles on both bodies</h2>
+  <section class="grid">${STYLE_FIGURES}</section>
+  <h2>Round 2 · Each hairstyle in all 8 hair colors</h2>
+  ${STYLE_COLOR_ROWS}
+  <h2>Round 2 · Facial hair (none, stubble, beard; Male only) and glasses</h2>
+  <section class="heads">${FACIAL}</section>
+  <h2 class="round">Round 1 (approved)</h2>
   <h2>Both bodies in all 10 Monk tones, wearing their set's starter items</h2>
   <section class="grid">${tones}</section>
   <h2>Crop top, sandals, clogs, heels and boots on both bodies (types added 2026-10-11)</h2>
@@ -106,6 +154,8 @@ style.textContent = `
   body { margin: 0; padding: 20px; background: #efe9e1; color: #1f2a37; font-family: 'Nunito Variable', system-ui, sans-serif; }
   h1 { margin: 0 0 4px; font-size: 26px; font-weight: 800; }
   h2 { margin: 26px 0 10px; font-size: 18px; font-weight: 700; }
+  h2.round { margin-top: 44px; padding-top: 18px; border-top: 2px solid #c9bfb2; font-size: 22px; }
+  h3 { margin: 14px 0 6px; font-size: 15px; font-weight: 700; }
   header p { margin: 0; color: #4b5563; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
   figure { margin: 0; background: linear-gradient(#d9e6f2, #f6f1e9); border-radius: 14px; padding-bottom: 8px; }

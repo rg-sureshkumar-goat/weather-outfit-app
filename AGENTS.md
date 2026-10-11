@@ -46,13 +46,14 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 
 # Project
 
-**Quick Dresser.** A static single-page app: Vite and plain JavaScript modules, no UI framework. Source of truth: `spec.md` (R1–R42) and `plan.md` (checkpoints C0–C12, plus C7a–C7d). Needs Node 22.12 or newer (developed on Node 24).
+**Quick Dresser.** A static single-page app: Vite and plain JavaScript modules, no UI framework. Source of truth: `spec.md` (R1–R43) and `plan.md` (checkpoints C0–C12, plus C6a–C6d and C7a–C7d). Needs Node 22.12 or newer (developed on Node 24).
 
 **Run locally**
 - `npm install`, once.
 - `npm run dev`, then open `http://localhost:5173/weather-outfit-app/`. The app lives under the Pages base path even locally, so `http://localhost:5173/` alone shows nothing.
 - `npm run build` writes `dist/`, and `npm run preview` serves it.
 - **Test weather:** with `npm run dev` running, add `?fixture=<name>` to the URL to show a saved forecast from `tests/fixtures/` instead of live weather, for example `?fixture=synthetic-snow`. A yellow "Test weather" line shows it's on. Dev only: the deployed build leaves it out.
+- **First run:** with no saved avatar, the app opens on first setup (female or male, selfie step, review), then location, then Today. To see it again, remove `quickDresser.avatar` from the site's local storage (browser dev tools), or delete the Home Screen app.
 - **Art review page:** with `npm run dev` running, open `http://localhost:5173/weather-outfit-app/art.html`. It shows every body, tone, garment and accessory. It's local-only and never part of the build.
 - `dev` and `build` first run `scripts/copy-mediapipe.mjs`, which copies the MediaPipe runtime from `node_modules` into `public/mediapipe/`. That folder is generated and not committed.
 - The dev server stays on this Mac. Never run it with `--host`: it can serve project files, and `vite.config.js` only blocks the private photo folders and HEIC files.

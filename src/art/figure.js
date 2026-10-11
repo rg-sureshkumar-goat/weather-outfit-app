@@ -214,7 +214,54 @@ function hand(body, skin, side) {
 // expressive eyes and open smile.
 const EYE_COLOR = '#2a1d17';
 
-export function face(h, skin, hairColor, set) {
+// Facial hair (R24), in the hair color, open to both faces (R40). Stubble
+// is a see-through shadow with fine dots; a beard is a full shape from the
+// sideburns around the jaw, with a mustache under the nose. The mouth is
+// drawn on top of both.
+function facialHair(h, hairColor, kind) {
+  if (!kind || kind === 'none') return '';
+  const p = (fx, fy) => ({ x: h.cx + h.rx * fx, y: h.cy + h.ry * fy });
+  const j = h.jaw;
+  const inner = [p(0.86, 0.04), p(0.8, 0.36), p(0.58, 0.5), p(0.28, 0.5), p(0, 0.53), p(-0.28, 0.5), p(-0.58, 0.5), p(-0.8, 0.36), p(-0.86, 0.04)];
+  if (kind === 'stubble') {
+    // Stays just inside the jaw line, so none of it shows on the neck.
+    const jawLine = [p(-0.95, 0.0), p(-0.96, 0.3), p(-0.78 * j, 0.71), p(-0.35, 0.95), p(0, 1.0), p(0.35, 0.95), p(0.78 * j, 0.71), p(0.96, 0.3), p(0.95, 0.0)];
+    const d = smoothClosed([...jawLine, ...inner]);
+    const id = uid('stubble');
+    // Fine dots scattered from a fixed seed, so the stubble never changes.
+    let seed = 12345;
+    const rand = () => {
+      seed = (seed * 1664525 + 1013904223) % 4294967296;
+      return seed / 4294967296;
+    };
+    let dots = '';
+    for (let i = 0; i < 110; i++) {
+      const q = p(-0.96 + rand() * 1.92, rand() * 1.02);
+      dots += `<circle cx="${q.x.toFixed(1)}" cy="${q.y.toFixed(1)}" r="0.9" fill="${hairColor}" opacity="0.55"/>`;
+    }
+    return `<clipPath id="${id}"><path d="${d}"/></clipPath><path d="${d}" fill="${hairColor}" opacity="0.2"/><g clip-path="url(#${id})">${dots}</g>`;
+  }
+  const outer = [p(-0.97, 0.0), p(-1.0, 0.32), p(-0.84 * j - 0.04, 0.78), p(-0.42, 1.08), p(0, 1.15), p(0.42, 1.08), p(0.84 * j + 0.04, 0.78), p(1.0, 0.32), p(0.97, 0.0)];
+  const d = smoothClosed([...outer, ...inner]);
+  // Beard: soft strokes for texture and a shadow on the viewer's right.
+  const strokes = [];
+  for (let i = 0; i < 26; i++) {
+    const fx = -0.9 + (i / 25) * 1.8;
+    const top = Math.abs(fx) > 0.6 ? 0.2 : 0.62;
+    const a = p(fx, top + ((i * 0.37) % 0.3));
+    strokes.push({ d: `M ${a.x} ${a.y} q ${fx * 2} 7 ${fx * 3} 13`, tone: i % 3 ? 'deep' : 'light', width: 1.6, opacity: 0.8 });
+  }
+  return piece({
+    parts: [d],
+    base: hairColor,
+    name: 'beard',
+    outline: 2,
+    shade: [{ d: smoothClosed([p(0.35, 0.95), p(0.9, 0.5), p(1.0, 0.1), p(0.8, 0.4), p(0.4, 0.75)]), tone: 'shadow', opacity: 0.8 }],
+    lines: strokes,
+  });
+}
+
+export function face(h, skin, hairColor, set, facialHairKind = 'none') {
   const sc = h.rx / 53;
   const { cx, cy } = h;
   const s = shades(skin);
@@ -263,6 +310,8 @@ export function face(h, skin, hairColor, set) {
   // Nose: a short curve with a soft shadow on the viewer's right.
   out += `<path d="M ${cx + 4 * sc} ${cy + 15 * sc} Q ${cx + 9 * sc} ${cy + 27 * sc} ${cx + 3 * sc} ${cy + 31 * sc} Q ${cx - 2 * sc} ${cy + 33 * sc} ${cx - 6 * sc} ${cy + 30 * sc}" fill="none" stroke="${s.deep}" stroke-width="${2.2 * sc}" stroke-linecap="round"/>`;
   out += `<ellipse cx="${cx + 5 * sc}" cy="${cy + 24 * sc}" rx="${3 * sc}" ry="${6 * sc}" fill="${s.shadow}" opacity="0.5"/>`;
+
+  out += facialHair(h, hairColor, facialHairKind);
 
   // Open smile: teeth on top, a darker mouth below.
   const my = cy + 42 * sc;
