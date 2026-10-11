@@ -52,6 +52,7 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 - `npm install`, once.
 - `npm run dev`, then open `http://localhost:5173/weather-outfit-app/`. The app lives under the Pages base path even locally, so `http://localhost:5173/` alone shows nothing.
 - `npm run build` writes `dist/`, and `npm run preview` serves it.
+- **Art review page:** with `npm run dev` running, open `http://localhost:5173/weather-outfit-app/art.html`. It shows every body, tone, garment and accessory. It's local-only and never part of the build.
 - `dev` and `build` first run `scripts/copy-mediapipe.mjs`, which copies the MediaPipe runtime from `node_modules` into `public/mediapipe/`. That folder is generated and not committed.
 - The dev server stays on this Mac. Never run it with `--host`: it can serve project files, and `vite.config.js` only blocks the private photo folders and HEIC files.
 
@@ -70,5 +71,18 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 - Camera and location need HTTPS, so phone checks use the deployed site, not the local server.
 
 **Structure** (see `plan.md` → Approach for what each folder holds): `src/weather`, `src/recommend`, `src/content`, `src/store`, `src/art`, `src/screens`, `src/vision`, `public/`, `tests/`.
+
+**Art** (`src/art/`), drawn as SVG strings by `renderAvatar(look, outfit)` in `avatar.js`, which fixes the layer order:
+- **`bodies.js`:** the two bodies' measurements and weight-shift pose.
+- **`figure.js`:** skin, face, limbs and hands.
+- **`fit.js`:** shared garment shapes.
+- **`garments.js`:** casual wear.
+- **`formal.js`:** formal wear and dresses.
+- **`shoes.js`:** shoes.
+- **`accessories.js`:** hats, scarf and eyewear.
+- **`hair.js`:** hairstyles.
+- **`palette.js`:** skin tones, hair colors and starter colors.
+
+Every garment is one drawing fitted from body measurements, so it fits both bodies.
 
 **Keep private:** `test-garments/`, `test-selfie/` and `*.HEIC` stay ignored. Check `git status` before every commit.

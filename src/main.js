@@ -1,4 +1,5 @@
 // C0 placeholder. Replaced by the real screens from C3 onward.
+import '@fontsource-variable/nunito';
 import './styles.css';
 
 document.querySelector('#app').innerHTML = `

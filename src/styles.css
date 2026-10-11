@@ -1,4 +1,4 @@
-/* C0 placeholder styles. The real palette and font arrive in C2. */
+/* Placeholder styles. Nunito (SIL Open Font License) is the app font, chosen in C2. */
 :root {
   --cream: #fbf7f2;
   --ink: #1f2a37;
@@ -14,7 +14,7 @@ body {
   min-height: 100vh;
   background: var(--cream);
   color: var(--ink);
-  font-family: system-ui, sans-serif;
+  font-family: 'Nunito Variable', system-ui, sans-serif;
 }
 
 .placeholder {

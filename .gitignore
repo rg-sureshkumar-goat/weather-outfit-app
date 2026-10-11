@@ -21,6 +21,10 @@ test-garments/
 # Developer selfie used for the avatar test (kept private)
 test-selfie/
 
+# Developer's original style-reference screenshot (shows a Snapcode); the cropped
+# copy reference/10-art-style-reference.jpg is committed instead
+reference/Art/
+
 # Original phone photos (HEIC) keep GPS metadata; commit cleaned JPEG copies instead
 *.HEIC
 *.heic

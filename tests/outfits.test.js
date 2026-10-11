@@ -84,6 +84,20 @@ describe('candidates (R9, R11)', () => {
     expect(cands.slice(1).every((c) => c.top.source === 'starter')).toBe(true);
   });
 
+  it.each([
+    ['cropTop', 'top', ['hot', 'warm']],
+    ['spaghettiTop', 'top', ['hot', 'warm']],
+    ['sandals', 'shoes', ['hot', 'warm']],
+    ['clogs', 'shoes', ['hot', 'warm', 'chilly']],
+    ['heels', 'shoes', ['hot', 'warm', 'chilly']],
+  ])('%s is used only on %s days in its bands (added 2026-10-11)', (type, slot, bands) => {
+    const mine = closetItem(`my-${type}`, type);
+    for (const band of BAND_IDS) {
+      const used = candidates({ band, closet: [mine], starterSet: set('woman') }).some((c) => c[slot]?.id === mine.id);
+      expect(used, band).toBe(bands.includes(band));
+    }
+  });
+
   it('items only join bands their type suits: a tee is not used on a Chilly day', () => {
     const cands = candidates({ band: 'chilly', closet: [closetItem('tee', 'tee')], starterSet: set('man') });
     expect(cands.some((c) => c.top.id === 'tee')).toBe(false);
@@ -143,6 +157,18 @@ describe('snow days (spec.md, Snow days)', () => {
     const cands = snow('freezing', [sneakers]);
     expect(cands.length).toBeGreaterThanOrEqual(3);
     cands.forEach((c) => expect(c.shoes).toBe(sneakers));
+  });
+
+  it('no boots: closed shoes first (sneakers, then clogs, then heels), sandals last', () => {
+    const sandals = closetItem('my-sandals', 'sandals');
+    const heels = closetItem('my-heels', 'heels');
+    const clogs = closetItem('my-clogs', 'clogs');
+    const sneakers = closetItem('my-sneakers', 'sneakers');
+    const shoesOf = (closet) => new Set(snow('cold', closet).map((c) => c.shoes.id));
+    expect(shoesOf([sandals, heels, clogs, sneakers])).toEqual(new Set(['my-sneakers']));
+    expect(shoesOf([sandals, heels, clogs])).toEqual(new Set(['my-clogs']));
+    expect(shoesOf([sandals, heels])).toEqual(new Set(['my-heels']));
+    expect(shoesOf([sandals])).toEqual(new Set(['my-sandals']));
   });
 
   it('without snow, Freezing still ignores sneakers (garment table)', () => {

@@ -1,0 +1,117 @@
+// Local-only art review page (art.html, plan.md C2). Shows both bodies in
+// all 10 Monk tones wearing starter items, the new garment types, and both
+// hairstyles in all 8 hair colors.
+
+import '@fontsource-variable/nunito';
+import { renderAvatar } from './avatar.js';
+import { MONK_TONES, HAIR_COLORS } from './palette.js';
+import { STARTER_SETS } from '../content/starters.js';
+
+const LOOKS = {
+  man: { body: 'B', face: 'B', hair: 'shortCrop' },
+  woman: { body: 'A', face: 'A', hair: 'longStraight' },
+};
+const HAIR_CYCLE = Object.values(HAIR_COLORS);
+
+const label = (o) => [o.outer, o.top, o.bottom, o.shoes].filter(Boolean).map((i) => i.name).join(' · ');
+
+// Outfits made from the gender set's own starter items, using only the
+// garment types drawn so far. Full starter outfits follow once C7 draws the
+// other seven types.
+function starterItemOutfits(gender) {
+  const items = STARTER_SETS[gender].items;
+  const ofType = (type) => items.filter((i) => i.type === type);
+  const [tees, bottoms, sneakers, jackets] = [ofType('tee'), [...ofType('shorts'), ...ofType('pants')], ofType('sneakers'), ofType('lightJacket')];
+  return MONK_TONES.map((_, i) => ({
+    top: tees[i % tees.length],
+    bottom: bottoms[(i * 2 + 1) % bottoms.length],
+    shoes: sneakers[i % sneakers.length],
+    outer: i % 3 === 2 ? jackets[i % jackets.length] : null,
+  }));
+}
+
+function figure(gender, tone, outfit, hairColor) {
+  const l = LOOKS[gender];
+  const look = { body: l.body, face: l.face, skin: MONK_TONES[tone], hair: { style: l.hair, color: hairColor } };
+  return `<figure>${renderAvatar(look, outfit)}<figcaption><b>Body ${l.body} · Monk ${tone + 1}</b>${label(outfit)}</figcaption></figure>`;
+}
+
+const woman = starterItemOutfits('woman');
+const man = starterItemOutfits('man');
+const tones = MONK_TONES.map((_, tone) =>
+  figure('woman', tone, woman[tone], HAIR_CYCLE[tone % 8]) + figure('man', tone, man[tone], HAIR_CYCLE[(tone + 3) % 8]),
+).join('');
+
+const hairRow = (gender) => Object.entries(HAIR_COLORS).map(([name, color], i) => {
+  const l = LOOKS[gender];
+  const look = { body: l.body, face: l.face, skin: MONK_TONES[(i * 3) % 10], hair: { style: l.hair, color } };
+  const svg = renderAvatar(look, {}).replace('viewBox="40 30 320 940"', 'viewBox="110 40 180 200"');
+  return `<figure class="head">${svg}<figcaption>${name}</figcaption></figure>`;
+}).join('');
+
+// The four types added on 2026-10-11 (crop top, sandals, clogs, heels) and
+// boots, on both bodies.
+const own = (type, base, name) => ({ type, name, colors: { base }, source: 'closet' });
+const NEW_TYPES = [
+  ['woman', 3, { top: own('cropTop', '#d98c9a', 'Rose crop top'), bottom: STARTER_SETS.woman.items.find((i) => i.name === 'Light jeans'), shoes: own('sneakers', '#f4f2ee', 'White sneakers') }],
+  ['man', 6, { top: own('cropTop', '#2b2d31', 'Black crop top'), bottom: STARTER_SETS.man.items.find((i) => i.name === 'Khaki shorts'), shoes: own('sandals', '#7a5233', 'Brown sandals') }],
+  ['woman', 7, { top: own('cropTop', '#f2c230', 'Yellow crop top'), bottom: STARTER_SETS.woman.items.find((i) => i.name === 'White shorts'), shoes: own('heels', '#b8392f', 'Red heels') }],
+  ['man', 2, { top: STARTER_SETS.man.items.find((i) => i.name === 'Navy tee'), bottom: STARTER_SETS.man.items.find((i) => i.name === 'Olive shorts'), shoes: own('clogs', '#2f5a3f', 'Green clogs') }],
+  ['woman', 1, { top: STARTER_SETS.woman.items.find((i) => i.name === 'White tee'), bottom: STARTER_SETS.woman.items.find((i) => i.name === 'Black pants'), shoes: own('clogs', '#f4f2ee', 'White clogs') }],
+  ['man', 4, { top: STARTER_SETS.man.items.find((i) => i.name === 'Heather-grey tee'), bottom: STARTER_SETS.man.items.find((i) => i.name === 'Dark jeans'), shoes: own('boots', '#7a5233', 'Brown boots'), outer: STARTER_SETS.man.items.find((i) => i.name === 'Navy light jacket') }],
+].map(([gender, tone, outfit]) => figure(gender, tone, outfit, HAIR_CYCLE[(tone + 1) % 8])).join('');
+
+// Knitwear, the spaghetti-strap top, accessories, and professional and
+// formal wear (drawn in C2 for the occasion and accessory phases, R41, R42).
+const looks = {
+  A: (tone, hairColor, extra = {}) => ({ body: 'A', face: 'A', skin: MONK_TONES[tone], hair: { style: 'longStraight', color: hairColor }, ...extra }),
+  B: (tone, hairColor, extra = {}) => ({ body: 'B', face: 'B', skin: MONK_TONES[tone], hair: { style: 'shortCrop', color: hairColor }, ...extra }),
+};
+const o = (type, base, print = null) => ({ type, colors: { base, print }, source: 'closet' });
+const showcase = (rows) => rows.map(([look, outfit, caption]) => `<figure>${renderAvatar(look, outfit)}<figcaption>${caption}</figcaption></figure>`).join('');
+const CASUAL_EXTRAS = showcase([
+  [looks.A(3, HAIR_COLORS.darkBrown), { top: o('spaghettiTop', '#ee7f6b'), bottom: o('shorts', '#f4f2ee'), shoes: o('sandals', '#b98f62'), hat: o('sunHat', '#e9d9a8'), eyewear: o('sunglasses', '#2b2d31') }, 'Spaghetti-strap top, sun hat, sunglasses, sandals'],
+  [looks.B(6, HAIR_COLORS.black), { top: o('hoodie', '#6e2b33'), bottom: o('pants', '#8fb0d2'), shoes: o('sneakers', '#f4f2ee'), hat: o('cap', '#26344f') }, 'Hoodie, jeans, cap'],
+  [looks.A(8, HAIR_COLORS.black), { top: o('sweater', '#efe4cf'), bottom: o('pants', '#33465f'), shoes: o('boots', '#7a5233'), hat: o('beanie', '#b8392f'), scarf: o('scarf', '#b8392f', '#f4f2ee') }, 'Sweater, beanie, scarf, boots'],
+  [looks.B(2, HAIR_COLORS.brown, { glasses: true }), { top: o('sweater', '#2f5a3f'), bottom: o('trousers', '#c8b48a'), shoes: o('sneakers', '#26344f') }, 'Sweater, glasses, chinos'],
+  [looks.B(4, HAIR_COLORS.auburn), { top: o('tee', '#f4f2ee'), bottom: o('pants', '#33465f'), shoes: o('clogs', '#2b2d31'), eyewear: o('sunglasses', '#7a5233'), outer: o('blazer', '#7c8a9a') }, 'Casual blazer over a tee, sunglasses, clogs'],
+]);
+const FORMAL_LOOKS = showcase([
+  [looks.B(7, HAIR_COLORS.black), { top: o('dressShirt', '#f4f2ee'), neckwear: o('tie', '#7c2436', '#c19a6b'), outer: o('blazer', '#26344f'), bottom: o('trousers', '#26344f'), shoes: o('dressShoes', '#3b2a20') }, 'Navy suit, shirt and tie'],
+  [looks.B(1, HAIR_COLORS.black), { top: o('dressShirt', '#ffffff'), neckwear: o('bowTie', '#111114'), outer: o('tuxedo', '#17181c'), bottom: o('tuxedoTrousers', '#17181c'), shoes: o('dressShoes', '#111114') }, 'Tuxedo and bow tie'],
+  [looks.A(5, HAIR_COLORS.darkBrown), { top: o('dressShirt', '#f4f2ee'), outer: o('blazer', '#2b2d31'), bottom: o('trousers', '#2b2d31'), shoes: o('heels', '#2b2d31') }, 'Black suit and heels'],
+  [looks.A(2, HAIR_COLORS.blonde), { dress: o('formalDress', '#26344f'), shoes: o('heels', '#c19a6b') }, 'Formal (knee-length) dress'],
+  [looks.A(9, HAIR_COLORS.black), { dress: o('banquetDress', '#7c2436'), shoes: o('heels', '#7c2436') }, 'Banquet gown'],
+]);
+
+document.querySelector('#art').innerHTML = `
+  <header>
+    <h1>Quick Dresser · art round 1</h1>
+    <p>Original artwork created for this project. Monk Skin Tone Scale by Ellis Monk (CC BY 4.0). Local review page only.</p>
+  </header>
+  <h2>Both bodies in all 10 Monk tones, wearing their set's starter items</h2>
+  <section class="grid">${tones}</section>
+  <h2>Crop top, sandals, clogs, heels and boots on both bodies (types added 2026-10-11)</h2>
+  <section class="grid">${NEW_TYPES}</section>
+  <h2>Spaghetti-strap top, knitwear and accessories</h2>
+  <section class="grid">${CASUAL_EXTRAS}</section>
+  <h2>Professional and formal (occasion phases, R41)</h2>
+  <section class="grid">${FORMAL_LOOKS}</section>
+  <h2>Hair colors · Long straight (Body A) and Short crop (Body B)</h2>
+  <section class="heads">${hairRow('woman')}${hairRow('man')}</section>
+`;
+
+const style = document.createElement('style');
+style.textContent = `
+  body { margin: 0; padding: 20px; background: #efe9e1; color: #1f2a37; font-family: 'Nunito Variable', system-ui, sans-serif; }
+  h1 { margin: 0 0 4px; font-size: 26px; font-weight: 800; }
+  h2 { margin: 26px 0 10px; font-size: 18px; font-weight: 700; }
+  header p { margin: 0; color: #4b5563; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  figure { margin: 0; background: linear-gradient(#d9e6f2, #f6f1e9); border-radius: 14px; padding-bottom: 8px; }
+  figure svg { display: block; width: 100%; height: auto; }
+  figcaption { padding: 0 10px; font-size: 12px; line-height: 1.35; display: grid; gap: 2px; }
+  .heads { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+  .head figcaption { text-align: center; }
+`;
+document.head.append(style);

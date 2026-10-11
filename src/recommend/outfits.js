@@ -4,7 +4,7 @@
 // An outfit is { top, bottom, shoes, outer, rain }, each an item or null.
 // Closet items look like { id, type, name, colors, source: 'closet' }.
 
-import { ELIGIBLE } from '../content/garments.js';
+import { ELIGIBLE, SNOW_SHOE_ORDER } from '../content/garments.js';
 import { isNeutral } from './color.js';
 
 const SLOTS = ['top', 'bottom', 'shoes', 'outer', 'rain'];
@@ -27,11 +27,10 @@ function closetPools(closet, band, { snowDay, rainWind }) {
 
   let shoes = ofType(rules.shoes);
   if (snowDay) {
-    // Snow days: the User's own shoes always win, boots first, in any band
-    // (spec.md, Snow days).
-    const boots = ofType(['boots']);
-    const anyShoes = ofType(['sneakers', 'boots']);
-    shoes = boots.length > 0 ? boots : anyShoes;
+    // Snow days: the User's own shoes always win, in any band: boots first,
+    // then the first type they own in SNOW_SHOE_ORDER (spec.md, Snow days).
+    const tiers = [['boots'], ...SNOW_SHOE_ORDER.map((t) => [t])];
+    shoes = tiers.map(ofType).find((tier) => tier.length > 0) || [];
   }
 
   // On a rain-and-wind day the rain jacket replaces the light jacket, is

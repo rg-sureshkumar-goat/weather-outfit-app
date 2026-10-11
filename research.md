@@ -63,6 +63,7 @@ Screenshots are the publishers' own App Store or press images, retrieved 2026-10
 | 7 | [07-carrot-phone.jpg](reference/07-carrot-phone.jpg) | [CARROT Weather, App Store](https://apps.apple.com/us/app/carrot-weather-alerts-radar/id961390574) | **Useful:** playful tone (big temperature, witty one-line summary, small illustrated scene) followed by hourly and daily forecast; personality and clear data can coexist. **Relevant:** bottom tab bar for one-handed use. |
 | 8 | [08-carrot-mac.jpg](reference/08-carrot-mac.jpg) | [CARROT Weather (Mac), App Store](https://apps.apple.com/us/app/carrot-weather-talking-forecast/id993487541?mt=12) | **Useful:** laptop layout spreads the hourly timeline and 7-day row across the wide window instead of stacking like the phone, which is the brief's "use the larger screen." **Ineffective:** dense small text is hard to scan quickly. |
 | 9 | [09-snapchat-3d-bitmoji.jpg](reference/09-snapchat-3d-bitmoji.jpg) | [Snap Newsroom, "Bitmoji introduces a new avatar style" (Jul 19, 2023)](https://newsroom.snap.com/bitmoji-introduces-a-new-avatar-style) | **Useful:** full-body 3D avatars in detailed, textured, patterned clothing (floral shirt, zebra skirt), with inclusive body types and a wheelchair user; the look I want for my avatar. **Limitation:** Snap designs each garment by hand; they are not generated from user photos. |
+| 10 | [10-art-style-reference.jpg](reference/10-art-style-reference.jpg) | The Developer's own Bitmoji in the Snapchat app; screenshot taken 2026-10-10, cropped to remove Snapchat's buttons and Snapcode. Added in the build (C2) | **Useful (the Developer's choice, C2):** an expressive face (large eyes, defined brows, wide smile); soft shading with fabric folds, ribbed cuffs and hem, a kangaroo pocket; a relaxed pose (one hand in a pocket was tried, then dropped by the Developer for both arms at the sides). **Not used:** the big-head proportions and the 3D rendering; the app stays 2D with recolorable templates. Bitmoji's own design must not be copied, so the character is drawn original. |
 
 **Gaps:** no reference yet for an error / location-denied state. (An occasion-picker reference is no longer needed; the occasion picker moved to future work.)
 
@@ -163,6 +164,15 @@ Record new evidence or changed decisions and explain why they changed.
 - **2026-10-03 — Avatar generated from a selfie.** The approved decision had the User pick from a few skin tones and hairstyles. The Developer chose to generate the avatar from a setup selfie, read on the device. An image-AI cartoon was rejected because it sends the face to a server, needs a proxy, and returns a flat image the garment templates can't layer onto. The selfie test confirmed the approach.
 - **2026-10-03 — Shuffle moves down; location stays up.** The Developer's main-screen drawing placed location and Shuffle at the top, against the thumb-zone decision. The Developer chose a split: the date strip and Shuffle in the lower half, and location at the top because it is saved and rarely changed.
 - **2026-10-10 — Woman or man added to setup (build phase).** The Developer added a gender choice that sets the avatar's body, face details, default hairstyle and starter outfits. The art estimate above is superseded: two bodies and two face-detail sets, with each garment template fitted to both bodies, and 30 starter outfits. Requirement, reasoning and trade-offs: `spec.md` R40 and Revisions.
+- **2026-10-11 — Art direction for the character (C2).**
+  - The Developer supplied reference 10, their own Bitmoji.
+  - Carried over, in an original 2D form: an expressive face, soft shading with fabric folds, and a relaxed pose.
+  - Not carried over: the big-head proportions, which stay close to the research preview at about 6½ heads tall, and the 3D rendering.
+  - Shading is drawn as shadow and highlight shapes over flat base colors, so every garment stays recolorable.
+- **2026-10-11 — More garment types and a relaxed stance.**
+  - The Developer dropped the hand-in-pocket pose for a relaxed stance with both arms at the sides.
+  - The Developer added a crop top, sandals, clogs and heels as garment types. The art estimate is now 16 garment templates and 16 type icons (`spec.md` R17 and Revisions).
+- **2026-10-11 — The occasion picker returns from future work.** The Developer brought occasions (Class, Interview, Party, Banquet, Hike, Beach), formal wear, dresses and weather-linked accessories into scope, to be built after Core deploy. This serves user story 3 more fully. See `spec.md` R41, R42 and Revisions, and `plan.md` C7a–C7d.
 
 ## Approval
 

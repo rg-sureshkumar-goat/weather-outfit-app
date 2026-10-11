@@ -27,7 +27,7 @@ Help a US college student get dressed quickly for a full day away from their roo
 Defined by the user stories in `research.md`:
 1. **Effortless:** know what to wear from my own wardrobe without thinking about it.
 2. **Comfortable all day:** my outfit and what I carry suit the whole 9 am–9 pm window.
-3. **Stylish and suited to the occasion:** outfits from my own clothes that look intentionally styled. *Served in part:* outfits come from the User's own clothes, but matching an outfit to an occasion is out of scope.
+3. **Stylish and suited to the occasion:** outfits from my own clothes that look intentionally styled. Served by the closet and, after Core deploy, by the occasion choice (R41) and accessories (R42), added 2026-10-11.
 
 ## Screen designs
 
@@ -95,7 +95,7 @@ Translate every fixed brief requirement and the selected research-driven feature
 |---|---|---|
 | R15 | **Add by photo.** Phone: a live camera in the page (P4a), or "Photos". Laptop: choose or drop a photo, with the camera as an option (L4). If camera access is denied or unavailable, a message says so and choosing a photo still works. | Deny the camera: the message appears and Photos works. On a laptop, dropping a JPEG starts the cut-out step |
 | R16 | **Cut out on the device.** The User taps or clicks the item, and MediaPipe MagicTouch (6.2 MB model, Apache 2.0, hosted with the app) outlines it on the device. If there's no usable outline, the message says to retake on a plain background in good light, and the User can tap again. | The network log shows no photo upload. A flat-laid tee gets an outline. A blank photo gets the retake message |
-| R17 | **Type, colors and name.** The User picks one of 12 garment types: tee, short-sleeve button-up, long-sleeve shirt, sweater or hoodie, light jacket, warm coat, hooded rain jacket, pants, shorts, skirt, sneakers, boots (P4c). Base and print colors are sampled from the cut-out and can be changed. The name is suggested from color and type ("Navy tee") and can be edited. The weather it suits comes from its type. | Picking Tee shows Hot and Warm. Changing the base color updates the avatar preview. Save stays disabled until a type is picked |
+| R17 | **Type, colors and name.** The User picks one of 17 garment types: tee, short-sleeve button-up, long-sleeve shirt, sweater or hoodie, crop top, spaghetti-strap top, light jacket, warm coat, hooded rain jacket, pants, shorts, skirt, sneakers, boots, sandals, clogs, heels (P4c; crop top, spaghetti-strap top, sandals, clogs and heels added 2026-10-11; occasion and accessory types follow in R41 and R42). Base and print colors are sampled from the cut-out and can be changed. The name is suggested from color and type ("Navy tee") and can be edited. The weather it suits comes from its type. | Picking Tee shows Hot and Warm. Changing the base color updates the avatar preview. Save stays disabled until a type is picked |
 | R18 | **Kept on this device.** Each item (cut-out image, type, colors, name, date added) is stored in the browser's on-device storage and never uploaded. Items survive reloads. If storage is full, a message says so and nothing is half-saved. | The network log shows no upload on save. Items remain after a reload. A simulated storage error shows the message |
 | R19 | **Browse the closet.** Items are grouped by type (Tops, Pants, Outer layers, Shoes) with counts. The rack header shows the 3 most recently added. Opening an item shows its detail (P5; beside the grid on a laptop, L3). | After adding an item, it appears on the rack and in its group, and the count goes up |
 | R20 | **Edit and delete.** Edit reopens the confirm step. Delete asks for confirmation in the page, then permanently removes the item from the device. Outfits that used it re-pick that slot (R14). | Delete, then Cancel: the item stays. Delete, then Delete: the item is gone after a reload, and Today shows a replacement |
@@ -107,10 +107,12 @@ Translate every fixed brief requirement and the selected research-driven feature
 |---|---|---|
 | R22 | **First setup.** On first open: woman or man (P9, L9; R40), then selfie (P7, L7), then review the avatar (P8, L8), then location (P2, L2), then Today. "Take a selfie" opens the phone's front camera, or the webcam in the page on a laptop. "Choose a photo" and "Set it up by hand" are always offered. | A fresh install walks through the 4 steps in order. "Set it up by hand" skips straight to the review with the gender's default values |
 | R23 | **Read on the device, then discarded.** MediaPipe face and hair models read the selfie on the device. Skin tone is sampled from the cheeks and forehead and snapped to the nearest Monk tone. Hair color is matched to the nearest of 8. Hair length pre-selects a hairstyle (bald → Bald, very short → Buzz, short → Short crop, medium → Medium straight, long → Long straight). The selfie is never uploaded or stored, and it's discarded when setup ends. Only the chosen avatar values are saved. | The network log shows no image upload. After setup, on-device storage holds no image. Reloading during the review loses the selfie |
-| R24 | **Review and adjust.** Gender (Woman, Man), body (A, B) and face details (A, B), which work as R40 describes; skin tone (10 Monk tones), hair color (8), hairstyle (bald, buzz, short crop, short curls or coils, afro, medium straight, medium curly, long straight, long curly, braids or locs, bun or ponytail), facial hair (none, stubble, beard) and glasses (on or off). The preview updates as each one changes. "Looks good" saves the avatar values on this device. | Each control changes the preview right away. After a reload, the avatar matches the saved values |
+| R24 | **Review and adjust.** Gender (Woman, Man), Body (Female, Male) and Face (Female, Male), which work as R40 describes; skin tone (10 Monk tones), hair color (8), hairstyle (bald, buzz, short crop, short curls or coils, afro, medium straight, medium curly, long straight, long curly, braids or locs, bun or ponytail), facial hair (none, stubble, beard) and glasses (on or off). The preview updates as each one changes. "Looks good" saves the avatar values on this device. | Each control changes the preview right away. After a reload, the avatar matches the saved values |
 | R25 | **Setup problems.** No face found: "No face found. Try a front-facing photo in even light, or set it up by hand," with the adjust controls ready. Camera denied or unavailable: a message, and choosing a photo still works. | A photo without a face shows the message and controls. Denying the camera shows the message, and Choose a photo works |
 | R26 | **Edit later.** "Edit avatar" in the Closet opens the review screen with the current values, plus Retake. | Change the hairstyle there: Today's avatar shows it |
-| R40 | **Woman or man** (added 2026-10-10). The first setup step asks "Woman" or "Man". One must be picked to continue, and there is no third option (see Revisions). Gender sets the starting body (Woman: A, Man: B), face details (Woman: A, Man: B), the hairstyle for hand setup (Woman: Long straight, Man: Short crop; facial hair starts on None for both) and the starter outfit set (Content variation). It limits nothing: on the review screen, Body and Face can be changed on their own, and every hairstyle, facial-hair option, glasses choice and closet item type stays open to both. Changing Gender there resets Body, Face and the starter set to that gender's, and keeps skin, hair, facial hair and glasses. A hairstyle read from a selfie (R23) overrides the gender default. Gender is never read from the selfie. It is saved on this device with the avatar values, never sent, and can be changed in "Edit avatar" (R26). | A fresh install shows this step first, and Continue stays disabled until one is picked. Man, then "Set it up by hand": the review shows body B, face B and Short crop. Woman: body A, face A and Long straight. Changing Body on the review changes only the body. With an empty closet, Hot days use the Woman set for Woman and the Man set for Man. No network request carries the gender |
+| R40 | **Woman or man** (added 2026-10-10). The first setup step asks "Woman" or "Man". One must be picked to continue, and there is no third option (see Revisions). Gender sets the starting Body (Woman: Female, Man: Male), Face (Woman: Female, Man: Male), the hairstyle for hand setup (Woman: Long straight, Man: Short crop; facial hair starts on None for both) and the starter outfit set (Content variation). It limits nothing: on the review screen, Body and Face can be changed on their own, and every hairstyle, facial-hair option, glasses choice and closet item type stays open to both. Changing Gender there resets Body, Face and the starter set to that gender's, and keeps skin, hair, facial hair and glasses. A hairstyle read from a selfie (R23) overrides the gender default. Gender is never read from the selfie. It is saved on this device with the avatar values, never sent, and can be changed in "Edit avatar" (R26). | A fresh install shows this step first, and Continue stays disabled until one is picked. Man, then "Set it up by hand": the review shows Body Male, Face Male and Short crop. Woman: Body Female, Face Female and Long straight. Changing Body on the review changes only the body. With an empty closet, Hot days use the Woman set for Woman and the Man set for Man. No network request carries the gender |
+| R41 | **Occasions** (added 2026-10-11; built after Core deploy, plan.md C7a–C7c). Today offers an occasion choice: Class (the default), Interview, Party, Banquet, Hike, Beach. Class never uses special-occasion clothes. When the User deliberately picks another occasion, the outfit comes from closet items suited to it; any slot the closet can't fill uses that occasion's starter garment, labeled "Starter item". Weather rules (bands, rain, snow) still apply. One-piece garments (dresses, swimsuits) fill top and bottom together. The detailed rules are specified with the Developer before each occasion checkpoint: the picker's place on Today, whether the occasion is saved per date, how items are tagged for occasions, and each occasion's garment types, bands and starter garments. | With an empty closet, Interview shows a complete starter interview outfit with every item labeled "Starter item". Class never shows a blazer, suit, tuxedo, dress or swimwear. After adding a blazer, Interview uses it |
+| R42 | **Weather-linked accessories** (added 2026-10-11; built after Core deploy, plan.md C7d). The avatar wears accessories when the weather calls for them: a cap or sun hat and sunglasses at UV 3 or more, a beanie and scarf on Cold and Freezing days. The User's own accessories come first (cap, sun hat, beanie, scarf, sunglasses become closet types), otherwise starter accessories. They appear on the avatar and in the Wearing list. The details are specified with the Developer before that checkpoint. | A UV 6 day with an empty closet shows a starter cap and sunglasses. A Cold day shows a beanie and scarf. An added scarf is used on Cold days |
 
 ### Info, states and quality
 
@@ -173,16 +175,21 @@ Which of the User's items can be picked for each band (Developer's judgement; re
 | Type | Hot ≥85°F | Warm 70–84 | Chilly 55–69 | Cold 35–54 | Freezing <35 |
 |---|---|---|---|---|---|
 | Tee, short-sleeve button-up | ✓ | ✓ | | | |
+| Crop top (added 2026-10-11) | ✓ | ✓ | | | |
+| Spaghetti-strap top (added 2026-10-11) | ✓ | ✓ | | | |
 | Long-sleeve shirt | | ✓ | ✓ | ✓ under coat | ✓ under coat |
 | Sweater or hoodie | | | ✓ | ✓ under coat | ✓ under coat |
 | Shorts, skirt | ✓ | ✓ | | | |
 | Pants | | ✓ | ✓ | ✓ | ✓ |
 | Sneakers | ✓ | ✓ | ✓ | ✓ | |
 | Boots | | | | ✓ | ✓, and any snow day |
+| Sandals (added 2026-10-11) | ✓ | ✓ | | | |
+| Clogs (added 2026-10-11) | ✓ | ✓ | ✓ | | |
+| Heels (added 2026-10-11) | ✓ | ✓ | ✓ | | |
 | **Outer layer** | none | none | light jacket | warm coat | warm coat |
 
 - **Hooded rain jacket** (rain chance 40% or more and gusts of 25 mph or more; research.md reminder rule). It is added on Hot and Warm days and replaces the light jacket on Chilly days. On Cold and Freezing days it is worn over the warm coat: both are in the outfit, and the rain jacket is drawn on top. The User's own rain jacket comes first, otherwise the starter one. In summaries, {outer} names the coat when both are worn.
-- **Snow days** (any snowfall from 9 am to 9 pm). If the User owns boots, the shoes are one of their boots. If they own shoes but no boots, the shoes are one of their own shoes, of any type and in any band, and the Snow reminder uses its "no boots" wordings. If they own no shoes, starter boots are used.
+- **Snow days** (any snowfall from 9 am to 9 pm). If the User owns boots, the shoes are one of their boots. If they own shoes but no boots, the shoes come from their own shoes in any band, closed shoes first: sneakers, then clogs, then heels, and sandals only if they own nothing else (revised 2026-10-11). The Snow reminder then uses its "no boots" wordings. If they own no shoes, starter boots are used.
 - **Layer for later jacket:** a light jacket if the coldest hour is Chilly, a warm coat if it's Cold or Freezing. It's picked at random, in this order of preference: the User's neutral jackets, the User's other jackets, starter neutral jackets, other starter jackets. Neutral means a starter color marked neutral (white, cream, greys, black, navy, tan, khaki, camel, olive, denim, brown), or, for the User's items, a sampled base color with CIE LCh chroma below 30. The pick is saved with the day's other picks (R14).
 - **Hat and gloves** (Cold and Freezing, per NWS guidance) appear only in the written recommendation, not on the avatar.
 
@@ -258,9 +265,9 @@ List every art and graphical asset: the character, each outfit variation, icons,
 |---|---|---|---|
 | Character base: two bodies (A, B) and two sets of face details (A, B), recolored to 10 skin tones | Today, setup, add-item preview | SVG | Created by the Agent, art-directed by the Developer: "Original artwork created for this project" |
 | 11 hairstyles in 8 colors; stubble, beard, glasses | Avatar | SVG | Created (as above) |
-| 12 garment templates (recolorable base and print), each fitted to both bodies | Avatar, add-item preview | SVG | Created |
+| 16 garment templates (recolorable base and print), each fitted to both bodies; sandals and heels show the foot in the wearer's skin tone | Avatar, add-item preview | SVG | Created |
 | 30 starter outfits (15 per gender) and the yellow rain jacket | Outfits, Closet | Color data on the templates | Created |
-| 12 garment-type icons | Type picker, Closet tiles for starter items | SVG | Created |
+| 16 garment-type icons | Type picker, Closet tiles for starter items | SVG | Created |
 | 7 weather icons (clear, partly cloudy, cloudy, fog, rain, storm, snow) | Today, date strip, week list | SVG | Created |
 | 7 reminder icons (umbrella, sunscreen, water, layer, wind, rain jacket, snow) | Reminders | SVG | Created |
 | Interface icons (location, info, Shuffle, tabs, camera, photos, close, back, search, edit, delete, check, lock) | Throughout | SVG | Created |
@@ -269,7 +276,7 @@ List every art and graphical asset: the character, each outfit variation, icons,
 | Decorative map | Location setup | SVG | Created (abstract shapes, not map data) |
 | App icon and favicon | Browser tab, home screen | SVG/PNG | Created; a placeholder (white hanger on coral) from C0, final in C10 |
 | Web app manifest | Home Screen install (R38) | JSON | Created |
-| Rounded web font | All text | WOFF2 | A Google Font under the SIL Open Font License, chosen during the build and credited |
+| Rounded web font: Nunito (variable), chosen by the Developer in C2 | All text | WOFF2, bundled with the app from the npm package @fontsource-variable/nunito 5.3.0 | Licensed, SIL Open Font License 1.1 (Nunito by Vernon Adams and others); credited on Info |
 | MediaPipe runtime; Face Landmarker, Hair Segmenter and MagicTouch models | Setup, add item | JS, WASM, model files | Licensed, Apache 2.0, hosted with the app |
 | Monk Skin Tone Scale colors | Skin palette | Color values | Licensed, CC BY 4.0 (Ellis Monk) |
 
@@ -277,9 +284,8 @@ List every art and graphical asset: the character, each outfit variation, icons,
 
 Record features intentionally excluded from this project.
 
-- The occasion picker (interview, party, hike); research moved it to future work.
 - Exact garments on the avatar, photo-real try-on and 3D avatars.
-- Dresses and other one-piece garments; accessories as closet items (hats, bags); body shapes beyond the two bodies in R40.
+- Bags and other accessories not named in R42; body shapes beyond the two bodies in R40. (The occasion picker, dresses and accessories as closet items moved into scope on 2026-10-11: R41, R42.)
 - Gender options other than Woman and Man (Developer's decision, 2026-10-10; see Revisions).
 - Accounts, cloud sync and use on more than one device.
 - Non-US locations, metric units, forecasts beyond 7 days, and an hourly view.
@@ -311,6 +317,34 @@ After implementation or testing, record requirement changes and the evidence tha
   - **Agent defaults, stated to the Developer before building:** times read "3 pm"; reminders follow the table order; a day with no feels-like data is unavailable. The way candidates are built (R9, R11) is recorded under Content variation.
   - **Found while building C1:** snowfall isn't rounded. Real fixtures showed 0.249 in of snow in Minneapolis, which rounding would turn into 0, so "snow if any falls" would never fire.
   - **Changed:** R8, R10, R29, Window, Garment types by band, Content variation and Wordings.
+- **2026-10-11 — Four new garment types: crop top, sandals, clogs, heels (C2 art round).** After seeing the first character art, the Developer asked for a crop top, to check the art handles clothes that show skin, and for sandals, Crocs-style clogs and heels, to widen the shoes. Asked whether they should be mockups only or real types, the Developer chose real types.
+  - **Bands** (Developer approved the proposed table): crop top and sandals on Hot and Warm days; clogs and heels on Hot, Warm and Chilly days.
+  - **Snow days without boots:** closed shoes first (sneakers, clogs, heels), sandals last.
+  - **Heels** are open to both genders, keeping R40's rule that gender limits nothing.
+  - **Starter sets are unchanged:** the new types appear only as the User's own items.
+  - **Clogs** are drawn generic, not as any brand.
+  - **Changed:** R17 (12 → 16 types), Garment types by band, Snow days and Assets. The type picker (P4c, L4) needs four more tiles; its wireframes get updated in C7, where that screen is built.
+- **2026-10-11 — Occasions, formal wear, accessories and a spaghetti-strap top (C2 art review).** The Developer asked for:
+  - more natural bodies
+  - a spaghetti-strap top
+  - professional and formal clothing: suits, blazers, tuxedos, formal and banquet dresses
+  - accessories: hats, caps, scarves, glasses, sunglasses
+  - hoodies and sweaters
+
+  The Agent flagged that dresses, accessories as closet items and the occasion picker were out of scope, that formal wear needs occasions (the app picks by weather alone), and that this is a schedule risk. The Developer then chose:
+  - **Real formal types with an occasion picker,** covering the full user-story list: Class, Interview, Party, Banquet, Hike, Beach. Special-occasion clothes appear only when the User picks that occasion, from the closet first, with missing slots filled by that occasion's labeled starter garments (new R41).
+  - **Weather-linked accessories, including closet items** (new R42).
+  - **A spaghetti-strap top,** a real type for Hot and Warm days (R17).
+  - **Scheduling:** occasions and accessories are built in phases after the closet (C7), with Core deploy unchanged, but all the mockups are drawn now in C2.
+
+  **Changed:** Goal (story 3), R17, Garment types by band, new R41 and R42, and Out of scope.
+- **2026-10-11 — Art round 1 approved (C2).** Decisions recorded:
+  - **Font:** Nunito, self-hosted.
+  - **Review-screen labels:** Body and Face read "Female" and "Male", replacing A and B.
+  - **How garments fit both bodies:** one drawing per garment, built from each body's measurements and its weight-shift pose (Developer confirmed, keeping the approach in the approved art).
+  - **Art direction:** from reference 10, an expressive face, soft shading and a relaxed weight-shift pose, with Body B's legs set apart.
+  - **Deferred to the start of C5:** more hairstyles come in C5 as planned. Whether face shapes and more body sizes join the spec gets decided then, with options and costs, since body sizes are out of scope today.
+  - **Wireframes:** P8 and L8 relabeled.
 
 ## Approval
 
