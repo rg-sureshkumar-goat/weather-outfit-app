@@ -10,8 +10,14 @@
 import { piece, uid } from './draw.js';
 import { shades } from './paint.js';
 import { smoothClosed, curveThrough, limb, pt } from './shapes.js';
+import { widthScale } from './face.js';
 
-const at = (h) => (fx, fy) => ({ x: h.cx + h.rx * fx, y: h.cy + h.ry * fy });
+// A point in head units. On a fitted head (see hair()), the sides follow the
+// face shape's width at that height.
+const at = (h) => (fx, fy) => ({ x: h.cx + h.rx * fx * (h.widthAt ? h.widthAt(fy) : 1), y: h.cy + h.ry * fy });
+
+// The same fit for a point already in drawing units, such as one on an arc().
+const fit = (h) => (q) => (h.widthAt ? { x: h.cx + (q.x - h.cx) * h.widthAt((q.y - h.cy) / h.ry), y: q.y } : q);
 
 // A small seeded random source, so textures look natural but never change
 // between renders.
@@ -58,7 +64,7 @@ function curls(h, box, count, seed, size = 0.09) {
   for (let i = 0; i < count; i++) {
     const x = box.x0 + (box.x1 - box.x0) * rand();
     const y = box.y0 + (box.y1 - box.y0) * rand();
-    const c = { x: h.cx + h.rx * x, y: h.cy + h.ry * y };
+    const c = fit(h)({ x: h.cx + h.rx * x, y: h.cy + h.ry * y });
     const s = r * (0.7 + rand() * 0.6);
     lines.push({
       d: `M ${pt({ x: c.x - s, y: c.y })} a ${s} ${s} 0 1 1 ${s * 1.4} ${s * 0.9}`,
@@ -140,7 +146,7 @@ function shortCrop(h, color) {
 function shortCurls(h, color) {
   const p = at(h);
   // A rounded crop of tight curls, a little higher than the skull.
-  const dome = arc(p(0, -0.32), h.rx * 1.08, h.ry * 0.94, 186, 354, 13);
+  const dome = arc(p(0, -0.32), h.rx * 1.08, h.ry * 0.94, 186, 354, 13).map(fit(h));
   const hairline = [p(0.9, -0.02), p(0.82, -0.32), p(0.5, -0.5), p(0.15, -0.55), p(-0.2, -0.54), p(-0.55, -0.49), p(-0.84, -0.3), p(-0.9, -0.02)];
   const outline = wavy([...dome, ...hairline], p(0, -0.45), h.rx * 0.07);
   const front = piece({
@@ -158,7 +164,7 @@ function afro(h, color) {
   const center = p(0, -0.42);
   // A full round shape around the whole head, wider than the shoulders of
   // the face, ending at the jaw.
-  const ring = arc(center, h.rx * 1.72, h.ry * 1.36, 0, 360, 25).slice(0, 24);
+  const ring = arc(center, h.rx * 1.72, h.ry * 1.36, 0, 360, 25).slice(0, 24).map(fit(h));
   const volume = smoothClosed(wavy(ring, center, h.rx * 0.08));
   const back = piece({
     parts: [volume],
@@ -389,7 +395,10 @@ function bun(h, color) {
 // In the order the review screen lists them (R24).
 export const HAIRSTYLES = { bald, buzz, shortCrop, shortCurls, afro, mediumStraight, mediumCurly, longStraight, longCurly, braids, bun };
 
-export function hair(style, h, color) {
+// `faceShape` fits the style to the face (R43, C6c); Oval draws it as
+// approved in C5.
+export function hair(style, head, color, faceShape = 'oval') {
+  const h = faceShape === 'oval' ? head : { ...head, widthAt: widthScale(faceShape) };
   const draw = HAIRSTYLES[style];
   if (!draw) throw new Error(`Unknown hairstyle: ${style}`);
   return draw(h, color);

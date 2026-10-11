@@ -1,5 +1,7 @@
-// Local-only art review page (art.html, plan.md C2, C5, C6a and C6b). The
-// C6b face options come first, then the C6a body types: all 12 bodies (R43)
+// Local-only art review page (art.html, plan.md C2, C5, C6a, C6b and C6c).
+// The C6c hair, beards and moustaches on every face shape come first, then
+// the C6b face options,
+// then the C6a body types: all 12 bodies (R43)
 // in a range of outfits. Art round 2 (C5) follows: all 11 hairstyles on both bodies and in all 8 hair
 // colors, stubble, beard and glasses. Round 1 follows: both bodies in all 10
 // Monk tones wearing starter items, the new garment types, knitwear,
@@ -121,6 +123,48 @@ const faceRow = ([title, feature, options], r) => `
   })).join('')}</section>`;
 const FACE_SECTION = FACE_ROWS.map(faceRow).join('');
 
+// ---- C6c: hair on every face shape (R43) ---------------------------------------
+
+// One row per face set, the 8 shapes in the same columns, so each style can be
+// compared shape by shape.
+const SHAPES = Object.keys(FACE.FACE_SHAPES);
+const fittedHead = (set, shape, style, i, r, facialHair = 'none') => {
+  const look = { body: set, face: set, skin: MONK_TONES[(i * 3 + r + (set === 'B' ? 5 : 0)) % 10], hair: { style, color: HAIR_CYCLE[(i + r) % 8] }, features: { shape }, facialHair };
+  return `<figure class="head">${renderAvatar(look, {}).replace(`viewBox="${AVATAR_VIEWBOX}"`, FACE_VIEW)}<figcaption>${set === 'A' ? 'F' : 'M'} · ${shape}</figcaption></figure>`;
+};
+const FIT_ROWS = Object.keys(HAIRSTYLES).map((style, r) => `
+  <h3>${HAIRSTYLE_NAMES[style]}</h3>
+  <section class="heads eight">${['A', 'B'].flatMap((set) => SHAPES.map((shape, i) => fittedHead(set, shape, style, i, r))).join('')}</section>`).join('');
+
+// Every beard and every moustache on the 8 face shapes (Male only, R40).
+const facialRow = (title, choice, r) => `
+  <h3>${title}</h3>
+  <section class="heads eight">${SHAPES.map((shape, i) => fittedHead('B', shape, 'shortCrop', i, r, choice)).join('')}</section>`;
+const FIT_BEARDS = FACE.BEARDS.filter((b) => b !== 'none').map((beard, r) => facialRow(`Beard · ${beard}`, { beard, moustache: 'none' }, r)).join('');
+const FIT_MOUSTACHES = FACE.MOUSTACHES.filter((m) => m !== 'none').map((moustache, r) => facialRow(`Moustache · ${moustache}`, { beard: 'none', moustache }, r + 3)).join('');
+
+// Sample combinations, then the long styles over clothes: the beard, mouth
+// and moustache are drawn after the clothes and scarf.
+const LONG_VIEW = 'viewBox="100 40 200 290"';
+const manItem = (name) => STARTER_SETS.man.items.find((i) => i.name === name);
+const bearded = (beard, moustache, i, outfit, caption) => {
+  const look = { body: 'B', face: 'B', skin: MONK_TONES[(i * 3 + 2) % 10], hair: { style: 'shortCrop', color: HAIR_CYCLE[(i + 1) % 8] }, facialHair: { beard, moustache } };
+  return `<figure class="head">${renderAvatar(look, outfit).replace(`viewBox="${AVATAR_VIEWBOX}"`, LONG_VIEW)}<figcaption>${caption}</figcaption></figure>`;
+};
+const tee = { top: manItem('Heather-grey tee') };
+const FIT_COMBOS = [
+  ['goatee', 'chevron'], ['anchor', 'pencil'], ['circle', 'classic'], ['muttonChops', 'classic'], ['shortBoxed', 'classic'], ['full', 'classic'],
+  ['long', 'walrus'], ['garibaldi', 'handlebar'], ['ducktail', 'classic'], ['soulPatch', 'handlebar'], ['heavyStubble', 'horseshoe'], ['chinStrap', 'pencil'], ['soulPatch', 'fuManchu'],
+].map(([beard, moustache], i) => bearded(beard, moustache, i, tee, `${beard} + ${moustache}`)).join('');
+const OUTFITS = [
+  ['tee', tee],
+  ['hoodie', { top: manItem('Grey hoodie') }],
+  ['button-up', { top: manItem('Light-blue short-sleeve button-up') }],
+  ['coat and scarf', { top: manItem('Navy sweater'), outer: manItem('Navy coat'), scarf: own('scarf', '#5d7a99', 'Blue scarf') }],
+];
+const FIT_OVER_CLOTHES = [['long', 'none'], ['garibaldi', 'classic'], ['ducktail', 'chevron'], ['none', 'fuManchu']]
+  .flatMap(([beard, moustache], r) => OUTFITS.map(([name, outfit], i) => bearded(beard, moustache, r * 4 + i, outfit, `${beard} + ${moustache} · ${name}`))).join('');
+
 // ---- C6a: body types (R43) ------------------------------------------------------
 
 const TYPE_NAMES = { slim: 'Slim', average: 'Average', athletic: 'Athletic', hourglass: 'Hourglass', pear: 'Pear', broad: 'Broad', stocky: 'Stocky', plusSize: 'Plus-size' };
@@ -180,6 +224,17 @@ document.querySelector('#art').innerHTML = `
     <h1>Quick Dresser · art review</h1>
     <p>Original artwork created for this project. Monk Skin Tone Scale by Ellis Monk (CC BY 4.0). Local review page only.</p>
   </header>
+  <h2>C6c · All 11 hairstyles on all 8 face shapes (R43)</h2>
+  ${FIT_ROWS}
+  <h2>C6c · The 14 beards on all 8 face shapes (Male only)</h2>
+  ${FIT_BEARDS}
+  <h2>C6c · The 8 moustaches on all 8 face shapes (Male only)</h2>
+  ${FIT_MOUSTACHES}
+  <h2>C6c · Beard and moustache combinations</h2>
+  <section class="heads">${FIT_COMBOS}</section>
+  <h2>C6c · Long styles over the clothes and scarf</h2>
+  <section class="heads">${FIT_OVER_CLOTHES}</section>
+  <h2 class="round">C6b (approved)</h2>
   <h2>C6b · Face options (R43), each on both faces</h2>
   ${FACE_SECTION}
   <h2 class="round">C6a (approved)</h2>
@@ -220,5 +275,6 @@ style.textContent = `
   figcaption { padding: 0 10px; font-size: 12px; line-height: 1.35; display: grid; gap: 2px; }
   .heads { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
   .head figcaption { text-align: center; }
+  .heads.eight { grid-template-columns: repeat(8, minmax(0, 1fr)); }
 `;
 document.head.append(style);

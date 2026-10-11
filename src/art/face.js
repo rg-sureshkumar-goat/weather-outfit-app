@@ -138,6 +138,19 @@ function geometry(h, shapeName) {
   return { p, shape, T: shape.temple, C: shape.cheek, J: 0.8 * h.jaw * shape.jaw, N: shape.chin, Y: shape.chinY };
 }
 
+// How much wider (or narrower) a face shape is than Oval at a height fy:
+// 1 at the crown, the temple ratio at fy -0.2 and the cheekbone ratio from
+// fy 0.3 down. Hairstyles scale their sides by this so they hug every face
+// shape (R43, C6c); hair below the cheekbones falls straight.
+export function widthScale(shapeName = 'oval') {
+  const shape = FACE_SHAPES[shapeName] ?? FACE_SHAPES.oval;
+  const oval = FACE_SHAPES.oval;
+  const t = shape.temple / oval.temple;
+  const c = shape.cheek / oval.cheek;
+  const lerp = (a, b, k) => a + (b - a) * Math.min(1, Math.max(0, k));
+  return (fy) => (fy <= -0.8 ? 1 : fy <= -0.2 ? lerp(1, t, (fy + 0.8) / 0.6) : lerp(t, c, (fy + 0.2) / 0.5));
+}
+
 // Head outline: a rounded crown narrowing to the jaw and chin.
 export function headPath(h, shapeName = 'oval') {
   const { p, shape, T, C, J, N, Y } = geometry(h, shapeName);
@@ -183,46 +196,174 @@ export function headSkin(h, skin, set, features = {}) {
 
 // ---- Facial hair --------------------------------------------------------------
 
-// Facial hair (R24), in the hair color, Male only (R40, enforced on the
-// saved values). Stubble is a see-through shadow with fine dots; a beard is
-// a full shape from the sideburns around the jaw, with a mustache under the
-// nose. Both follow the face shape's jaw. The mouth is drawn on top of both.
-function facialHair(h, hairColor, kind, shapeName) {
-  if (!kind || kind === 'none') return '';
-  const { p, T, C, J, N, Y } = geometry(h, shapeName);
-  const inner = [p(0.86, 0.04), p(0.8, 0.36), p(0.58, 0.5), p(0.28, 0.5), p(0, 0.53), p(-0.28, 0.5), p(-0.58, 0.5), p(-0.8, 0.36), p(-0.86, 0.04)];
-  const mirror = (pts) => [...pts, ...[...pts].reverse().slice(1).map((q) => ({ x: 2 * h.cx - q.x, y: q.y }))];
-  if (kind === 'stubble') {
-    // Stays just inside the jaw line, so none of it shows on the neck.
-    const jawLine = mirror([p(-T * 0.95, 0.0), p(-C * 0.99, 0.3), p(-J * 0.975, 0.71), p(-N * 0.972, Y - 0.07), p(0, Y - 0.02)]);
-    const d = smoothClosed([...jawLine, ...inner]);
-    const id = uid('stubble');
-    const rand = seeded(12345);
-    let dots = '';
-    for (let i = 0; i < 110; i++) {
-      const q = p(-0.96 + rand() * 1.92, rand() * Y);
-      dots += `<circle cx="${q.x.toFixed(1)}" cy="${q.y.toFixed(1)}" r="0.9" fill="${hairColor}" opacity="0.55"/>`;
-    }
-    return `<clipPath id="${id}"><path d="${d}"/></clipPath><path d="${d}" fill="${hairColor}" opacity="0.2"/><g clip-path="url(#${id})">${dots}</g>`;
-  }
-  const outer = mirror([p(-T * 0.97, 0.0), p(-C * 1.031, 0.32), p(-(J * 1.05 + 0.04), 0.78), p(-N * 1.167, Y + 0.06), p(0, Y + 0.13)]);
-  const d = smoothClosed([...outer, ...inner]);
-  // Beard: soft strokes for texture and a shadow on the viewer's right.
+// A beard and a moustache (R24, R43), combined freely, in the hair color and
+// Male only (R40, enforced on the saved values). Beards follow the face
+// shape's jaw and leave the upper lip to the moustache; moustaches follow the
+// mouth's width. The mouth is drawn over the beard and under the moustache.
+export const BEARDS = ['none', 'lightStubble', 'heavyStubble', 'shortBoxed', 'full', 'long', 'garibaldi', 'ducktail', 'goatee', 'anchor', 'circle', 'chinStrap', 'muttonChops', 'soulPatch'];
+export const MOUSTACHES = ['none', 'classic', 'chevron', 'handlebar', 'pencil', 'horseshoe', 'walrus', 'fuManchu'];
+
+// Before C6d the saved values had one choice: none, stubble or beard.
+const ONE_CHOICE = {
+  none: { beard: 'none', moustache: 'none' },
+  stubble: { beard: 'lightStubble', moustache: 'none' },
+  beard: { beard: 'full', moustache: 'classic' },
+};
+export const facialHairChoice = (value) => (typeof value === 'string' ? ONE_CHOICE[value] : value) ?? ONE_CHOICE.none;
+
+// Left-side points, from the top down to the middle, made into the whole
+// outline by adding their mirror image.
+const mirrored = (h, pts) => [...pts, ...[...pts].reverse().slice(1).map((q) => ({ x: 2 * h.cx - q.x, y: q.y }))];
+
+// The top edge of a cheek-to-cheek beard, right to left: down the sideburns,
+// along the cheeks, to the mouth's corners and under the mouth. The upper lip
+// stays bare for the moustache.
+function aroundMouth(h, g, lip) {
+  const { p } = g;
+  const sc = h.rx / 53;
+  const right = [p(0.86, 0.04), p(0.8, 0.36), p(0.6, 0.5), { x: h.cx + lip.w + 7 * sc, y: lip.y - 4 * sc }, { x: h.cx + lip.w * 0.5, y: lip.y + 2 * sc }];
+  return [...right, { x: h.cx, y: lip.y + 3.5 * sc }, ...[...right].reverse().map((q) => ({ x: 2 * h.cx - q.x, y: q.y }))];
+}
+
+// Soft hair strokes from `top` down, `len` long, across `span` of the face;
+// `top` returns null where a beard has no hair.
+function beardStrokes(g, { count = 26, span = 0.9, top = (fx) => (Math.abs(fx) > 0.6 ? 0.2 : 0.62), len = 13 }) {
   const strokes = [];
-  for (let i = 0; i < 26; i++) {
-    const fx = -0.9 + (i / 25) * 1.8;
-    const top = Math.abs(fx) > 0.6 ? 0.2 : 0.62;
-    const a = p(fx, top + ((i * 0.37) % 0.3));
-    strokes.push({ d: `M ${a.x} ${a.y} q ${fx * 2} 7 ${fx * 3} 13`, tone: i % 3 ? 'deep' : 'light', width: 1.6, opacity: 0.8 });
+  for (let i = 0; i < count; i++) {
+    const fx = -span + (i / (count - 1)) * 2 * span;
+    if (top(fx) === null) continue;
+    const a = g.p(fx, top(fx) + ((i * 0.37) % 0.3));
+    strokes.push({ d: `M ${a.x} ${a.y} q ${fx * 2} ${len * 0.55} ${fx * 3} ${len}`, tone: i % 3 ? 'deep' : 'light', width: 1.6, opacity: 0.8 });
   }
+  return strokes;
+}
+
+// Stubble: a see-through shadow with fine dots, just inside the jaw line so
+// none of it shows on the neck. Heavy stubble is darker and denser.
+function stubble(h, g, color, heavy) {
+  const { p, T, C, J, N, Y } = g;
+  const jawLine = mirrored(h, [p(-T * 0.95, 0.0), p(-C * 0.99, 0.3), p(-J * 0.975, 0.71), p(-N * 0.972, Y - 0.07), p(0, Y - 0.02)]);
+  const inner = [p(0.86, 0.04), p(0.8, 0.36), p(0.58, 0.5), p(0.28, 0.5), p(0, 0.53), p(-0.28, 0.5), p(-0.58, 0.5), p(-0.8, 0.36), p(-0.86, 0.04)];
+  const d = smoothClosed([...jawLine, ...inner]);
+  const id = uid('stubble');
+  const rand = seeded(12345);
+  let dots = '';
+  for (let i = 0; i < (heavy ? 260 : 110); i++) {
+    const q = p(-0.96 + rand() * 1.92, rand() * Y);
+    dots += `<circle cx="${q.x.toFixed(1)}" cy="${q.y.toFixed(1)}" r="${heavy ? 1.1 : 0.9}" fill="${color}" opacity="${heavy ? 0.75 : 0.55}"/>`;
+  }
+  return `<clipPath id="${id}"><path d="${d}"/></clipPath><path d="${d}" fill="${color}" opacity="${heavy ? 0.38 : 0.2}"/><g clip-path="url(#${id})">${dots}</g>`;
+}
+
+// Each beard's outline: `outer` runs left to right under the jaw (left half,
+// mirrored), `inner` right to left along the top edge.
+function beardShape(h, g, name, lip) {
+  const { p, T, C, J, N, Y } = g;
+  const sc = h.rx / 53;
+  const mouthLine = (w) => [{ x: h.cx + w, y: lip.y - 1 * sc }, { x: h.cx + lip.w * 0.5, y: lip.y + 2 * sc }, { x: h.cx, y: lip.y + 3.5 * sc }, { x: h.cx - lip.w * 0.5, y: lip.y + 2 * sc }, { x: h.cx - w, y: lip.y - 1 * sc }];
+  const mx = lip.w / h.rx; // the mouth corner, in head units
+  // Jaw-following sides shared by the cheek-to-cheek beards.
+  const jawSides = (out) => [p(-T * 0.97, 0.0), p(-C * (1 + 0.031 * out), 0.32), p(-(J * (1 + 0.05 * out) + 0.04 * out), 0.78)];
+  switch (name) {
+    case 'shortBoxed':
+      return { outer: mirrored(h, [p(-T * 0.96, 0.02), p(-C * 1.0, 0.32), p(-(J * 1.01 + 0.01), 0.76), p(-N * 1.06, Y + 0.02), p(0, Y + 0.06)]), inner: aroundMouth(h, g, lip), strokes: { len: 8 } };
+    case 'full':
+      return { outer: mirrored(h, [...jawSides(1), p(-N * 1.167, Y + 0.06), p(0, Y + 0.13)]), inner: aroundMouth(h, g, lip), strokes: {} };
+    case 'long':
+      return { outer: mirrored(h, [...jawSides(1), p(-(N * 1.25 + 0.04), Y + 0.32), p(-0.34, Y + 0.62), p(0, Y + 0.8)]), inner: aroundMouth(h, g, lip), strokes: { count: 32, len: 30 }, hangs: true };
+    case 'garibaldi':
+      return { outer: mirrored(h, [p(-T * 0.99, 0.0), p(-C * 1.06, 0.32), p(-(J * 1.12 + 0.1), 0.8), p(-(J * 1.0 + 0.06), Y + 0.32), p(-0.42, Y + 0.52), p(0, Y + 0.58)]), inner: aroundMouth(h, g, lip), strokes: { count: 34, span: 1, len: 22 }, hangs: true };
+    case 'ducktail':
+      return { outer: mirrored(h, [...jawSides(1), p(-N * 1.05, Y + 0.3), p(-0.1, Y + 0.6), p(0, Y + 0.66)]), inner: aroundMouth(h, g, lip), strokes: { count: 28, len: 24 }, hangs: true };
+    case 'goatee': {
+      const w = mx + 0.09;
+      return { outer: mirrored(h, [p(-w, 0.66), p(-w * 0.98, 0.84), p(-w * 0.75, Y + 0.04), p(-0.18, Y + 0.13), p(0, Y + 0.15)]), inner: mouthLine(lip.w + 2 * sc), strokes: { count: 12, span: w * 0.85, top: () => 0.8, len: 10 } };
+    }
+    case 'anchor':
+      // Arms along the jaw, measured from the jaw so they suit narrow chins,
+      // and a point under the chin.
+      return { outer: mirrored(h, [p(-J * 0.88, 0.74), p(-N * 1.1, Y - 0.02), p(-0.16, Y + 0.12), p(0, Y + 0.26)]), inner: [p(J * 0.8, 0.78), p(N * 0.92, Y - 0.1), { x: h.cx + lip.w * 0.35, y: lip.y + 14 * sc }, { x: h.cx, y: lip.y + 12 * sc }, { x: h.cx - lip.w * 0.35, y: lip.y + 14 * sc }, p(-N * 0.92, Y - 0.1), p(-J * 0.8, 0.78)], strokes: { count: 14, span: 0.55, top: () => 0.88, len: 9 } };
+    case 'circle': {
+      const w = mx + 0.16;
+      return { outer: mirrored(h, [p(-w, 0.55), p(-w * 1.02, 0.78), p(-w * 0.82, Y + 0.02), p(-0.22, Y + 0.12), p(0, Y + 0.15)]), inner: [p(w - 0.08, 0.55), { x: h.cx + lip.w + 3 * sc, y: lip.y + 1 * sc }, ...mouthLine(lip.w).slice(1, 4), { x: h.cx - lip.w - 3 * sc, y: lip.y + 1 * sc }, p(-(w - 0.08), 0.55)], strokes: { count: 14, span: w * 0.9, top: () => 0.62, len: 12 } };
+    }
+    case 'chinStrap':
+      return { outer: mirrored(h, [p(-T * 0.97, 0.0), p(-C * 1.02, 0.32), p(-(J * 1.03 + 0.02), 0.76), p(-N * 1.1, Y + 0.03), p(0, Y + 0.07)]), inner: [p(T * 0.89, 0.02), p(C * 0.93, 0.32), p(J * 0.92, 0.7), p(N * 0.92, Y - 0.06), p(0, Y - 0.02), p(-N * 0.92, Y - 0.06), p(-J * 0.92, 0.7), p(-C * 0.93, 0.32), p(-T * 0.89, 0.02)], strokes: { count: 0 } };
+    case 'muttonChops': {
+      // Two pieces: wide sideburns that sweep toward the mouth's corners and
+      // leave the chin bare.
+      const side = (s) => [p(s * T * 0.97, -0.08), p(s * C * 1.03, 0.32), p(s * (J * 1.05 + 0.03), 0.78), p(s * J * 0.86, 0.86), p(s * Math.max(mx + 0.2, J * 0.72), 0.76), p(s * 0.68, 0.48), p(s * 0.84, 0.2), p(s * 0.86, -0.08)];
+      return { parts: [smoothClosed(side(-1)), smoothClosed(side(1))], strokes: { count: 20, span: 0.95, top: (fx) => (Math.abs(fx) > 0.62 ? 0.3 : null), len: 13 } };
+    }
+    case 'soulPatch':
+      return { parts: [smoothClosed([{ x: h.cx, y: lip.y + 17 * sc }, p(0.1, 0.96), p(0.07, 1.07), p(0, 1.13), p(-0.07, 1.07), p(-0.1, 0.96)])], strokes: { count: 0 } };
+    default:
+      return null;
+  }
+}
+
+function beard(h, g, color, name, lip) {
+  if (name === 'lightStubble' || name === 'heavyStubble') return stubble(h, g, color, name === 'heavyStubble');
+  const shape = beardShape(h, g, name, lip);
+  if (!shape) return '';
+  const { p } = g;
   return piece({
-    parts: [d],
-    base: hairColor,
+    parts: shape.parts ?? [smoothClosed([...shape.outer, ...shape.inner])],
+    base: color,
     name: 'beard',
     outline: 2,
+    // A shadow on the viewer's right, as on the hair.
     shade: [{ d: smoothClosed([p(0.35, 0.95), p(0.9, 0.5), p(1.0, 0.1), p(0.8, 0.4), p(0.4, 0.75)]), tone: 'shadow', opacity: 0.8 }],
-    lines: strokes,
+    lines: beardStrokes(g, shape.strokes),
   });
+}
+
+// Moustaches, drawn from the mouth: `lip.y` is the top of the open mouth and
+// `lip.w` its half width. They start just under the nose.
+function moustache(h, g, color, name, lip) {
+  const sc = h.rx / 53;
+  const { cx } = h;
+  const at = (u, v) => ({ x: cx + u * sc, y: lip.y + v * sc });
+  const w = lip.w / sc;
+  // Right half, top edge from the middle out and bottom edge back in; the
+  // left half mirrors it.
+  const both = (right) => [...right, ...[...right].reverse().map((q) => ({ x: 2 * cx - q.x, y: q.y }))];
+  const parts = [];
+  let lines = [];
+  switch (name) {
+    case 'classic':
+      parts.push(smoothClosed(both([at(0, -8), at(5, -9.5), at(w * 0.7, -8), at(w + 6, -2), at(w + 8, 3), at(w + 3, 1), at(w * 0.5, -0.5), at(0, 0.5)])));
+      break;
+    case 'chevron':
+      parts.push(smoothClosed(both([at(0, -9.5), at(6, -11), at(w * 0.75, -9.5), at(w + 7, -2), at(w + 9, 5), at(w + 3, 4), at(w * 0.5, 2.5), at(0, 3)])));
+      break;
+    case 'handlebar':
+      parts.push(smoothClosed(both([at(0, -7.5), at(5, -8.5), at(w * 0.7, -7), at(w + 9, -4), at(w + 16, -9), at(w + 19, -17), at(w + 17, -12), at(w + 12, -1.5), at(w * 0.55, -0.5), at(0, -0.5)])));
+      break;
+    case 'pencil':
+      parts.push(smoothClosed(both([at(1.5, -4.5), at(w * 0.6, -4), at(w + 3, -1.5), at(w + 3, -0.5), at(w * 0.6, -1.5), at(1.5, -2)])));
+      break;
+    case 'horseshoe': {
+      // A moustache with bars down past the mouth's corners to the jaw.
+      const down = (g.Y * h.ry - (lip.y - h.cy)) / sc;
+      parts.push(smoothClosed(both([at(0, -8), at(5, -9.5), at(w * 0.7, -8), at(w + 6, -5), at(w + 11, 2), at(w + 11, down - 2), at(w + 8, down + 1), at(w + 4, down - 2), at(w + 3, 2), at(w * 0.5, -0.5), at(0, 0.5)])));
+      break;
+    }
+    case 'walrus':
+      // Thick and drooping over the top lip.
+      parts.push(smoothClosed(both([at(0, -10), at(7, -11.5), at(w * 0.8, -9.5), at(w + 8, -2), at(w + 9, 9), at(w + 5, 7), at(w * 0.75, 7.5), at(w * 0.45, 5.5), at(w * 0.2, 7), at(0, 5.5)])));
+      lines = [-0.75, -0.45, -0.2, 0.2, 0.45, 0.75].map((k, i) => ({ d: `M ${cx + k * w * sc} ${lip.y - 6 * sc} q ${k * 2 * sc} ${6 * sc} ${k * 3 * sc} ${11 * sc}`, tone: i % 2 ? 'deep' : 'light', width: 1.5, opacity: 0.8 }));
+      break;
+    case 'fuManchu': {
+      // A thin moustache whose ends hang in long strands below the chin.
+      const down = (g.Y * h.ry - (lip.y - h.cy)) / sc + 30;
+      parts.push(smoothClosed(both([at(0, -6.5), at(w * 0.6, -6), at(w + 3, -3), at(w + 5.5, 4), at(w + 6, down * 0.55), at(w + 4.5, down), at(w + 2.5, down * 0.55), at(w + 1.5, 2), at(w * 0.55, -2), at(0, -2.5)])));
+      break;
+    }
+    default:
+      return '';
+  }
+  return piece({ parts, base: color, name: 'moustache', outline: 1.8, shade: [{ d: smoothClosed([at(w * 0.3, -12), at(w + 12, -12), at(w + 12, 40), at(w * 0.6, 4)]), tone: 'shadow', opacity: 0.6 }], lines });
 }
 
 // ---- Eyes, lashes, brows ------------------------------------------------------
@@ -465,8 +606,9 @@ function faceLines(h, name, s, eyes) {
 
 // ---- The face -------------------------------------------------------------------
 
-// { skin, hairColor, set: 'A'|'B', facialHair, features }
-export function face(h, { skin, hairColor, set, facialHair: facialHairKind = 'none', features = {} }) {
+// The face up to the nose and face extras; the beard, mouth and moustache
+// come from faceFront(). { skin, hairColor, set: 'A'|'B', features }
+export function face(h, { skin, hairColor, set, features = {} }) {
   const opts = faceOptions(set, features);
   const sc = h.rx / 53;
   const { cx, cy } = h;
@@ -492,7 +634,17 @@ export function face(h, { skin, hairColor, set, facialHair: facialHairKind = 'no
   out += nose(h, opts.nose, s);
   out += faceLines(h, opts.lines, s, eyes);
   out += beautyMark(h, opts.mark, skin);
-  out += facialHair(h, hairColor, facialHairKind, opts.shape);
-  out += mouth(h, set, opts, s, skin);
   return out;
+}
+
+// The beard under the mouth and the moustache over its top edge. renderAvatar
+// draws these after the clothes and scarf, so long beards hang over them.
+// { skin, hairColor, set: 'A'|'B', facialHair, features }
+export function faceFront(h, { skin, hairColor, set, facialHair = 'none', features = {} }) {
+  const opts = faceOptions(set, features);
+  const sc = h.rx / 53;
+  const { beard: beardName, moustache: moustacheName } = facialHairChoice(facialHair);
+  const g = geometry(h, opts.shape);
+  const lip = { w: (MOUTHS[opts.mouth] ?? MOUTHS.medium).w * sc, y: h.cy + 42 * sc };
+  return beard(h, g, hairColor, beardName, lip) + mouth(h, set, opts, shades(skin), skin) + moustache(h, g, hairColor, moustacheName, lip);
 }

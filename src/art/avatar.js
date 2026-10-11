@@ -10,7 +10,7 @@
 
 import { bodyFor } from './bodies.js';
 import { skinBase, arms } from './figure.js';
-import { face } from './face.js';
+import { face, faceFront } from './face.js';
 import { hair } from './hair.js';
 import { TEMPLATES } from './garments.js';
 import { FORMAL } from './formal.js';
@@ -44,12 +44,13 @@ function drawItem(item, body, extras) {
 // look: { body: 'A'|'B', bodyType (bodies.js BODY_TYPES; default
 //         'average'), face: 'A'|'B', features (face.js options; any may
 //         be missing), skin, hair: { style, color },
-//         facialHair: 'none'|'stubble'|'beard', glasses }
+//         facialHair: { beard, moustache } (face.js BEARDS, MOUSTACHES;
+//         the older 'none'|'stubble'|'beard' still works), glasses }
 // outfit: { top, bottom, shoes, outer, rain, dress, neckwear, scarf, hat,
 //           eyewear } items (any may be missing)
 export function renderAvatar(look, outfit = {}, { title = '' } = {}) {
   const body = bodyFor(look.body, look.bodyType);
-  const h = hair(look.hair.style, body.head, look.hair.color);
+  const h = hair(look.hair.style, body.head, look.hair.color, look.features?.shape);
   const dress = drawItem(outfit.dress, body);
   const top = dress ? null : drawItem(outfit.top, body);
   const bottom = dress ? null : drawItem(outfit.bottom, body);
@@ -72,7 +73,7 @@ export function renderAvatar(look, outfit = {}, { title = '' } = {}) {
   const layers = [
     h.back,
     skinBase(body, look.skin, look.face, look.features),
-    face(body.head, { skin: look.skin, hairColor: look.hair.color, set: look.face, facialHair: look.facialHair, features: look.features }),
+    face(body.head, { skin: look.skin, hairColor: look.hair.color, set: look.face, features: look.features }),
     shoes?.svg,
     bottom?.svg,
     (dress || top)?.torso,
@@ -82,6 +83,8 @@ export function renderAvatar(look, outfit = {}, { title = '' } = {}) {
     arms(body, look.skin, armStyle),
     sleeveLayer?.sleeves,
     scarf?.svg,
+    // Beard, mouth and moustache over the clothes, so long beards hang over them.
+    faceFront(body.head, { skin: look.skin, hairColor: look.hair.color, set: look.face, facialHair: look.facialHair, features: look.features }),
     eyewear?.svg ?? (look.glasses ? glasses(body) : ''),
     h.front,
     hat?.svg,

@@ -79,13 +79,13 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 **Art** (`src/art/`), drawn as SVG strings by `renderAvatar(look, outfit)` in `avatar.js`, which fixes the layer order:
 - **`bodies.js`:** the two bodies' measurements and weight-shift pose.
 - **`figure.js`:** skin, limbs and hands.
-- **`face.js`:** head shape, ears, eyes, brows, nose, mouth, facial hair and the face extras, each a named option (R43); with no options, each face set draws its approved defaults.
+- **`face.js`:** head shape, ears, eyes, brows, nose, mouth, beards and moustaches, and the face extras, each a named option (R43); with no options, each face set draws its approved defaults. `faceFront()` draws the beard, mouth and moustache, which `renderAvatar` layers over the clothes so long beards hang over them.
 - **`fit.js`:** shared garment shapes.
 - **`garments.js`:** casual wear.
 - **`formal.js`:** formal wear and dresses.
 - **`shoes.js`:** shoes.
 - **`accessories.js`:** hats, scarf and eyewear.
-- **`hair.js`:** hairstyles.
+- **`hair.js`:** hairstyles, fitted to the face shape's width (`widthScale` in `face.js`).
 - **`palette.js`:** skin tones, hair colors and starter colors.
 
 Every garment is one drawing fitted from body measurements, so it fits both bodies.

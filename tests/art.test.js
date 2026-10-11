@@ -303,3 +303,152 @@ describe('face options (R43)', () => {
     expect(beard('round')).not.toBe(beard('heart'));
   });
 });
+
+// C6c (R43): the 11 hairstyles, stubble and beard fitted to all 8 face shapes.
+describe('hair fitted to the face shape (R43)', () => {
+  const SHAPES = ['oval', 'round', 'square', 'heart', 'oblong', 'diamond', 'triangle', 'rectangle'];
+  const norm = (s) => s.replace(/qd-([a-z-]+)-\d+/g, 'qd-$1-N');
+
+  it('the width rule: 1 on Oval and at the crown, the temple and cheekbone ratios below', async () => {
+    const { FACE_SHAPES, widthScale } = await import('../src/art/face.js');
+    for (const shape of SHAPES) {
+      const w = widthScale(shape);
+      const { temple, cheek } = FACE_SHAPES[shape];
+      expect(w(-1)).toBe(1);
+      expect(w(-0.2)).toBeCloseTo(temple / FACE_SHAPES.oval.temple);
+      expect(w(0.3)).toBeCloseTo(cheek / FACE_SHAPES.oval.cheek);
+      // Long hair falls straight below the cheekbones.
+      expect(w(1.5)).toBe(w(0.3));
+    }
+    for (const fy of [-1.2, -0.5, 0, 0.6, 2]) expect(widthScale('oval')(fy)).toBe(1);
+  });
+
+  it('draws every hairstyle on every face shape on both faces, with unique ids', async () => {
+    const { HAIRSTYLES } = await import('../src/art/hair.js');
+    for (const set of ['A', 'B']) {
+      for (const style of Object.keys(HAIRSTYLES)) {
+        for (const shape of SHAPES) {
+          for (const facialHair of set === 'B' ? ['none', 'stubble', 'beard'] : ['none']) {
+            const svg = renderAvatar(look(set, { hair: { style, color: HAIR_COLORS.black }, features: { shape }, facialHair }), {});
+            expect(svg, `${set} ${style} ${shape} ${facialHair}`).not.toContain('NaN');
+            const ids = [...svg.matchAll(/ id="([^"]+)"/g)].map((m) => m[1]);
+            expect(new Set(ids).size).toBe(ids.length);
+          }
+        }
+      }
+    }
+  });
+
+  it('Oval draws every hairstyle as approved: the same as no face shape', async () => {
+    const { HAIRSTYLES } = await import('../src/art/hair.js');
+    for (const set of ['A', 'B']) {
+      for (const style of Object.keys(HAIRSTYLES)) {
+        const hair = { style, color: HAIR_COLORS.brown };
+        expect(norm(renderAvatar(look(set, { hair, features: { shape: 'oval' } }), {}))).toBe(norm(renderAvatar(look(set, { hair }), {})));
+      }
+    }
+  });
+
+  it('the sides follow the face: narrower at a Diamond temple, wider at a Heart temple', async () => {
+    const { hair } = await import('../src/art/hair.js');
+    const { bodyFor } = await import('../src/art/bodies.js');
+    for (const set of ['A', 'B']) {
+      const head = bodyFor(set, 'average').head;
+      // Half-width of the hair outline between the brows and the cheekbones.
+      const halfWidth = (shape) => {
+        const d = hair('shortCrop', head, '#333333', shape).front.match(/<clipPath id="[^"]+"><path d="([^"]+)"/)[1];
+        const n = d.match(/-?\d+\.?\d*/g).map(Number);
+        let widest = 0;
+        for (let i = 0; i < n.length; i += 2) {
+          const fy = (n[i + 1] - head.cy) / head.ry;
+          if (fy >= -0.5 && fy <= 0.1) widest = Math.max(widest, Math.abs(n[i] - head.cx));
+        }
+        return widest;
+      };
+      expect(halfWidth('diamond')).toBeLessThan(halfWidth('oval'));
+      expect(halfWidth('heart')).toBeGreaterThan(halfWidth('oval'));
+    }
+  });
+
+  it('every hairstyle is drawn differently on each of the 8 face shapes', async () => {
+    const { HAIRSTYLES, hair } = await import('../src/art/hair.js');
+    const head = (await import('../src/art/bodies.js')).bodyFor('A', 'average').head;
+    // Bald draws only a scalp shine, so it has no sides to fit.
+    for (const style of Object.keys(HAIRSTYLES).filter((s) => s !== 'bald')) {
+      const drawn = new Set(SHAPES.map((shape) => norm(JSON.stringify(hair(style, head, '#333333', shape)))));
+      expect(drawn.size, style).toBe(SHAPES.length);
+    }
+  });
+
+  it('every beard is drawn to each of the 8 jaws', async () => {
+    const { BEARDS } = await import('../src/art/face.js');
+    for (const beard of BEARDS.filter((b) => b !== 'none')) {
+      const jaws = new Set(SHAPES.map((shape) => norm(renderAvatar(look('B', { features: { shape }, facialHair: { beard, moustache: 'none' } }), {}))));
+      expect(jaws.size, beard).toBe(SHAPES.length);
+    }
+  });
+});
+
+// C6c (R43): beards and moustaches, combined freely, Male only (R40).
+describe('beards and moustaches (R43)', () => {
+  const SHAPES = ['oval', 'round', 'square', 'heart', 'oblong', 'diamond', 'triangle', 'rectangle'];
+  const norm = (s) => s.replace(/qd-([a-z-]+)-\d+/g, 'qd-$1-N');
+  const man = (facialHair, extra = {}) => look('B', { facialHair, ...extra });
+
+  it('offers the 14 beards and 8 moustaches the spec lists', async () => {
+    const { BEARDS, MOUSTACHES } = await import('../src/art/face.js');
+    expect(BEARDS).toEqual(['none', 'lightStubble', 'heavyStubble', 'shortBoxed', 'full', 'long', 'garibaldi', 'ducktail', 'goatee', 'anchor', 'circle', 'chinStrap', 'muttonChops', 'soulPatch']);
+    expect(MOUSTACHES).toEqual(['none', 'classic', 'chevron', 'handlebar', 'pencil', 'horseshoe', 'walrus', 'fuManchu']);
+  });
+
+  it('draws every beard with every moustache on every face shape, with unique ids', async () => {
+    const { BEARDS, MOUSTACHES } = await import('../src/art/face.js');
+    for (const beard of BEARDS) {
+      for (const moustache of MOUSTACHES) {
+        for (const shape of SHAPES) {
+          const svg = renderAvatar(man({ beard, moustache }, { features: { shape } }), {});
+          expect(svg, `${beard} ${moustache} ${shape}`).not.toContain('NaN');
+          const ids = [...svg.matchAll(/ id="([^"]+)"/g)].map((m) => m[1]);
+          expect(new Set(ids).size).toBe(ids.length);
+        }
+      }
+    }
+  });
+
+  it('every choice draws something different, and None draws nothing', async () => {
+    const { BEARDS, MOUSTACHES } = await import('../src/art/face.js');
+    const beards = BEARDS.map((beard) => norm(renderAvatar(man({ beard, moustache: 'none' }), {})));
+    const moustaches = MOUSTACHES.map((moustache) => norm(renderAvatar(man({ beard: 'none', moustache }), {})));
+    expect(new Set(beards).size).toBe(BEARDS.length);
+    expect(new Set(moustaches).size).toBe(MOUSTACHES.length);
+    expect(beards[0]).not.toMatch(/qd-(beard|stubble|moustache)/);
+  });
+
+  it('the one choice saved before C6d still draws: Stubble is Light stubble, Beard is Full with Classic', () => {
+    const same = (a, b) => expect(norm(renderAvatar(man(a), {}))).toBe(norm(renderAvatar(man(b), {})));
+    same('none', { beard: 'none', moustache: 'none' });
+    same('stubble', { beard: 'lightStubble', moustache: 'none' });
+    same('beard', { beard: 'full', moustache: 'classic' });
+  });
+
+  it('moustaches follow the mouth: a wide mouth gets a wider moustache', () => {
+    const draw = (mouth) => renderAvatar(man({ beard: 'none', moustache: 'classic' }, { features: { mouth } }), {}).match(/<clipPath id="qd-moustache-clip-\d+"><path d="([^"]+)"/)[1];
+    const span = (d) => { const xs = d.match(/-?\d+\.?\d*/g).map(Number).filter((_, i) => i % 2 === 0); return Math.max(...xs) - Math.min(...xs); };
+    expect(span(draw('wide'))).toBeGreaterThan(span(draw('medium')));
+    expect(span(draw('small'))).toBeLessThan(span(draw('medium')));
+  });
+
+  it('the beard, mouth and moustache are drawn over the clothes and scarf, so long beards hang over them', () => {
+    const top = '#0a0a02';
+    const scarf = '#0a0a05';
+    const svg = renderAvatar(man({ beard: 'long', moustache: 'walrus' }), { top: item('tee', top), scarf: item('scarf', scarf) });
+    const at = (s) => svg.indexOf(s);
+    expect(at(`fill="${top}"`)).toBeGreaterThan(-1);
+    expect(at(`fill="${scarf}"`)).toBeGreaterThan(-1);
+    expect(at('qd-beard-clip')).toBeGreaterThan(at(`fill="${top}"`));
+    expect(at('qd-beard-clip')).toBeGreaterThan(at(`fill="${scarf}"`));
+    // The mouth (its dark opening) sits between the beard and the moustache.
+    expect(at('fill="#5b2229"')).toBeGreaterThan(at('qd-beard-clip'));
+    expect(at('qd-moustache-clip')).toBeGreaterThan(at('fill="#5b2229"'));
+  });
+});
