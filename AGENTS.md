@@ -46,4 +46,28 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 
 # Project
 
-Fill in as the project takes shape: how to run it locally, how to test it, and any commands or structure that aren't obvious from the code.
+**Quick Dresser.** A static single-page app: Vite and plain JavaScript modules, no UI framework. Source of truth: `spec.md` (R1–R40) and `plan.md` (checkpoints C0–C12). Needs Node 22.12 or newer (developed on Node 24).
+
+**Run locally**
+- `npm install`, once.
+- `npm run dev`, then open `http://localhost:5173/weather-outfit-app/`. The app lives under the Pages base path even locally, so `http://localhost:5173/` alone shows nothing.
+- `npm run build` writes `dist/`, and `npm run preview` serves it.
+- `dev` and `build` first run `scripts/copy-mediapipe.mjs`, which copies the MediaPipe runtime from `node_modules` into `public/mediapipe/`. That folder is generated and not committed.
+- The dev server stays on this Mac. Never run it with `--host`: it can serve project files, and `vite.config.js` only blocks the private photo folders and HEIC files.
+
+**Try it on the iPhone**
+- **Before a commit:** run `npm run phone`. It builds the app and serves only `dist/` on the Mac's Wi-Fi. On the iPhone, on the same Wi-Fi, open the "Network" URL it prints, ending in `:4173/weather-outfit-app/`. It's plain HTTP, so camera and location don't work there.
+- **After a deploy:** open the live URL in Safari, then Share → Add to Home Screen. The installed app updates itself on each deploy and keeps its own storage, separate from Safari's.
+
+**Test**
+- `npm test` runs Vitest once. Tests and saved Open-Meteo responses (fixtures) live in `tests/`.
+
+**Deploy**
+- Every push to `main` runs `.github/workflows/deploy.yml`: install, test, build, then publish `dist/` to GitHub Pages. If a test fails, nothing deploys.
+- Live URL: https://rg-sureshkumar-goat.github.io/weather-outfit-app/
+- The base path `/weather-outfit-app/` is set in `vite.config.js`, and `tests/smoke.test.js` guards it.
+- Camera and location need HTTPS, so phone checks use the deployed site, not the local server.
+
+**Structure** (see `plan.md` → Approach for what each folder holds): `src/weather`, `src/recommend`, `src/content`, `src/store`, `src/art`, `src/screens`, `src/vision`, `public/`, `tests/`.
+
+**Keep private:** `test-garments/`, `test-selfie/` and `*.HEIC` stay ignored. Check `git status` before every commit.

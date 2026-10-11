@@ -1,0 +1,27 @@
+{
+  "name": "quick-dresser",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Quick Dresser: one outfit from your own closet for the day's weather.",
+  "type": "module",
+  "scripts": {
+    "copy-mediapipe": "node scripts/copy-mediapipe.mjs",
+    "predev": "npm run copy-mediapipe",
+    "dev": "vite",
+    "prebuild": "npm run copy-mediapipe",
+    "build": "vite build",
+    "preview": "vite preview",
+    "phone": "npm run build && vite preview --host --port 4173 --strictPort",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "devDependencies": {
+    "vite": "8.3.4",
+    "vitest": "5.0.3"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "1.0.1"
+  }
+}

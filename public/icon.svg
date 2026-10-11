@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Placeholder app icon (C0): a hanger on coral. The final icon arrives in C10. -->
+  <rect width="512" height="512" fill="#e8604c"/>
+  <g fill="none" stroke="#ffffff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 38)">
+    <path d="M256 214 V188 C256 168 300 160 300 126 C300 102 280 86 256 86 C232 86 214 102 212 124"/>
+    <path d="M256 214 L102 318 C88 328 94 350 112 350 H400 C418 350 424 328 410 318 Z"/>
+  </g>
+</svg>
