@@ -61,6 +61,7 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 **Try it on the iPhone**
 - **Before a commit:** run `npm run phone`. It builds the app and serves only `dist/` on the Mac's Wi-Fi. On the iPhone, on the same Wi-Fi, open the "Network" URL it prints, ending in `:4173/weather-outfit-app/`. It's plain HTTP, so camera and location don't work there.
 - **After a deploy:** open the live URL in Safari, then Share → Add to Home Screen. The installed app updates itself on each deploy and keeps its own storage, separate from Safari's.
+- **Add to Home Screen only from the live https URL.** An icon added from the Wi-Fi preview (http://192.168…) can't use location ("This browser can't share your location here") and only loads on the home network. Found 2026-10-11; fixed by removing that icon and adding it again from the live site.
 
 **Test**
 - `npm test` runs Vitest once. Tests live in `tests/`. `tests/fixtures/` holds real Open-Meteo responses from six places, plus geocoding and reverse-lookup responses. When the forecast request changes, re-save the six with `node tests/fixtures/save-forecasts.mjs` (it uses the app's own request), then rebuild the four `synthetic-*` forecasts (rain with wind, snow, no UV, a missing day 7) from the Austin one with `node tests/fixtures/make-synthetic.mjs`. `tests/helpers.js` builds synthetic days for rule edges and provides a seeded random source, so draws repeat exactly.
