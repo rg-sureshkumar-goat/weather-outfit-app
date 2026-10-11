@@ -103,6 +103,9 @@ body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.4 var(--font)
 .logo{font:800 17px var(--font);letter-spacing:-.01em;border:1.5px dashed var(--wire);border-radius:8px;padding:4px 10px}
 .ltab{display:flex;align-items:center;gap:6px;font-weight:650;font-size:15px;color:var(--ink-2);height:64px;border-bottom:3px solid transparent}
 .ltab.on{color:var(--ink);border-bottom-color:var(--ink)}
+.ctabs{border-bottom:1.5px solid var(--wire)}
+.ctab{display:inline-flex;align-items:center;height:40px;padding:0 10px;font-size:13px;font-weight:650;color:var(--ink-2);border-bottom:3px solid transparent;margin-bottom:-1.5px;white-space:nowrap}
+.ctab.on{color:var(--ink);border-bottom-color:var(--ink)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--fill-2)}
 .dot.on{background:var(--ink)}
 .wrow{display:grid;grid-template-columns:60px 28px 1fr 46px;align-items:center;height:56px;padding:0 14px;border-radius:12px;font-size:14px}
@@ -640,32 +643,27 @@ html.single .board{border:0;border-radius:0;transform:none!important}
         <div class="status">9:41<i></i></div>
         <div class="a row" style="left:18px;top:60px;gap:6px"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="t12 muted" style="margin-left:6px">Step 3 of 4</span></div>
         <div class="a t24 xb" style="left:18px;top:90px">Does this look like you?</div>
-        <div class="a sky" style="left:115px;top:128px;width:160px;height:160px;overflow:hidden"><svg viewBox="10 0 140 160" style="width:160px;height:183px"><use href="#avatar" width="160" height="300"/></svg></div>
-        <div class="a" style="left:290px;top:132px;width:56px;height:56px;border-radius:50%;background:var(--fill-2);border:2px solid #fff;box-shadow:0 0 0 1.5px var(--wire)"></div>
-        <div class="a lbl" style="left:18px;top:298px">Gender</div>
-        <div class="a row" style="left:16px;top:316px;width:200px;gap:6px"><span class="seg">Female</span><span class="seg on">Male</span></div>
-        <div class="a lbl" style="left:18px;top:370px">Skin tone</div>
-        <div class="a" style="left:16px;top:388px;display:grid;grid-template-columns:repeat(5,44px);gap:8px 26px"><span class="sw" style="background:#f6ede4"></span><span class="sw" style="background:#f3e7db"></span><span class="sw" style="background:#f7ead0"></span><span class="sw" style="background:#eadaba"></span><span class="sw" style="background:#d7bd96"></span><span class="sw" style="background:#a07e56"></span><span class="sw on" style="background:#825c43"></span><span class="sw" style="background:#604134"></span><span class="sw" style="background:#3a312a"></span><span class="sw" style="background:#292420"></span></div>
-        <div class="a lbl" style="left:18px;top:494px">Hair color</div>
-        <div class="a" style="left:16px;top:512px;display:grid;grid-template-columns:repeat(8,38px);gap:6px"><span class="sw" style="width:38px;height:38px;background:#1d1a18"></span><span class="sw on" style="width:38px;height:38px;background:#3b2a20"></span><span class="sw" style="width:38px;height:38px;background:#61402b"></span><span class="sw" style="width:38px;height:38px;background:#8c6443"></span><span class="sw" style="width:38px;height:38px;background:#c9a467"></span><span class="sw" style="width:38px;height:38px;background:#e2d5b5"></span><span class="sw" style="width:38px;height:38px;background:#8a3a20"></span><span class="sw" style="width:38px;height:38px;background:#9b9a96"></span></div>
-        <div class="a lbl" style="left:18px;top:566px">Hairstyle</div>
-        <div class="a row scroll" style="left:16px;right:0;top:584px;gap:6px;overflow:hidden"><span class="chip">Bald</span><span class="chip">Buzz</span><span class="chip on">Short crop</span><span class="chip">Short curls or coils</span><span class="chip">Afro</span><span class="chip">Medium straight</span><span class="chip">Medium curly</span><span class="chip">Long straight</span><span class="chip">Long curly</span><span class="chip">Braids or locs</span><span class="chip">Bun or ponytail</span></div>
-        <div class="a lbl" style="left:18px;top:636px">Facial hair</div>
-        <div class="a row" style="left:16px;top:654px;width:228px;gap:6px"><span class="seg">None</span><span class="seg on">Stubble</span><span class="seg">Beard</span></div>
-        <div class="a lbl" style="left:262px;top:636px">Glasses</div>
-        <div class="a row" style="left:262px;top:654px;width:112px;gap:6px"><span class="seg on">Off</span><span class="seg">On</span></div>
+        <div class="a sky" style="left:95px;top:128px;width:200px;height:200px;overflow:hidden"><svg viewBox="10 0 140 160" style="width:200px;height:229px"><use href="#avatar" width="160" height="300"/></svg></div>
+        <div class="a" style="left:306px;top:132px;width:56px;height:56px;border-radius:50%;background:var(--fill-2);border:2px solid #fff;box-shadow:0 0 0 1.5px var(--wire)"></div>
+        <div class="a row scroll ctabs" style="left:16px;right:0;top:344px;gap:2px;overflow:hidden"><span class="ctab on">Body</span><span class="ctab">Face</span><span class="ctab">Eyes</span><span class="ctab">Nose and mouth</span><span class="ctab">Hair</span><span class="ctab">Details</span><span class="ctab">Makeup</span></div>
+        <div class="a lbl" style="left:18px;top:404px">Female or Male</div>
+        <div class="a row" style="left:16px;top:422px;width:200px;gap:6px"><span class="seg">Female</span><span class="seg on">Male</span></div>
+        <div class="a lbl" style="left:18px;top:478px">Body type</div>
+        <div class="a row scroll" style="left:16px;right:0;top:496px;gap:6px;overflow:hidden"><span class="chip">Slim</span><span class="chip on">Average</span><span class="chip">Athletic</span><span class="chip">Broad</span><span class="chip">Stocky</span><span class="chip">Plus-size</span></div>
+        <div class="a lbl" style="left:18px;top:552px">Skin tone</div>
+        <div class="a" style="left:16px;top:570px;display:grid;grid-template-columns:repeat(5,44px);gap:8px 26px"><span class="sw" style="background:#f6ede4"></span><span class="sw" style="background:#f3e7db"></span><span class="sw" style="background:#f7ead0"></span><span class="sw" style="background:#eadaba"></span><span class="sw" style="background:#d7bd96"></span><span class="sw" style="background:#a07e56"></span><span class="sw on" style="background:#825c43"></span><span class="sw" style="background:#604134"></span><span class="sw" style="background:#3a312a"></span><span class="sw" style="background:#292420"></span></div>
         <div class="a btn" style="left:16px;top:756px;width:120px">Retake</div>
         <div class="a btn pri" style="left:148px;right:16px;top:756px">Looks good</div>
         <div class="home"></div>
-        <span class="n" style="left:106px;top:120px">1</span><span class="n" style="left:340px;top:124px">2</span><span class="n" style="left:72px;top:292px">3</span><span class="n" style="left:94px;top:364px">4</span><span class="n" style="left:94px;top:560px">5</span><span class="n" style="left:108px;top:630px">6</span><span class="n" style="left:8px;top:748px">7</span>
+        <span class="n" style="left:86px;top:120px">1</span><span class="n" style="left:356px;top:124px">2</span><span class="n" style="left:8px;top:320px">3</span><span class="n" style="left:144px;top:398px">4</span><span class="n" style="left:94px;top:546px">5</span><span class="n" style="left:316px;top:316px">6</span><span class="n" style="left:8px;top:748px">7</span>
       </div>
       <ol class="notes">
-        <li><div><b>Avatar preview</b><span class="tag p">Proposed</span></div><p>Updates as you adjust. Pre-filled from the selfie, as in the selfie test.</p></li>
+        <li><div><b>Avatar preview</b><span class="tag p">Proposed</span></div><p>Updates as you adjust, and stays on screen while you switch tabs. Pre-filled from the selfie, as in the selfie test.</p></li>
         <li><div><b>Selfie thumbnail</b><span class="tag p">Proposed</span></div><p>Shown for comparison during setup only, then discarded.</p></li>
-        <li><div><b>Gender</b><span class="tag r">Revised</span></div><p>Starts as picked on P9. One choice sets the body and face; changing it changes them and the starter outfits together (R40). No separate body or face controls.</p></li>
-        <li><div><b>Skin tone and hair color</b><span class="tag p">Proposed</span></div><p>Monk Skin Tone Scale and eight hair colors, with the closest match pre-selected.</p></li>
-        <li><div><b>Hairstyle</b><span class="tag p">Proposed</span></div><p>11 named styles in a row that scrolls sideways. The hair length read from the selfie pre-selects the closest one. Set up by hand, it starts on the gender's default: Long straight for Female, Short crop for Male.</p></li>
-        <li><div><b>Facial hair and glasses</b><span class="tag r">Revised</span></div><p>Not detected from the photo, so you choose: none, stubble or beard (Male only; hidden for Female); glasses off or on.</p></li>
+        <li><div><b>Category tabs</b><span class="tag r">Revised</span></div><p>Body · Face · Eyes · Nose and mouth · Hair · Details · Makeup (R43). The row scrolls sideways; the open tab is underlined.</p></li>
+        <li><div><b>Body tab</b><span class="tag r">Revised</span></div><p>Female or Male sets the face, the starter outfits and which six body types are offered (R40, R43). Female: Slim, Average, Athletic, Hourglass, Pear, Plus-size. Male: Slim, Average, Athletic, Broad, Stocky, Plus-size.</p></li>
+        <li><div><b>Skin tone</b><span class="tag p">Proposed</span></div><p>Monk Skin Tone Scale, with the closest match pre-selected.</p></li>
+        <li><div><b>The other tabs</b><span class="tag r">Revised</span></div><p>Face: face shape, ears, lines and age. Eyes: eye shape, eye color, eyebrows, eyelashes, glasses. Nose and mouth. Hair: 11 hairstyles, 8 colors, facial hair (Male only). Details: freckles, beauty mark. Makeup: lips, eyeshadow, eyeliner, blush. Each choice is a named chip or a swatch.</p></li>
         <li><div><b>Retake or continue</b><span class="tag p">Proposed</span></div><p>"Looks good" goes on to location (P2). The same screen opens later from "Edit avatar" in the Closet.</p></li>
       </ol>
     </div>
@@ -930,23 +928,22 @@ html.single .board{border:0;border-radius:0;transform:none!important}
         <div class="a t28 xb" style="left:120px;top:96px">Does this look like you?</div>
         <div class="a" style="left:120px;top:160px;width:200px"><div class="ph" style="height:240px"></div><div class="t13 muted" style="margin-top:8px">Your selfie, for comparison</div><div class="link t14" style="margin-top:8px">Retake</div></div>
         <div class="a sky" style="left:350px;top:160px;width:340px;height:520px;overflow:hidden"><svg style="position:absolute;left:40px;top:20px;width:260px;height:488px"><use href="#avatar"/></svg></div>
-        <div class="a" style="left:730px;top:160px;width:430px;display:grid;gap:10px">
-          <div class="row" style="gap:20px;align-items:flex-start"><div class="col" style="width:220px"><div class="lbl">Gender</div><div class="row" style="gap:6px"><span class="seg">Female</span><span class="seg on">Male</span></div></div></div>
+        <div class="a" style="left:730px;top:160px;width:430px;display:grid;gap:12px">
+          <div class="row ctabs" style="gap:2px"><span class="ctab on">Body</span><span class="ctab">Face</span><span class="ctab">Eyes</span><span class="ctab">Nose and mouth</span><span class="ctab">Hair</span><span class="ctab">Details</span><span class="ctab">Makeup</span></div>
+          <div class="lbl" style="margin-top:8px">Female or Male</div>
+          <div class="row" style="gap:6px;width:220px"><span class="seg">Female</span><span class="seg on">Male</span></div>
+          <div class="lbl" style="margin-top:6px">Body type</div>
+          <div class="row" style="flex-wrap:wrap;gap:6px"><span class="chip">Slim</span><span class="chip on">Average</span><span class="chip">Athletic</span><span class="chip">Broad</span><span class="chip">Stocky</span><span class="chip">Plus-size</span></div>
           <div class="lbl" style="margin-top:6px">Skin tone</div>
           <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:6px"><span class="sw" style="width:auto;background:#f6ede4"></span><span class="sw" style="width:auto;background:#f3e7db"></span><span class="sw" style="width:auto;background:#f7ead0"></span><span class="sw" style="width:auto;background:#eadaba"></span><span class="sw" style="width:auto;background:#d7bd96"></span><span class="sw" style="width:auto;background:#a07e56"></span><span class="sw on" style="width:auto;background:#825c43"></span><span class="sw" style="width:auto;background:#604134"></span><span class="sw" style="width:auto;background:#3a312a"></span><span class="sw" style="width:auto;background:#292420"></span></div>
-          <div class="lbl" style="margin-top:6px">Hair color</div>
-          <div style="display:grid;grid-template-columns:repeat(8,44px);gap:8px"><span class="sw" style="background:#1d1a18"></span><span class="sw on" style="background:#3b2a20"></span><span class="sw" style="background:#61402b"></span><span class="sw" style="background:#8c6443"></span><span class="sw" style="background:#c9a467"></span><span class="sw" style="background:#e2d5b5"></span><span class="sw" style="background:#8a3a20"></span><span class="sw" style="background:#9b9a96"></span></div>
-          <div class="lbl" style="margin-top:6px">Hairstyle</div>
-          <div class="row" style="flex-wrap:wrap;gap:6px"><span class="chip">Bald</span><span class="chip">Buzz</span><span class="chip on">Short crop</span><span class="chip">Short curls or coils</span><span class="chip">Afro</span><span class="chip">Medium straight</span><span class="chip">Medium curly</span><span class="chip">Long straight</span><span class="chip">Long curly</span><span class="chip">Braids or locs</span><span class="chip">Bun or ponytail</span></div>
-          <div class="row" style="gap:24px;margin-top:6px;align-items:flex-start"><div class="col" style="flex:1"><div class="lbl">Facial hair</div><div class="row" style="gap:6px"><span class="seg">None</span><span class="seg on">Stubble</span><span class="seg">Beard</span></div></div><div class="col" style="width:130px"><div class="lbl">Glasses</div><div class="row" style="gap:6px"><span class="seg on">Off</span><span class="seg">On</span></div></div></div>
         </div>
         <div class="a btn pri" style="left:980px;top:704px;width:180px">Looks good</div>
-        <span class="n" style="left:110px;top:152px">1</span><span class="n" style="left:340px;top:152px">2</span><span class="n" style="left:808px;top:152px">3</span><span class="n" style="left:970px;top:696px">4</span>
+        <span class="n" style="left:110px;top:152px">1</span><span class="n" style="left:340px;top:152px">2</span><span class="n" style="left:722px;top:150px">3</span><span class="n" style="left:970px;top:696px">4</span>
       </div>
       <ol class="notes">
         <li><div><b>Selfie beside the result</b><span class="tag p">Proposed</span></div><p>Shown during setup only, then discarded. Retake goes back to L7.</p></li>
-        <li><div><b>Full-body avatar</b><span class="tag p">Proposed</span></div><p>Large in the center, like Today.</p></li>
-        <li><div><b>Adjust controls</b><span class="tag r">Revised</span></div><p>Same choices as the phone: gender (sets body and face), skin tone, hair color, 11 hairstyles, facial hair (Male only) and glasses (R40).</p></li>
+        <li><div><b>Full-body avatar</b><span class="tag p">Proposed</span></div><p>Large in the center, like Today. Shows each body type in full.</p></li>
+        <li><div><b>Category tabs</b><span class="tag r">Revised</span></div><p>The same 7 tabs as the phone (R43): Body, Face, Eyes, Nose and mouth, Hair, Details, Makeup. All fit in one row; arrow keys move between tabs. The Body tab is shown.</p></li>
         <li><div><b>Continue</b><span class="tag p">Proposed</span></div><p>Goes on to location (L2). Opens later from "Edit avatar".</p></li>
       </ol>
     </div>

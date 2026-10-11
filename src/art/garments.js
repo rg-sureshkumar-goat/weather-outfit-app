@@ -15,7 +15,7 @@ import { SHOES } from './shoes.js';
 import { halfWidthAt, posed, torsoSide } from './bodies.js';
 import { legProfile, profileSlice } from './figure.js';
 import { limb, along, smoothClosed, curveThrough, pt, lerp } from './shapes.js';
-import { P, line, curve, torsoPoints, torsoPath, shoulderFromNeck, setInSleeve, endBand, torsoShadow, bustLines } from './fit.js';
+import { P, line, curve, torsoPoints, torsoPath, shoulderFromNeck, setInSleeve, endBand, torsoShadow, bustLines, hipBlock, legStart } from './fit.js';
 
 // ---- Tops ------------------------------------------------------------------
 
@@ -258,8 +258,7 @@ function bottom(body, { base, print }, to, name) {
   const at = (s, x, y) => posed(body, s, x, y);
   const mid = (y) => posed(body, 0, cx, y);
   const band = (s, dy = 0) => at(s, cx + s * hw, top + dy);
-  const pelvis = `M ${pt(band(-1))} L ${pt(band(1))} L ${pt(at(1, cx + body.hip.half + 2, body.hip.y + 14))}`
-    + ` L ${pt(at(0, cx + 6, body.crotchY + 6))} L ${pt(at(0, cx - 6, body.crotchY + 6))} L ${pt(at(-1, cx - body.hip.half - 2, body.hip.y + 14))} Z`;
+  const pelvis = hipBlock(body, top).d;
   const legs = ['left', 'right'].map((side) => {
     const s = side === 'left' ? -1 : 1;
     const prof = legProfile(body, side);
@@ -267,10 +266,11 @@ function bottom(body, { base, print }, to, name) {
     // Shorts sit closer than pants so the two legs separate below the crotch.
     const ext = to > 0.9 ? 12 : 8;
     const knee = body.legWidths[1] + ext - 2;
-    const pts = [P(sl.pts[0].x, at(s, sl.pts[0].x, top + 10).y), ...sl.pts];
+    const start = legStart(body, side, sl.pts[0], sl.widths[0] + ext - 2);
+    const pts = [start.pt, ...sl.pts];
     // Thighs follow the leg; below the knee straight-leg pants hang rather
     // than hugging the calf.
-    const widths = [sl.widths[0] + ext - 2, ...sl.widths.map((w, i) => (sl.ts[i] >= 0.44 ? Math.max(w + ext, knee) : w + ext))];
+    const widths = [start.width, ...sl.widths.map((w, i) => (sl.ts[i] >= 0.44 ? Math.max(w + ext, knee) : w + ext))];
     // Flat at the top: a rounded start would bulge out over the hips.
     return { pts, widths, knee: along(body.legs[side], 0.5), d: limb(pts, widths, { capStart: false, capEnd: false }) };
   });

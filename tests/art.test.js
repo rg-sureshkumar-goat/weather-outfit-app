@@ -177,3 +177,68 @@ describe('hair and facial hair (R24, R40)', () => {
     }
   });
 });
+
+// C6a body types (R43): 6 named types per gender, every drawing on all 12.
+describe('body types (R43)', () => {
+  it('offers the 6 named types per gender from the spec', async () => {
+    const { BODY_TYPES } = await import('../src/art/bodies.js');
+    expect(BODY_TYPES.A).toEqual(['slim', 'average', 'athletic', 'hourglass', 'pear', 'plusSize']);
+    expect(BODY_TYPES.B).toEqual(['slim', 'average', 'athletic', 'broad', 'stocky', 'plusSize']);
+  });
+
+  it('Average is today\'s body, unchanged', async () => {
+    const { BODIES, bodyFor } = await import('../src/art/bodies.js');
+    for (const set of ['A', 'B']) expect({ ...bodyFor(set, 'average'), type: undefined }).toEqual({ ...BODIES[set], type: undefined });
+  });
+
+  it('draws every garment, shoe and accessory on all 12 bodies, with unique ids', async () => {
+    const { BODY_TYPES } = await import('../src/art/bodies.js');
+    const all = { ...TEMPLATES, ...FORMAL, ...ACCESSORIES };
+    for (const set of ['A', 'B']) {
+      for (const bodyType of BODY_TYPES[set]) {
+        for (const [type, t] of Object.entries(all)) {
+          const svg = renderAvatar(look(set, { bodyType }), { [t.slot]: item(type, '#7a5233') });
+          expect(svg, `${set} ${bodyType} ${type}`).not.toContain('NaN');
+          const ids = [...svg.matchAll(/ id="([^"]+)"/g)].map((m) => m[1]);
+          expect(new Set(ids).size).toBe(ids.length);
+        }
+      }
+    }
+  });
+
+  it('every body, arms and hands included, fits inside the drawing area', async () => {
+    const { BODY_TYPES, bodyFor } = await import('../src/art/bodies.js');
+    const { armProfile } = await import('../src/art/figure.js');
+    const { AVATAR_VIEWBOX } = await import('../src/art/avatar.js');
+    const [x0, , w] = AVATAR_VIEWBOX.split(' ').map(Number);
+    for (const set of ['A', 'B']) {
+      for (const type of BODY_TYPES[set]) {
+        const b = bodyFor(set, type);
+        for (const side of ['left', 'right']) {
+          const p = armProfile(b, side);
+          p.pts.forEach((q, i) => {
+            expect(q.x - p.widths[i] / 2, `${set} ${type}`).toBeGreaterThan(x0 + 10);
+            expect(q.x + p.widths[i] / 2, `${set} ${type}`).toBeLessThan(x0 + w - 10);
+          });
+        }
+      }
+    }
+  });
+
+  it('bottoms start each leg at the hip line, never wider than the hips there', async () => {
+    const { BODY_TYPES, bodyFor, torsoSide } = await import('../src/art/bodies.js');
+    const { legStart } = await import('../src/art/fit.js');
+    for (const set of ['A', 'B']) {
+      for (const type of BODY_TYPES[set]) {
+        const b = bodyFor(set, type);
+        for (const side of ['left', 'right']) {
+          const s = side === 'left' ? -1 : 1;
+          const joint = b.legs[side][0];
+          const { pt: p, width } = legStart(b, side, joint, 200);
+          const edge = torsoSide(b, s, b.hip.y, 2).x;
+          expect(Math.abs(p.x + (s * width) / 2 - edge), `${set} ${type} ${side}`).toBeLessThan(0.5);
+        }
+      }
+    }
+  });
+});

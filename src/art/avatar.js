@@ -8,7 +8,7 @@
 // Inner sleeves sit inside the outer ones, so drawing them would only let
 // them peek through around the armhole. A dress fills the top and bottom.
 
-import { BODIES } from './bodies.js';
+import { bodyFor } from './bodies.js';
 import { skinBase, face, arms } from './figure.js';
 import { hair } from './hair.js';
 import { TEMPLATES } from './garments.js';
@@ -17,6 +17,11 @@ import { ACCESSORIES, glasses } from './accessories.js';
 import { itemColors } from './palette.js';
 
 const ALL = { ...TEMPLATES, ...FORMAL, ...ACCESSORIES };
+
+// The drawing area: the full 400 px width, so the widest body types and
+// their coats fit (R43). Most screens size the avatar by its height, so it
+// keeps the same size there.
+export const AVATAR_VIEWBOX = '0 30 400 940';
 
 // Until C7 draws every garment type, the types without a template borrow
 // the closest one drawn so far.
@@ -35,12 +40,13 @@ function drawItem(item, body, extras) {
   return template.draw(body, itemColors(item), extras);
 }
 
-// look: { body: 'A'|'B', face: 'A'|'B', skin, hair: { style, color },
+// look: { body: 'A'|'B', bodyType (bodies.js BODY_TYPES; default
+//         'average'), face: 'A'|'B', skin, hair: { style, color },
 //         facialHair: 'none'|'stubble'|'beard', glasses }
 // outfit: { top, bottom, shoes, outer, rain, dress, neckwear, scarf, hat,
 //           eyewear } items (any may be missing)
 export function renderAvatar(look, outfit = {}, { title = '' } = {}) {
-  const body = BODIES[look.body];
+  const body = bodyFor(look.body, look.bodyType);
   const h = hair(look.hair.style, body.head, look.hair.color);
   const dress = drawItem(outfit.dress, body);
   const top = dress ? null : drawItem(outfit.top, body);
@@ -81,5 +87,5 @@ export function renderAvatar(look, outfit = {}, { title = '' } = {}) {
 
   const ground = `<ellipse cx="204" cy="${body.legs.right[2].y + 46}" rx="96" ry="12" fill="#1e1a24" opacity="0.12"/>`;
   const label = title ? `<title>${title}</title>` : '';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 30 320 940" role="img"${title ? '' : ' aria-hidden="true"'}>${label}${ground}${layers.filter(Boolean).join('')}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${AVATAR_VIEWBOX}" role="img"${title ? '' : ' aria-hidden="true"'}>${label}${ground}${layers.filter(Boolean).join('')}</svg>`;
 }

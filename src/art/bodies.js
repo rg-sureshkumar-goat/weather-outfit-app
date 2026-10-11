@@ -106,3 +106,98 @@ export function posed(body, s, x, y) {
 export function torsoSide(body, s, y, extra = 0) {
   return posed(body, s, body.head.cx + s * (halfWidthAt(body, y) + extra), y);
 }
+
+// ---- Body types (R43) -----------------------------------------------------
+//
+// Six named body types per gender, made from that gender's body (A or B,
+// which is "Average") by changing its measurements. Garments, shoes and
+// accessories are all built from these measurements, so they fit every
+// type without separate drawings.
+//
+// Each type gives target half-widths for the shoulder, chest, waist and hip
+// (px), and multipliers for limb widths. Arms and legs are moved so they
+// keep the same gap from the torso as on the Average body.
+
+const TYPE_SPECS = {
+  A: {
+    slim: { shoulder: 64, chest: 57, waist: 43, hip: 70, neck: 12, legs: [0.86, 0.88, 0.92], arms: 0.88 },
+    average: {},
+    athletic: { shoulder: 77, chest: 66, waist: 50, hip: 76, neck: 14, legs: [0.98, 1.08, 1.04], arms: 1.12 },
+    hourglass: { shoulder: 74, chest: 74, waist: 46, hip: 90, neck: 13, legs: [1.06, 1.04, 1], arms: 1.02 },
+    pear: { shoulder: 64, chest: 60, waist: 52, hip: 96, neck: 13, legs: [1.16, 1.1, 1.02], arms: 0.96 },
+    plusSize: { shoulder: 82, chest: 86, waist: 80, hip: 104, neck: 16, legs: [1.3, 1.3, 1.16], arms: 1.32 },
+  },
+  B: {
+    slim: { shoulder: 80, chest: 70, waist: 56, hip: 60, neck: 17, legs: [0.86, 0.84, 0.88], arms: 0.84 },
+    average: {},
+    athletic: { shoulder: 100, chest: 90, waist: 64, hip: 68, neck: 22, legs: [1.04, 1.1, 1.02], arms: 1.16 },
+    broad: { shoulder: 106, chest: 96, waist: 78, hip: 74, neck: 23, legs: [1.06, 1.06, 1.04], arms: 1.14 },
+    stocky: { shoulder: 96, chest: 92, waist: 86, hip: 82, neck: 24, legs: [1.18, 1.16, 1.1], arms: 1.14 },
+    plusSize: { shoulder: 102, chest: 104, waist: 104, hip: 94, neck: 25, legs: [1.34, 1.3, 1.16], arms: 1.32 },
+  },
+};
+
+// The body types in the order the review screen lists them.
+export const BODY_TYPES = {
+  A: ['slim', 'average', 'athletic', 'hourglass', 'pear', 'plusSize'],
+  B: ['slim', 'average', 'athletic', 'broad', 'stocky', 'plusSize'],
+};
+
+// Moves a limb joint sideways so its distance from the torso edge stays as
+// on the base body. `halfOld`/`halfNew` are torso half-widths at the joint's
+// height; `wOld`/`wNew` the limb's width there.
+function keepGap(p, cx, halfOld, halfNew, wOld, wNew) {
+  const s = Math.sign(p.x - cx) || 1;
+  const gap = Math.abs(p.x - cx) - halfOld - wOld / 2;
+  return { x: cx + s * (halfNew + wNew / 2 + gap), y: p.y };
+}
+
+function shapeBody(base, type) {
+  const spec = TYPE_SPECS[base.id][type];
+  if (!spec) throw new Error(`Unknown body type: ${type}`);
+  if (!spec.shoulder) return { ...base, type };
+  const body = {
+    ...base,
+    id: base.id,
+    type,
+    neck: { ...base.neck, half: spec.neck },
+    shoulder: { ...base.shoulder, half: spec.shoulder },
+    chest: { ...base.chest, half: spec.chest },
+    waist: { ...base.waist, half: spec.waist },
+    hip: { ...base.hip, half: spec.hip },
+    legWidths: base.legWidths.map((w, i) => w * spec.legs[i]),
+    armWidths: base.armWidths.map((w) => w * spec.arms),
+    hand: base.hand * Math.sqrt(spec.arms),
+  };
+  const cx = base.head.cx;
+
+  // Arms: the shoulder joint moves with the shoulder; elbow and wrist keep
+  // their gap from the torso at their height.
+  const arm = (pts) => {
+    const [sh, el, wr] = pts;
+    const dS = spec.shoulder - base.shoulder.half;
+    const shoulderJoint = { x: sh.x + Math.sign(sh.x - cx) * dS, y: sh.y };
+    return [
+      shoulderJoint,
+      keepGap(el, cx, halfWidthAt(base, el.y), halfWidthAt(body, el.y), base.armWidths[1], body.armWidths[1]),
+      keepGap(wr, cx, halfWidthAt(base, wr.y), halfWidthAt(body, wr.y), base.armWidths[2], body.armWidths[2]),
+    ];
+  };
+  body.arms = { left: arm(base.arms.left), right: arm(base.arms.right) };
+
+  // Legs: the hip joints move out with the hips, so the thighs fill the
+  // hip width as on the base body; knees and ankles follow part of the way.
+  const dHip = spec.hip - base.hip.half;
+  const leg = (pts) => pts.map((p, i) => ({ x: p.x + Math.sign(p.x - cx) * dHip * [0.62, 0.42, 0.3][i], y: p.y }));
+  body.legs = { left: leg(base.legs.left), right: leg(base.legs.right) };
+  return body;
+}
+
+const shaped = new Map();
+
+// The drawn body for a body set ('A' female, 'B' male) and a type.
+export function bodyFor(set, type = 'average') {
+  const key = `${set}:${type}`;
+  if (!shaped.has(key)) shaped.set(key, shapeBody(BODIES[set], type));
+  return shaped.get(key);
+}

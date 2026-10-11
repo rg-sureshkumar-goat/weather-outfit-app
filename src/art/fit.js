@@ -99,6 +99,34 @@ export function endBand(points, widths, inset) {
   return line(back(left), back(right));
 }
 
+// ---- Bottoms ------------------------------------------------------------------
+
+// The hips of shorts, pants and trousers, from the waistband at `top` down
+// to just below the hip line, following the body's side curve so no skin
+// shows beside it on any body type (R43).
+export function hipBlock(body, top) {
+  const hipY = body.hip.y;
+  const side = (s) => [top, (top + hipY) / 2, hipY, hipY + 14].map((y) => torsoSide(body, s, y, y >= hipY ? 2 : 1));
+  const crotch = posed(body, 0, body.head.cx, body.crotchY);
+  const L = side(-1);
+  const R = side(1);
+  const d = `M ${pt(L[0])} L ${pt(R[0])}${curveThrough(R)}`
+    + ` L ${pt(P(crotch.x + 6, crotch.y + 6))} L ${pt(P(crotch.x - 6, crotch.y + 6))}`
+    + ` L ${pt(L[L.length - 1])}${curveThrough([...L].reverse())} Z`;
+  return { d, crotch };
+}
+
+// Where a leg tube of a bottom starts: at the hip line above the hip joint,
+// no wider there than the hips. Starting higher, at the waistband, made the
+// thighs poke out past the hips and the hem of a top on wide- and
+// narrow-hipped bodies.
+export function legStart(body, side, joint, width) {
+  const s = side === 'left' ? -1 : 1;
+  const y = body.hip.y;
+  const limit = Math.abs(torsoSide(body, s, y, 2).x - joint.x);
+  return { pt: P(joint.x, posed(body, s, joint.x, y).y), width: Math.min(width, 2 * limit) };
+}
+
 // The right-side shadow of a torso, light coming from the upper left.
 export function torsoShadow(body, opts) {
   const { r } = torsoPoints(body, opts);

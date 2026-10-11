@@ -7,7 +7,7 @@ import { piece } from './draw.js';
 import { posed, torsoSide } from './bodies.js';
 import { legProfile, profileSlice } from './figure.js';
 import { limb, along, curveThrough, pt, lerp } from './shapes.js';
-import { P, curve, torsoPoints, torsoPath, shoulderFromNeck, setInSleeve, endBand, torsoShadow, bustLines } from './fit.js';
+import { P, curve, torsoPoints, torsoPath, shoulderFromNeck, setInSleeve, endBand, torsoShadow, bustLines, hipBlock, legStart } from './fit.js';
 
 const dot = (p, r = 2.6) => `M ${p.x - r} ${p.y} a ${r} ${r} 0 1 0 ${r * 2} 0 a ${r} ${r} 0 1 0 ${-r * 2} 0`;
 
@@ -176,13 +176,14 @@ function trousers(body, { base, print }, { stripe = false } = {}) {
   const hw = torsoSide(body, 1, top).x - posed(body, 1, cx, top).x + 1;
   const band = (s, dy = 0) => at(s, cx + s * hw, top + dy);
   const crotch = posed(body, 0, cx, body.crotchY);
-  const pelvis = `M ${pt(band(-1))} L ${pt(band(1))} L ${pt(at(1, cx + body.hip.half + 2, body.hip.y + 14))} L ${pt(P(crotch.x + 6, crotch.y + 6))} L ${pt(P(crotch.x - 6, crotch.y + 6))} L ${pt(at(-1, cx - body.hip.half - 2, body.hip.y + 14))} Z`;
+  const pelvis = hipBlock(body, top).d;
   const legs = ['left', 'right'].map((side) => {
     const s = side === 'left' ? -1 : 1;
     const sl = profileSlice(legProfile(body, side), 0, 1);
     const knee = body.legWidths[1] + 14;
-    const pts = [P(sl.pts[0].x, at(s, sl.pts[0].x, top + 10).y), ...sl.pts];
-    const widths = [sl.widths[0] + 10, ...sl.widths.map((w, i) => (sl.ts[i] >= 0.4 ? Math.max(w + 14, knee) : w + 14))];
+    const start = legStart(body, side, sl.pts[0], sl.widths[0] + 10);
+    const pts = [start.pt, ...sl.pts];
+    const widths = [start.width, ...sl.widths.map((w, i) => (sl.ts[i] >= 0.4 ? Math.max(w + 14, knee) : w + 14))];
     pts[pts.length - 1] = P(pts[pts.length - 1].x, pts[pts.length - 1].y + 8);
     return { s, pts, widths, d: limb(pts, widths, { capStart: false, capEnd: false }) };
   });

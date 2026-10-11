@@ -1,12 +1,14 @@
-// Local-only art review page (art.html, plan.md C2 and C5). Art round 2
-// (C5) comes first: all 11 hairstyles on both bodies and in all 8 hair
+// Local-only art review page (art.html, plan.md C2, C5 and C6a). The C6a
+// body types come first: all 12 bodies (R43) in a range of outfits. Art round 2
+// (C5) follows: all 11 hairstyles on both bodies and in all 8 hair
 // colors, stubble, beard and glasses. Round 1 follows: both bodies in all 10
 // Monk tones wearing starter items, the new garment types, knitwear,
 // accessories and formal wear.
 
 import '@fontsource-variable/nunito';
-import { renderAvatar } from './avatar.js';
+import { renderAvatar, AVATAR_VIEWBOX } from './avatar.js';
 import { HAIRSTYLES } from './hair.js';
+import { BODY_TYPES } from './bodies.js';
 import { HAIRSTYLE_NAMES } from '../content/avatarOptions.js';
 import { MONK_TONES, HAIR_COLORS } from './palette.js';
 import { STARTER_SETS } from '../content/starters.js';
@@ -49,7 +51,7 @@ const tones = MONK_TONES.map((_, tone) =>
 const hairRow = (gender) => Object.entries(HAIR_COLORS).map(([name, color], i) => {
   const l = LOOKS[gender];
   const look = { body: l.body, face: l.face, skin: MONK_TONES[(i * 3) % 10], hair: { style: l.hair, color } };
-  const svg = renderAvatar(look, {}).replace('viewBox="40 30 320 940"', 'viewBox="110 40 180 200"');
+  const svg = renderAvatar(look, {}).replace(`viewBox="${AVATAR_VIEWBOX}"`, 'viewBox="110 40 180 200"');
   return `<figure class="head">${svg}<figcaption>${name}</figcaption></figure>`;
 }).join('');
 
@@ -88,11 +90,28 @@ const FORMAL_LOOKS = showcase([
   [looks.A(9, HAIR_COLORS.black), { dress: o('banquetDress', '#7c2436'), shoes: o('heels', '#7c2436') }, 'Banquet gown'],
 ]);
 
+// ---- C6a: body types (R43) ------------------------------------------------------
+
+const TYPE_NAMES = { slim: 'Slim', average: 'Average', athletic: 'Athletic', hourglass: 'Hourglass', pear: 'Pear', broad: 'Broad', stocky: 'Stocky', plusSize: 'Plus-size' };
+const BODY_OUTFITS = [
+  ['Tee and shorts', { top: o('tee', '#b5b7b9'), bottom: o('shorts', '#26344f'), shoes: o('sneakers', '#f4f2ee') }],
+  ['Crop top and pants', { top: o('cropTop', '#d98c9a'), bottom: o('pants', '#4f6f96'), shoes: o('sandals', '#7a5233') }],
+  ['Light jacket', { top: o('tee', '#f4f2ee'), outer: o('lightJacket', '#6b7148'), bottom: o('pants', '#33465f'), shoes: o('sneakers', '#26344f') }],
+  ['Suit', { top: o('dressShirt', '#f4f2ee'), neckwear: o('tie', '#7c2436', '#c19a6b'), outer: o('blazer', '#26344f'), bottom: o('trousers', '#26344f'), shoes: o('dressShoes', '#3b2a20') }],
+  ['Formal dress', { dress: o('formalDress', '#26344f'), shoes: o('heels', '#c19a6b') }],
+];
+const BODY_ROWS = ['A', 'B'].map((set) => BODY_OUTFITS.map(([label, outfit], r) => `
+  <h3>${set === 'A' ? 'Female' : 'Male'} · ${label}</h3>
+  <section class="grid six">${BODY_TYPES[set].map((type, i) => {
+    const look = { body: set, bodyType: type, face: set, skin: MONK_TONES[(i * 2 + r + (set === 'B' ? 1 : 0)) % 10], hair: { style: set === 'A' ? 'longStraight' : 'shortCrop', color: HAIR_CYCLE[(i + r) % 8] } };
+    return `<figure>${renderAvatar(look, outfit)}<figcaption><b>${TYPE_NAMES[type]}</b></figcaption></figure>`;
+  }).join('')}</section>`).join('')).join('');
+
 // ---- Art round 2 (C5): hairstyles, facial hair, glasses ----------------------
 
 const STYLE_NAMES = HAIRSTYLE_NAMES;
 const HEAD_VIEW = 'viewBox="85 15 230 250"';
-const headOnly = (look) => renderAvatar(look, {}).replace('viewBox="40 30 320 940"', HEAD_VIEW);
+const headOnly = (look) => renderAvatar(look, {}).replace(`viewBox="${AVATAR_VIEWBOX}"`, HEAD_VIEW);
 const lookFor = (gender, tone, style, color, extra = {}) => ({
   body: gender === 'woman' ? 'A' : 'B', face: gender === 'woman' ? 'A' : 'B', skin: MONK_TONES[tone], hair: { style, color }, ...extra,
 });
@@ -127,9 +146,12 @@ const FACIAL = [
 
 document.querySelector('#art').innerHTML = `
   <header>
-    <h1>Quick Dresser · art rounds 1 and 2</h1>
+    <h1>Quick Dresser · art review</h1>
     <p>Original artwork created for this project. Monk Skin Tone Scale by Ellis Monk (CC BY 4.0). Local review page only.</p>
   </header>
+  <h2>C6a · The 12 body types (R43), every outfit fitted from measurements</h2>
+  ${BODY_ROWS}
+  <h2 class="round">Round 2 (approved)</h2>
   <h2>Round 2 · All 11 hairstyles on both bodies</h2>
   <section class="grid">${STYLE_FIGURES}</section>
   <h2>Round 2 · Each hairstyle in all 8 hair colors</h2>
@@ -158,6 +180,7 @@ style.textContent = `
   h3 { margin: 14px 0 6px; font-size: 15px; font-weight: 700; }
   header p { margin: 0; color: #4b5563; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .grid.six { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   figure { margin: 0; background: linear-gradient(#d9e6f2, #f6f1e9); border-radius: 14px; padding-bottom: 8px; }
   figure svg { display: block; width: 100%; height: auto; }
   figcaption { padding: 0 10px; font-size: 12px; line-height: 1.35; display: grid; gap: 2px; }
