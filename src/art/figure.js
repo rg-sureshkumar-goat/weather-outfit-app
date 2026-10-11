@@ -1,9 +1,10 @@
-// The character's skin, head, face, arms and hands (original artwork).
+// The character's skin, arms and hands (original artwork). The head and face
+// are in face.js.
 // Light comes from the upper left, so shadows sit on the viewer's right.
 
-import { piece, uid } from './draw.js';
+import { piece } from './draw.js';
+import { headSkin } from './face.js';
 import { posed, torsoSide } from './bodies.js';
-import { shades, mix } from './paint.js';
 import { limb, smoothClosed, along, pt, curveThrough } from './shapes.js';
 
 // ---- Torso -----------------------------------------------------------------
@@ -46,30 +47,6 @@ function torsoSkin(body, skin) {
       { d: `M ${chestMid.x} ${chestMid.y} L ${navel.x} ${navel.y - 12}`, tone: 'shadow', width: 1.6, opacity: body.bust ? 0 : 0.5 },
     ],
   });
-}
-
-// ---- Head -----------------------------------------------------------------
-
-// Head outline: a rounded crown narrowing to the jaw. `jaw` < 1 gives a
-// softer, narrower chin.
-export function headPath(h) {
-  const { cx, cy, rx, ry, jaw } = h;
-  const p = (fx, fy) => ({ x: cx + rx * fx, y: cy + ry * fy });
-  return smoothClosed([
-    p(0, -1), p(0.74, -0.8), p(1, -0.2), p(0.97, 0.3), p(0.8 * jaw, 0.72),
-    p(0.36, 0.97), p(0, 1.02), p(-0.36, 0.97), p(-0.8 * jaw, 0.72),
-    p(-0.97, 0.3), p(-1, -0.2), p(-0.74, -0.8),
-  ]);
-}
-
-function ears(h, skin) {
-  const ear = (side) => {
-    const x = h.cx + side * h.rx * 0.97;
-    const y = h.cy + h.ry * 0.1;
-    const d = `M ${x} ${y - 15} C ${x + side * 13} ${y - 18} ${x + side * 14} ${y + 8} ${x + side * 2} ${y + 15} Z`;
-    return piece({ parts: [d], base: skin, outline: 2, name: 'ear', lines: [{ d: `M ${x + side * 3} ${y - 8} C ${x + side * 9} ${y - 8} ${x + side * 9} ${y + 4} ${x + side * 3} ${y + 7}`, tone: 'shadow', width: 2.4 }] });
-  };
-  return ear(-1) + ear(1);
 }
 
 // Neck and the skin of the chest, drawn under every top.
@@ -207,145 +184,10 @@ function hand(body, skin, side) {
   return piece({ parts: [palm], base: skin, name: 'hand', outline: 2, lines: [{ d: finger(-0.2), tone: 'shadow', width: 1.8 }, { d: finger(0.1), tone: 'shadow', width: 1.8 }] });
 }
 
-// ---- Face -----------------------------------------------------------------
-
-// Two face-detail sets (R40). A: arched brows, outer lashes, fuller lips.
-// B: straighter, heavier brows and a firmer mouth line. Both share the same
-// expressive eyes and open smile.
-const EYE_COLOR = '#2a1d17';
-
-// Facial hair (R24), in the hair color, open to both faces (R40). Stubble
-// is a see-through shadow with fine dots; a beard is a full shape from the
-// sideburns around the jaw, with a mustache under the nose. The mouth is
-// drawn on top of both.
-function facialHair(h, hairColor, kind) {
-  if (!kind || kind === 'none') return '';
-  const p = (fx, fy) => ({ x: h.cx + h.rx * fx, y: h.cy + h.ry * fy });
-  const j = h.jaw;
-  const inner = [p(0.86, 0.04), p(0.8, 0.36), p(0.58, 0.5), p(0.28, 0.5), p(0, 0.53), p(-0.28, 0.5), p(-0.58, 0.5), p(-0.8, 0.36), p(-0.86, 0.04)];
-  if (kind === 'stubble') {
-    // Stays just inside the jaw line, so none of it shows on the neck.
-    const jawLine = [p(-0.95, 0.0), p(-0.96, 0.3), p(-0.78 * j, 0.71), p(-0.35, 0.95), p(0, 1.0), p(0.35, 0.95), p(0.78 * j, 0.71), p(0.96, 0.3), p(0.95, 0.0)];
-    const d = smoothClosed([...jawLine, ...inner]);
-    const id = uid('stubble');
-    // Fine dots scattered from a fixed seed, so the stubble never changes.
-    let seed = 12345;
-    const rand = () => {
-      seed = (seed * 1664525 + 1013904223) % 4294967296;
-      return seed / 4294967296;
-    };
-    let dots = '';
-    for (let i = 0; i < 110; i++) {
-      const q = p(-0.96 + rand() * 1.92, rand() * 1.02);
-      dots += `<circle cx="${q.x.toFixed(1)}" cy="${q.y.toFixed(1)}" r="0.9" fill="${hairColor}" opacity="0.55"/>`;
-    }
-    return `<clipPath id="${id}"><path d="${d}"/></clipPath><path d="${d}" fill="${hairColor}" opacity="0.2"/><g clip-path="url(#${id})">${dots}</g>`;
-  }
-  const outer = [p(-0.97, 0.0), p(-1.0, 0.32), p(-0.84 * j - 0.04, 0.78), p(-0.42, 1.08), p(0, 1.15), p(0.42, 1.08), p(0.84 * j + 0.04, 0.78), p(1.0, 0.32), p(0.97, 0.0)];
-  const d = smoothClosed([...outer, ...inner]);
-  // Beard: soft strokes for texture and a shadow on the viewer's right.
-  const strokes = [];
-  for (let i = 0; i < 26; i++) {
-    const fx = -0.9 + (i / 25) * 1.8;
-    const top = Math.abs(fx) > 0.6 ? 0.2 : 0.62;
-    const a = p(fx, top + ((i * 0.37) % 0.3));
-    strokes.push({ d: `M ${a.x} ${a.y} q ${fx * 2} 7 ${fx * 3} 13`, tone: i % 3 ? 'deep' : 'light', width: 1.6, opacity: 0.8 });
-  }
-  return piece({
-    parts: [d],
-    base: hairColor,
-    name: 'beard',
-    outline: 2,
-    shade: [{ d: smoothClosed([p(0.35, 0.95), p(0.9, 0.5), p(1.0, 0.1), p(0.8, 0.4), p(0.4, 0.75)]), tone: 'shadow', opacity: 0.8 }],
-    lines: strokes,
-  });
-}
-
-export function face(h, skin, hairColor, set, facialHairKind = 'none') {
-  const sc = h.rx / 53;
-  const { cx, cy } = h;
-  const s = shades(skin);
-  const lip = set === 'A' ? mix(skin, '#b5485a', 0.38) : s.deep;
-  let out = '';
-
-  // Cheeks
-  const blush = mix(skin, '#e05a5f', 0.5);
-  [-1, 1].forEach((side) => {
-    out += `<ellipse cx="${cx + side * 31 * sc}" cy="${cy + 30 * sc}" rx="${11 * sc}" ry="${6 * sc}" fill="${blush}" opacity="0.28"/>`;
-  });
-
-  // Eyes: rounded, big irises with two catchlights, a lid line on top.
-  [-1, 1].forEach((side) => {
-    const ex = cx + side * 21 * sc;
-    const ey = cy + 6 * sc;
-    const w = (set === 'A' ? 13 : 12.5) * sc;
-    const top = (set === 'A' ? 12 : 11) * sc;
-    const bottom = 8 * sc;
-    const eye = `M ${ex - w} ${ey} C ${ex - w * 0.7} ${ey - top} ${ex + w * 0.7} ${ey - top} ${ex + w} ${ey} C ${ex + w * 0.6} ${ey + bottom} ${ex - w * 0.6} ${ey + bottom} ${ex - w} ${ey} Z`;
-    const id = uid('eye');
-    const ix = ex + side * 1.5 * sc;
-    out += `<clipPath id="${id}"><path d="${eye}"/></clipPath>`;
-    out += `<path d="${eye}" fill="#fbfaf7"/>`;
-    out += `<g clip-path="url(#${id})"><circle cx="${ix}" cy="${ey + 0.5 * sc}" r="${8.6 * sc}" fill="${EYE_COLOR}"/>`
-      + `<circle cx="${ix}" cy="${ey + 0.5 * sc}" r="${4.4 * sc}" fill="#0d0a09"/>`
-      + `<circle cx="${ix + 3 * sc}" cy="${ey - 3 * sc}" r="${2.6 * sc}" fill="#fff"/>`
-      + `<circle cx="${ix - 3 * sc}" cy="${ey + 3.4 * sc}" r="${1.2 * sc}" fill="#fff" opacity="0.8"/>`
-      + `<path d="M ${ex - w} ${ey - top * 0.55} L ${ex + w} ${ey - top * 0.55}" stroke="${s.shadow}" stroke-width="${3 * sc}" opacity="0.35"/></g>`;
-    // Upper lid line and a soft crease above it.
-    out += `<path d="M ${ex - w - 1 * sc} ${ey + 0.5 * sc} C ${ex - w * 0.7} ${ey - top - 0.5 * sc} ${ex + w * 0.7} ${ey - top - 0.5 * sc} ${ex + w + 1 * sc} ${ey}" fill="none" stroke="#2a201c" stroke-width="${2.6 * sc}" stroke-linecap="round"/>`;
-    out += `<path d="M ${ex - w * 0.7} ${ey - top - 4 * sc} Q ${ex} ${ey - top - 8 * sc} ${ex + w * 0.75} ${ey - top - 3.5 * sc}" fill="none" stroke="${s.shadow}" stroke-width="${1.6 * sc}" stroke-linecap="round"/>`;
-    if (set === 'A') {
-      const ox = ex + side * w;
-      out += `<path d="M ${ox} ${ey - 1 * sc} l ${side * 4.5 * sc} ${-3.5 * sc} M ${ox - side * 2.5 * sc} ${ey - 4 * sc} l ${side * 4 * sc} ${-4 * sc}" stroke="#2a201c" stroke-width="${1.8 * sc}" stroke-linecap="round"/>`;
-    }
-    // Brows in the hair color, a little darker so light hair still shows.
-    const brow = mix(hairColor, '#1e1a24', 0.25);
-    const by = ey - top - 9 * sc;
-    const browD = set === 'A'
-      ? `M ${ex - side * 11 * sc} ${by + 3 * sc} Q ${ex + side * 1 * sc} ${by - 6 * sc} ${ex + side * 13 * sc} ${by + 1.5 * sc}`
-      : `M ${ex - side * 12 * sc} ${by + 1 * sc} Q ${ex + side * 1 * sc} ${by - 3.5 * sc} ${ex + side * 13 * sc} ${by + 1 * sc}`;
-    out += `<path d="${browD}" fill="none" stroke="${brow}" stroke-width="${(set === 'A' ? 4 : 5.8) * sc}" stroke-linecap="round"/>`;
-  });
-
-  // Nose: a short curve with a soft shadow on the viewer's right.
-  out += `<path d="M ${cx + 4 * sc} ${cy + 15 * sc} Q ${cx + 9 * sc} ${cy + 27 * sc} ${cx + 3 * sc} ${cy + 31 * sc} Q ${cx - 2 * sc} ${cy + 33 * sc} ${cx - 6 * sc} ${cy + 30 * sc}" fill="none" stroke="${s.deep}" stroke-width="${2.2 * sc}" stroke-linecap="round"/>`;
-  out += `<ellipse cx="${cx + 5 * sc}" cy="${cy + 24 * sc}" rx="${3 * sc}" ry="${6 * sc}" fill="${s.shadow}" opacity="0.5"/>`;
-
-  out += facialHair(h, hairColor, facialHairKind);
-
-  // Open smile: teeth on top, a darker mouth below.
-  const my = cy + 42 * sc;
-  const mw = (set === 'A' ? 17 : 19) * sc;
-  const mouth = `M ${cx - mw} ${my} Q ${cx} ${my + 3 * sc} ${cx + mw} ${my} Q ${cx + mw * 0.7} ${my + 17 * sc} ${cx} ${my + 18 * sc} Q ${cx - mw * 0.7} ${my + 17 * sc} ${cx - mw} ${my} Z`;
-  const mid = uid('mouth');
-  out += `<clipPath id="${mid}"><path d="${mouth}"/></clipPath>`;
-  out += `<path d="${mouth}" fill="#5b2229"/>`;
-  out += `<g clip-path="url(#${mid})"><path d="M ${cx - mw} ${my - 2} L ${cx + mw} ${my - 2} L ${cx + mw} ${my + 6 * sc} Q ${cx} ${my + 9 * sc} ${cx - mw} ${my + 6 * sc} Z" fill="#fbf8f2"/>`
-    + `<ellipse cx="${cx}" cy="${my + 17 * sc}" rx="${mw * 0.55}" ry="${6 * sc}" fill="#c4545e"/></g>`;
-  out += `<path d="${mouth}" fill="none" stroke="${lip}" stroke-width="${(set === 'A' ? 2.8 : 2.2) * sc}" stroke-linejoin="round"/>`;
-  if (set === 'A') {
-    out += `<path d="M ${cx - mw * 0.55} ${my + 20.5 * sc} Q ${cx} ${my + 24 * sc} ${cx + mw * 0.55} ${my + 20.5 * sc}" fill="none" stroke="${lip}" stroke-width="${2.6 * sc}" stroke-linecap="round" opacity="0.7"/>`;
-  }
-  // Smile creases at the corners.
-  [-1, 1].forEach((side) => {
-    out += `<path d="M ${cx + side * (mw + 3 * sc)} ${my - 5 * sc} q ${side * 3 * sc} ${5 * sc} ${side * 0.5 * sc} ${9 * sc}" fill="none" stroke="${s.shadow}" stroke-width="${1.8 * sc}" stroke-linecap="round"/>`;
-  });
-  return out;
-}
-
 // ---- Whole skin layer ------------------------------------------------------
 
 // Everything skin-colored that sits behind the clothes: torso, legs, neck,
 // ears and head. The face is drawn on the head.
-export function skinBase(body, skin) {
-  const h = body.head;
-  const head = piece({
-    parts: [headPath(h)],
-    base: skin,
-    name: 'head',
-    shade: [
-      { d: `M ${h.cx + h.rx * 0.45} ${h.cy - h.ry} C ${h.cx + h.rx * 1.2} ${h.cy - h.ry * 0.4} ${h.cx + h.rx * 1.1} ${h.cy + h.ry * 0.8} ${h.cx + h.rx * 0.2} ${h.cy + h.ry * 1.1} C ${h.cx + h.rx * 0.95} ${h.cy + h.ry * 0.4} ${h.cx + h.rx * 0.95} ${h.cy - h.ry * 0.3} ${h.cx + h.rx * 0.45} ${h.cy - h.ry} Z`, tone: 'shadow', opacity: 0.55 },
-    ],
-  });
-  return torsoSkin(body, skin) + legs(body, skin) + neckAndChest(body, skin) + ears(h, skin) + head;
+export function skinBase(body, skin, set, features = {}) {
+  return torsoSkin(body, skin) + legs(body, skin) + neckAndChest(body, skin) + headSkin(body.head, skin, set, features);
 }

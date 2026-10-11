@@ -9,7 +9,8 @@
 // them peek through around the armhole. A dress fills the top and bottom.
 
 import { bodyFor } from './bodies.js';
-import { skinBase, face, arms } from './figure.js';
+import { skinBase, arms } from './figure.js';
+import { face } from './face.js';
 import { hair } from './hair.js';
 import { TEMPLATES } from './garments.js';
 import { FORMAL } from './formal.js';
@@ -41,7 +42,8 @@ function drawItem(item, body, extras) {
 }
 
 // look: { body: 'A'|'B', bodyType (bodies.js BODY_TYPES; default
-//         'average'), face: 'A'|'B', skin, hair: { style, color },
+//         'average'), face: 'A'|'B', features (face.js options; any may
+//         be missing), skin, hair: { style, color },
 //         facialHair: 'none'|'stubble'|'beard', glasses }
 // outfit: { top, bottom, shoes, outer, rain, dress, neckwear, scarf, hat,
 //           eyewear } items (any may be missing)
@@ -69,8 +71,8 @@ export function renderAvatar(look, outfit = {}, { title = '' } = {}) {
 
   const layers = [
     h.back,
-    skinBase(body, look.skin),
-    face(body.head, look.skin, look.hair.color, look.face, look.facialHair),
+    skinBase(body, look.skin, look.face, look.features),
+    face(body.head, { skin: look.skin, hairColor: look.hair.color, set: look.face, facialHair: look.facialHair, features: look.features }),
     shoes?.svg,
     bottom?.svg,
     (dress || top)?.torso,

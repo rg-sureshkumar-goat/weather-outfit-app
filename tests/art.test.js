@@ -242,3 +242,64 @@ describe('body types (R43)', () => {
     }
   });
 });
+
+// C6b face options (R43): every choice on both faces, defaults unchanged.
+describe('face options (R43)', () => {
+  it('offers the options and counts the spec lists', async () => {
+    const f = await import('../src/art/face.js');
+    expect(Object.keys(f.FACE_SHAPES)).toEqual(['oval', 'round', 'square', 'heart', 'oblong', 'diamond', 'triangle', 'rectangle']);
+    expect(Object.keys(f.EYE_SHAPES)).toEqual(['almond', 'round', 'hooded', 'monolid', 'upturned', 'downturned', 'deepSet', 'closeSet']);
+    expect(Object.keys(f.EYE_COLORS)).toEqual(['darkBrown', 'brown', 'amber', 'hazel', 'green', 'blue', 'lightBlue', 'grey']);
+    expect(Object.keys(f.BROWS)).toEqual(['straight', 'softArch', 'highArch', 'rounded', 'thick', 'thin', 'bushy', 'angled']);
+    expect(f.NOSES).toEqual(['straight', 'button', 'rounded', 'wide', 'narrow', 'upturned', 'aquiline', 'flat']);
+    expect(Object.keys(f.MOUTHS)).toEqual(['medium', 'full', 'thin', 'wide', 'small', 'heartShaped', 'fullLower', 'fullUpper']);
+    expect(Object.keys(f.EARS)).toEqual(['average', 'small', 'large', 'round', 'pointed', 'closeToHead', 'protruding', 'attachedLobes']);
+    expect(f.LASHES).toEqual(['natural', 'medium', 'long']);
+    expect(Object.keys(f.FRECKLES)).toEqual(['none', 'light', 'medium', 'heavy']);
+    expect(Object.keys(f.BEAUTY_MARKS)).toEqual(['none', 'cheek', 'chin', 'aboveLip']);
+    expect(f.FACE_LINES).toEqual(['none', 'smile', 'forehead', 'crowsFeet', 'all']);
+    expect(Object.keys(f.LIP_COLORS)).toHaveLength(9);
+    expect(Object.keys(f.EYESHADOWS)).toHaveLength(9);
+    expect(f.EYELINERS).toEqual(['none', 'thin', 'winged']);
+    expect(Object.keys(f.BLUSHES)).toHaveLength(5);
+  });
+
+  it('with no options, each face draws its approved defaults', async () => {
+    const { FACE_DEFAULTS } = await import('../src/art/face.js');
+    const norm = (s) => s.replace(/qd-([a-z-]+)-\d+/g, 'qd-$1-N');
+    for (const set of ['A', 'B']) {
+      const plain = renderAvatar(look(set), {});
+      const explicit = renderAvatar(look(set, { features: FACE_DEFAULTS[set] }), {});
+      expect(norm(explicit)).toBe(norm(plain));
+    }
+  });
+
+  it('draws every choice of every feature on both faces, with unique ids', async () => {
+    const f = await import('../src/art/face.js');
+    const choices = {
+      shape: Object.keys(f.FACE_SHAPES), eyeShape: Object.keys(f.EYE_SHAPES), eyeColor: Object.keys(f.EYE_COLORS),
+      brows: Object.keys(f.BROWS), nose: f.NOSES, mouth: Object.keys(f.MOUTHS), ears: Object.keys(f.EARS),
+      lashes: f.LASHES, freckles: Object.keys(f.FRECKLES), mark: Object.keys(f.BEAUTY_MARKS), lines: f.FACE_LINES,
+      lips: Object.keys(f.LIP_COLORS), eyeshadow: Object.keys(f.EYESHADOWS), eyeliner: f.EYELINERS, blush: Object.keys(f.BLUSHES),
+    };
+    for (const set of ['A', 'B']) {
+      for (const [feature, options] of Object.entries(choices)) {
+        const seen = new Set();
+        for (const option of options) {
+          const svg = renderAvatar(look(set, { features: { [feature]: option }, facialHair: set === 'B' ? 'beard' : 'none' }), {});
+          expect(svg, `${set} ${feature} ${option}`).not.toContain('NaN');
+          const ids = [...svg.matchAll(/ id="([^"]+)"/g)].map((m) => m[1]);
+          expect(new Set(ids).size).toBe(ids.length);
+          seen.add(svg.replace(/qd-([a-z-]+)-\d+/g, 'N'));
+        }
+        // Every choice draws something different.
+        expect(seen.size, `${set} ${feature}`).toBe(options.length);
+      }
+    }
+  });
+
+  it("the beard follows the face shape's jaw", () => {
+    const beard = (shape) => renderAvatar(look('B', { features: { shape }, facialHair: 'beard' }), {}).match(/<g><defs><clipPath id="qd-beard-clip-\d+"><path d="([^"]+)"/)[1];
+    expect(beard('round')).not.toBe(beard('heart'));
+  });
+});

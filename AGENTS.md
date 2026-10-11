@@ -78,7 +78,8 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 
 **Art** (`src/art/`), drawn as SVG strings by `renderAvatar(look, outfit)` in `avatar.js`, which fixes the layer order:
 - **`bodies.js`:** the two bodies' measurements and weight-shift pose.
-- **`figure.js`:** skin, face, limbs and hands.
+- **`figure.js`:** skin, limbs and hands.
+- **`face.js`:** head shape, ears, eyes, brows, nose, mouth, facial hair and the face extras, each a named option (R43); with no options, each face set draws its approved defaults.
 - **`fit.js`:** shared garment shapes.
 - **`garments.js`:** casual wear.
 - **`formal.js`:** formal wear and dresses.

@@ -390,6 +390,16 @@ After implementation or testing, record requirement changes and the evidence tha
   - **Agent defaults:** the Facial hair control is hidden for Female. Switching from Male to Female sets facial hair to None, and switching back starts from None.
   - **Unchanged:** hairstyles, glasses and closet item types stay open to both.
   - **Changed:** R24, R40 and R43. The P8 and L8 notes say Facial hair is Male only.
+- **2026-10-11 — Face art approved (C6b).** The Developer approved the face options: 8 face shapes, eye shapes, eye colors, eyebrows, noses, mouths and ears, plus eyelashes, freckles, beauty marks, face lines and makeup. With no options chosen, both faces draw as before.
+  - **Changed after the Developer's review:**
+    - Lips are now filled shapes that share the mouth's edges and taper to nothing at the corners. Drawn as lines, colored lips had spilled past the corners, sat below the mouth, or floated above it.
+    - Pointed ears are now a human ear with a gently tapered upper rim instead of a spike.
+  - **One change to the approved C2 art:** the female face's fuller lower lip, a faint separate line under the mouth, is now a soft tinted lower lip attached to the mouth.
+  - **Found while drawing, also fixed:**
+    - Hooded eyes now lower the lid as a fold.
+    - Deep-set eyes have a soft crescent shadow instead of a grey oval.
+    - Eyeshadow was too faint and is stronger.
+    - Bushy brows' hairs follow the brow's curve, and Angled brows have a lower peak.
 - **2026-10-11 — Body types approved (C6a).** The Developer approved the 12 body types and the redrawn P8 and L8 with the 7 tabs. Found while fitting:
   - Pant legs started just under the waistband at full thigh width, so they stuck out past wide hips and under the hem of tees on male bodies. Shorts, pants and trousers now share one fix: the hips follow the body's curve, and the legs start at the hip line.
   - The avatar's drawing area was widened to the full 400 px so the widest bodies fit. Screens that size the avatar by its height keep it the same size.

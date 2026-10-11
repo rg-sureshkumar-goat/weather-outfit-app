@@ -1,6 +1,6 @@
-// Local-only art review page (art.html, plan.md C2, C5 and C6a). The C6a
-// body types come first: all 12 bodies (R43) in a range of outfits. Art round 2
-// (C5) follows: all 11 hairstyles on both bodies and in all 8 hair
+// Local-only art review page (art.html, plan.md C2, C5, C6a and C6b). The
+// C6b face options come first, then the C6a body types: all 12 bodies (R43)
+// in a range of outfits. Art round 2 (C5) follows: all 11 hairstyles on both bodies and in all 8 hair
 // colors, stubble, beard and glasses. Round 1 follows: both bodies in all 10
 // Monk tones wearing starter items, the new garment types, knitwear,
 // accessories and formal wear.
@@ -9,6 +9,7 @@ import '@fontsource-variable/nunito';
 import { renderAvatar, AVATAR_VIEWBOX } from './avatar.js';
 import { HAIRSTYLES } from './hair.js';
 import { BODY_TYPES } from './bodies.js';
+import * as FACE from './face.js';
 import { HAIRSTYLE_NAMES } from '../content/avatarOptions.js';
 import { MONK_TONES, HAIR_COLORS } from './palette.js';
 import { STARTER_SETS } from '../content/starters.js';
@@ -90,6 +91,36 @@ const FORMAL_LOOKS = showcase([
   [looks.A(9, HAIR_COLORS.black), { dress: o('banquetDress', '#7c2436'), shoes: o('heels', '#7c2436') }, 'Banquet gown'],
 ]);
 
+// ---- C6b: face options (R43) ----------------------------------------------------
+
+const FACE_ROWS = [
+  ['Face shape', 'shape', Object.keys(FACE.FACE_SHAPES)],
+  ['Eye shape', 'eyeShape', Object.keys(FACE.EYE_SHAPES)],
+  ['Eye color', 'eyeColor', Object.keys(FACE.EYE_COLORS)],
+  ['Eyebrows', 'brows', Object.keys(FACE.BROWS)],
+  ['Nose', 'nose', FACE.NOSES],
+  ['Mouth', 'mouth', Object.keys(FACE.MOUTHS)],
+  ['Ears', 'ears', Object.keys(FACE.EARS)],
+  ['Eyelashes', 'lashes', FACE.LASHES],
+  ['Freckles', 'freckles', Object.keys(FACE.FRECKLES)],
+  ['Beauty mark', 'mark', Object.keys(FACE.BEAUTY_MARKS)],
+  ['Face lines', 'lines', FACE.FACE_LINES],
+  ['Lip color', 'lips', Object.keys(FACE.LIP_COLORS)],
+  ['Eyeshadow', 'eyeshadow', Object.keys(FACE.EYESHADOWS)],
+  ['Eyeliner', 'eyeliner', FACE.EYELINERS],
+  ['Blush', 'blush', Object.keys(FACE.BLUSHES)],
+];
+const FACE_VIEW = 'viewBox="100 40 200 210"';
+const faceRow = ([title, feature, options], r) => `
+  <h3>${title}</h3>
+  <section class="heads">${['A', 'B'].flatMap((set) => options.map((option, i) => {
+    const hair = feature === 'ears' ? 'bald' : set === 'A' ? 'bun' : 'buzz';
+    const look = { body: set, face: set, skin: MONK_TONES[(i * 3 + r + (set === 'B' ? 5 : 0)) % 10], hair: { style: hair, color: HAIR_CYCLE[(i + r) % 8] }, features: { [feature]: option } };
+    const svg = renderAvatar(look, {}).replace(`viewBox="${AVATAR_VIEWBOX}"`, FACE_VIEW);
+    return `<figure class="head">${svg}<figcaption>${set === 'A' ? 'F' : 'M'} · ${option}</figcaption></figure>`;
+  })).join('')}</section>`;
+const FACE_SECTION = FACE_ROWS.map(faceRow).join('');
+
 // ---- C6a: body types (R43) ------------------------------------------------------
 
 const TYPE_NAMES = { slim: 'Slim', average: 'Average', athletic: 'Athletic', hourglass: 'Hourglass', pear: 'Pear', broad: 'Broad', stocky: 'Stocky', plusSize: 'Plus-size' };
@@ -149,6 +180,9 @@ document.querySelector('#art').innerHTML = `
     <h1>Quick Dresser · art review</h1>
     <p>Original artwork created for this project. Monk Skin Tone Scale by Ellis Monk (CC BY 4.0). Local review page only.</p>
   </header>
+  <h2>C6b · Face options (R43), each on both faces</h2>
+  ${FACE_SECTION}
+  <h2 class="round">C6a (approved)</h2>
   <h2>C6a · The 12 body types (R43), every outfit fitted from measurements</h2>
   ${BODY_ROWS}
   <h2 class="round">Round 2 (approved)</h2>
