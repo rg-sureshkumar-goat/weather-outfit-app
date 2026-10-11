@@ -24,23 +24,11 @@ import { itemColors } from '../art/palette.js';
 import { GARMENT_TYPES } from '../content/garments.js';
 import { ICONS, bigIcon, smallIcon } from './icons.js';
 import { dayLabels, timeLabel, skyFor, outfitDescription } from './format.js';
+import { esc, tabs, locationPill, infoButton, topBar, bindChrome } from './chrome.js';
 
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const deg = (v) => (v === null || v === undefined ? '—' : `${v}°`);
 
 // ---- Pieces --------------------------------------------------------------------
-
-const tabs = (where) => `
-  <nav class="tabs tabs-${where}" aria-label="Sections">
-    <button type="button" class="tab" aria-current="page" data-tab="today">${ICONS.person}<span>Today</span></button>
-    <button type="button" class="tab" data-tab="closet">${ICONS.rack}<span>Closet</span></button>
-    <button type="button" class="tab" data-tab="add">${ICONS.camera}<span>Add item</span></button>
-  </nav>`;
-
-const locationPill = (location) =>
-  `<button type="button" class="pill" data-location aria-label="Location: ${esc(location.label)}. Change location">${ICONS.pin}<span>${esc(location.label)}</span>${ICONS.chevron}</button>`;
-
-const infoButton = '<button type="button" class="icon-btn" data-info aria-label="About this app, sources and privacy">' + ICONS.info + '</button>';
 
 // Weather icon, then the temperature with feels-like (today) or high and
 // low (forecast days) and Open-Meteo's description (P1a, R10). Today uses
@@ -176,13 +164,7 @@ export function showToday(root, ctx) {
     const test = import.meta.env.DEV && ctx.testWeather ? `<p class="test-weather">Test weather: ${esc(ctx.testWeather)}</p>` : '';
     root.innerHTML = `
       <div class="today${loading ? ' is-loading' : ''}">
-        <header class="bar">
-          <span class="logo">Quick Dresser</span>
-          ${tabs('top')}
-          <span class="bar-gap"></span>
-          ${locationPill(ctx.location)}
-          ${infoButton}
-        </header>
+        ${topBar(ctx.location, 'today')}
         <div class="phone-top">
           <div class="phone-row">${locationPill(ctx.location)}${infoButton}<span class="grow"></span>${state ? nowIcon(state, 52) : ''}</div>
           <div class="phone-row">${dateLine}<span class="grow"></span>${state ? nowTemp(state) : ''}</div>
@@ -191,7 +173,7 @@ export function showToday(root, ctx) {
         ${test}
         ${banner}
         ${main}
-        ${week ? `<div class="bottom-dock">${strip(week, selected)}${tabs('bottom')}</div>` : `<div class="bottom-dock">${tabs('bottom')}</div>`}
+        <div class="bottom-dock">${week ? strip(week, selected) : ''}${tabs('bottom', 'today')}</div>
       </div>`;
     bind();
     if (active) focusVisible(root, active);
@@ -286,9 +268,7 @@ export function showToday(root, ctx) {
   }
 
   function bind() {
-    root.querySelectorAll('[data-location]').forEach((b) => b.addEventListener('click', () => ctx.onChangeLocation()));
-    root.querySelectorAll('[data-info]').forEach((b) => b.addEventListener('click', () => ctx.onInfo()));
-    root.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => ctx.onTab(b.dataset.tab)));
+    bindChrome(root, ctx);
     root.querySelectorAll('[data-retry]').forEach((b) => b.addEventListener('click', () => load(true)));
     root.querySelectorAll('.strip [data-date], .week-list [data-date]').forEach((b) => b.addEventListener('click', () => select(b.dataset.date)));
     // Arrow keys move through the week list on the laptop (L1).

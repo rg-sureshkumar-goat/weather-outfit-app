@@ -8,7 +8,26 @@ function memoryStorage() {
     getItem: (k) => (map.has(k) ? map.get(k) : null),
     setItem: (k, v) => map.set(k, String(v)),
     removeItem: (k) => map.delete(k),
+    key: (i) => [...map.keys()][i] ?? null,
+    get length() {
+      return map.size;
+    },
   };
+}
+
+// Every key the app saves starts with this, so "Delete all my data" (R35)
+// finds all of it: location, avatar, saved picks and, from C7, the closet.
+export const APP_PREFIX = 'quickDresser.';
+
+// Removes everything the app saved on this device and nothing else.
+export function clearAppData(storage) {
+  const keys = [];
+  for (let i = 0; i < storage.length; i++) {
+    const key = storage.key(i);
+    if (key && key.startsWith(APP_PREFIX)) keys.push(key);
+  }
+  keys.forEach((key) => storage.removeItem(key));
+  return keys;
 }
 
 export function deviceStorage() {

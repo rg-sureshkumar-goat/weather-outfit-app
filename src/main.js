@@ -2,8 +2,8 @@
 // (plan.md, usage limits), and wires the location dialog.
 //
 // First run follows R22: avatar setup (female or male, selfie step, review),
-// then location, then Today. Until C6 and C7, Info, Closet and Add item show
-// "coming soon" pages.
+// then location, then Today. Until C7, Closet and Add item show "coming
+// soon" pages.
 import '@fontsource-variable/nunito';
 import './styles.css';
 import { deviceStorage } from './store/storage.js';
@@ -13,6 +13,7 @@ import { fetchForecast } from './weather/openMeteo.js';
 import { showLocation } from './screens/location.js';
 import { showToday } from './screens/today.js';
 import { showSetup } from './screens/setup.js';
+import { showInfo } from './screens/info.js';
 import { loadAvatar } from './store/avatar.js';
 import { ICONS } from './screens/icons.js';
 
@@ -48,6 +49,26 @@ function comingSoon(title, text) {
   app.querySelector('[data-back]').addEventListener('click', () => go('today'));
 }
 
+// The location dialog over the current screen (P2 as a dialog, L2). Picking
+// a place redraws the screen for it; focus returns to the pill on screen.
+function changeLocation() {
+  const holder = document.createElement('div');
+  app.append(holder);
+  const focusPill = () => [...app.querySelectorAll('[data-location]')].find((b) => b.offsetParent !== null)?.focus();
+  showLocation(holder, {
+    storage,
+    onChosen: () => {
+      holder.remove();
+      go(screen);
+      focusPill();
+    },
+    onClose: () => {
+      holder.remove();
+      focusPill();
+    },
+  });
+}
+
 let screen = 'today';
 function go(name) {
   screen = name;
@@ -64,7 +85,21 @@ function go(name) {
   }
   if (name === 'closet') return comingSoon('Closet', 'Your closet arrives in a later update. Starter items fill every outfit until then.');
   if (name === 'add') return comingSoon('Add item', 'Adding your own clothes by photo arrives in a later update.');
-  if (name === 'info') return comingSoon('About Quick Dresser', 'Sources, privacy and credits arrive in a later update. Weather data by Open-Meteo.com (CC BY 4.0).');
+  if (name === 'info') {
+    return showInfo(app, {
+      storage,
+      location: place,
+      onTab: (tab) => go(tab),
+      onChangeLocation: changeLocation,
+      onBack: () => go('today'),
+      // Everything saved is gone (R35): forget this visit's forecasts too,
+      // and start first setup again.
+      onDeleted: () => {
+        cache.clear();
+        go('today');
+      },
+    });
+  }
 
   showToday(app, {
     storage,
@@ -74,24 +109,7 @@ function go(name) {
     getForecast: (opts) => getForecast(place, opts),
     onTab: (tab) => go(tab),
     onInfo: () => go('info'),
-    onChangeLocation: () => {
-      const holder = document.createElement('div');
-      app.append(holder);
-      // Phone and laptop each have a pill; focus returns to the one on screen.
-      const focusPill = () => [...app.querySelectorAll('[data-location]')].find((b) => b.offsetParent !== null)?.focus();
-      showLocation(holder, {
-        storage,
-        onChosen: () => {
-          holder.remove();
-          go('today');
-          focusPill();
-        },
-        onClose: () => {
-          holder.remove();
-          focusPill();
-        },
-      });
-    },
+    onChangeLocation: changeLocation,
   });
 }
 

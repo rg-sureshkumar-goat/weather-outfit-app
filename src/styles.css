@@ -16,6 +16,7 @@
   --radius: 16px;
   --shadow: 0 10px 30px rgba(31, 42, 55, 0.14);
   --focus: 0 0 0 3px var(--cream), 0 0 0 6px var(--coral);
+  --danger: #b42318; /* 6.5:1 with white text */
 }
 
 * {
@@ -108,6 +109,12 @@ input {
   border-radius: 50%;
   background: #fff;
   cursor: pointer;
+}
+
+.icon-btn[aria-current='page'] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
 }
 
 .pill {
@@ -776,6 +783,178 @@ input {
   font-size: 24px;
   font-weight: 800;
   margin-bottom: 6px;
+}
+
+/* ---- Info (P6, L6) --------------------------------------------------------- */
+
+.info-back {
+  padding: 12px 16px 0;
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 0 12px 0 6px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--ink);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.info-layout {
+  padding: 4px 16px calc(110px + env(safe-area-inset-bottom));
+}
+
+.info-nav {
+  display: none;
+}
+
+.info-content {
+  display: grid;
+  gap: 22px;
+  max-width: 680px;
+}
+
+.info-content h1 {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.info-content h1:focus,
+.info-content h2:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.info-content section {
+  display: grid;
+  gap: 10px;
+  scroll-margin-top: 16px;
+}
+
+.info-content h2 {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.info-content a {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+}
+
+.muted {
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+.bands {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bands li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.rules {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.btn-danger {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: #fff;
+}
+
+.confirm {
+  display: grid;
+  gap: 10px;
+}
+
+.confirm-title {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 900px) {
+  .info-back {
+    display: none;
+  }
+
+  /* Section list beside a readable column (L6). */
+  .info-layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 680px);
+    justify-content: center;
+    gap: 48px;
+    padding: 32px 28px 56px;
+  }
+
+  .info-nav {
+    display: block;
+  }
+
+  .info-nav ul {
+    position: sticky;
+    top: 100px;
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .info-nav a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 12px;
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .info-nav a:hover {
+    background: var(--fill);
+  }
+
+  .info-content section {
+    scroll-margin-top: 92px;
+  }
+
+  .info-content h1 {
+    font-size: 34px;
+  }
+
+  .confirm-actions {
+    grid-template-columns: auto auto;
+    justify-content: start;
+  }
 }
 
 /* ---- First setup (P9, P7, P8; L9, L7, L8) ----------------------------------- */
