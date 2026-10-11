@@ -9,7 +9,7 @@
    ?board=<id> shows one board at full size for PNG export. Single light "paper" theme on purpose: these are wireframes. */
 :root{
   --paper:#f2f1ec; --sheet:#ffffff; --ink:#23272e; --ink-2:#646b76; --wire:#b8bdc6; --fill:#e8eaee; --fill-2:#d9dde3; --sky:#e4ecf4;
-  --note:#c84a2f; --drawn:#2e5f8a; --drawn-bg:#e1ecf6; --prop-bg:#fbe7e1;
+  --note:#c84a2f; --drawn:#2e5f8a; --drawn-bg:#e1ecf6; --prop-bg:#fbe7e1; --rev:#5b4a9e; --rev-bg:#ece8f7;
   --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,monospace;
   color-scheme:light;
@@ -48,6 +48,7 @@ body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.4 var(--font)
 .tag{font:600 10px var(--mono);letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:1px;white-space:nowrap}
 .tag.d{background:var(--drawn-bg);color:var(--drawn)}
 .tag.p{background:var(--prop-bg);color:var(--note)}
+.tag.r{background:var(--rev-bg);color:var(--rev)}
 
 /* Frames */
 .frame{position:relative;flex:none;background:#fff;border:2px solid #8f96a1;overflow:hidden}
@@ -206,6 +207,7 @@ html.single .board{border:0;border-radius:0;transform:none!important}
     <div class="key">
       <span><span class="tag d" style="margin:0">Drawn</span> placed as in the hand drawing</span>
       <span><span class="tag p" style="margin:0">Proposed</span> Agent's addition, for review</span>
+      <span><span class="tag r" style="margin:0">Revised</span> changed during the build (spec.md, Revisions)</span>
       <span><b style="color:var(--note)">1 2 3</b> notes match the numbers on each frame</span>
     </div>
   </header>
@@ -220,8 +222,8 @@ html.single .board{border:0;border-radius:0;transform:none!important}
   </section>
 
   <nav class="toc" aria-label="Boards">
-    <a href="#phone-01a-today">P1a Today</a><a href="#phone-01b-today-scrolled">P1b Today scrolled</a><a href="#phone-02-location">P2 Location</a><a href="#phone-03-closet">P3 Closet</a><a href="#phone-04a-add-camera">P4a Add: camera</a><a href="#phone-04b-add-cutout">P4b Add: cut out</a><a href="#phone-04c-add-type">P4c Add: type</a><a href="#phone-04d-add-confirm">P4d Add: confirm</a><a href="#phone-05-item-detail">P5 Item</a><a href="#phone-06-info">P6 Info</a><a href="#phone-07-setup-selfie">P7 Setup: selfie</a><a href="#phone-08-setup-review">P8 Setup: review</a>
-    <a href="#laptop-01-today">L1 Today</a><a href="#laptop-02-location">L2 Location</a><a href="#laptop-03-closet-detail">L3 Closet + item</a><a href="#laptop-04-add-item">L4 Add item</a><a href="#laptop-06-info">L6 Info</a><a href="#laptop-07-setup-selfie">L7 Setup: selfie</a><a href="#laptop-08-setup-review">L8 Setup: review</a>
+    <a href="#phone-01a-today">P1a Today</a><a href="#phone-01b-today-scrolled">P1b Today scrolled</a><a href="#phone-02-location">P2 Location</a><a href="#phone-03-closet">P3 Closet</a><a href="#phone-04a-add-camera">P4a Add: camera</a><a href="#phone-04b-add-cutout">P4b Add: cut out</a><a href="#phone-04c-add-type">P4c Add: type</a><a href="#phone-04d-add-confirm">P4d Add: confirm</a><a href="#phone-05-item-detail">P5 Item</a><a href="#phone-06-info">P6 Info</a><a href="#phone-09-setup-gender">P9 Setup: woman or man</a><a href="#phone-07-setup-selfie">P7 Setup: selfie</a><a href="#phone-08-setup-review">P8 Setup: review</a>
+    <a href="#laptop-01-today">L1 Today</a><a href="#laptop-02-location">L2 Location</a><a href="#laptop-03-closet-detail">L3 Closet + item</a><a href="#laptop-04-add-item">L4 Add item</a><a href="#laptop-06-info">L6 Info</a><a href="#laptop-09-setup-gender">L9 Setup: woman or man</a><a href="#laptop-07-setup-selfie">L7 Setup: selfie</a><a href="#laptop-08-setup-review">L8 Setup: review</a>
   </nav>
 
   <h2 class="section-title">Phone · 390 × 844</h2>
@@ -576,13 +578,40 @@ html.single .board{border:0;border-radius:0;transform:none!important}
     </div>
   </section></div>
 
+  <!-- P9 Setup: woman or man (added 2026-10-10, R40) -->
+  <div class="fit"><section class="board" id="phone-09-setup-gender">
+    <header class="board-head"><span class="code">P9</span><h2>First setup, woman or man</h2></header>
+    <div class="board-body">
+      <div class="frame phone">
+        <div class="status">9:41<i></i></div>
+        <div class="a row" style="left:18px;top:60px;gap:6px"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t12 muted" style="margin-left:6px">Step 1 of 4</span></div>
+        <div class="a t28 xb" style="left:18px;top:92px">Make your avatar</div>
+        <div class="a t15 muted" style="left:18px;top:134px;width:340px">Pick one to start. It sets your avatar's body, face and starter outfits. You can change any of them later.</div>
+        <div class="a" style="left:16px;right:16px;top:290px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="box" style="height:300px;display:grid;grid-template-rows:1fr auto;gap:12px;padding:12px"><div class="ph" style="display:grid;place-items:center"><span class="t12 muted">Body A preview</span></div><div class="t17 xb" style="text-align:center;padding-bottom:4px">Woman</div></div>
+          <div class="box" style="height:300px;display:grid;grid-template-rows:1fr auto;gap:12px;padding:12px"><div class="ph" style="display:grid;place-items:center"><span class="t12 muted">Body B preview</span></div><div class="t17 xb" style="text-align:center;padding-bottom:4px">Man</div></div>
+        </div>
+        <div class="a row t13 muted" style="left:30px;right:30px;top:614px;justify-content:center;text-align:center;gap:6px"><svg class="ico s"><use href="#i-lock"/></svg>Saved only on this phone. Never sent.</div>
+        <div class="a btn pri" style="left:16px;right:16px;top:756px;opacity:.35">Continue</div>
+        <div class="home"></div>
+        <span class="n" style="left:146px;top:56px">1</span><span class="n" style="left:8px;top:282px">2</span><span class="n" style="left:22px;top:608px">3</span><span class="n" style="left:8px;top:748px">4</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>First-run steps</b><span class="tag r">Revised</span></div><p>1 woman or man, 2 selfie (P7), 3 review the avatar (P8), 4 location (P2). Then Today.</p></li>
+        <li><div><b>Woman or Man</b><span class="tag r">Revised</span></div><p>Large cards in thumb reach, each with a preview of its starting body. Sets the starting body, face details, hand-setup hairstyle and starter outfits (R40). Nothing is locked: all of it can be changed on P8.</p></li>
+        <li><div><b>Privacy promise</b><span class="tag r">Revised</span></div><p>Stored on the device with the avatar values. Never sent, and never read from the selfie.</p></li>
+        <li><div><b>Continue</b><span class="tag r">Revised</span></div><p>Disabled until one is picked. Goes on to the selfie (P7).</p></li>
+      </ol>
+    </div>
+  </section></div>
+
   <!-- P7 Setup: selfie -->
   <div class="fit"><section class="board" id="phone-07-setup-selfie">
     <header class="board-head"><span class="code">P7</span><h2>First setup, take a selfie</h2></header>
     <div class="board-body">
       <div class="frame phone">
         <div class="status">9:41<i></i></div>
-        <div class="a row" style="left:18px;top:60px;gap:6px"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="t12 muted" style="margin-left:6px">Step 1 of 3</span></div>
+        <div class="a row" style="left:18px;top:60px;gap:6px"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="t12 muted" style="margin-left:6px">Step 2 of 4</span></div>
         <div class="a t28 xb" style="left:18px;top:92px">Make your avatar</div>
         <div class="a t15 muted" style="left:18px;top:134px;width:340px">Take a selfie and the app matches your skin tone and hair. You can adjust it next.</div>
         <div class="a" style="left:75px;top:212px;width:240px;height:240px;border-radius:50%;border:2.5px dashed var(--ink-2);overflow:hidden;background:var(--fill)"><svg viewBox="10 0 140 160" style="width:100%;height:100%;margin-top:30px"><use href="#avatar" width="160" height="300"/></svg></div>
@@ -594,7 +623,7 @@ html.single .board{border:0;border-radius:0;transform:none!important}
         <span class="n" style="left:146px;top:56px">1</span><span class="n" style="left:300px;top:206px">2</span><span class="n" style="left:22px;top:470px">3</span><span class="n" style="left:8px;top:632px">4</span><span class="n" style="left:100px;top:766px">5</span>
       </div>
       <ol class="notes">
-        <li><div><b>First-run steps</b><span class="tag p">Proposed</span></div><p>1 selfie, 2 review the avatar, 3 location (P2). Then Today.</p></li>
+        <li><div><b>First-run steps</b><span class="tag r">Revised</span></div><p>1 woman or man (P9), 2 selfie, 3 review the avatar, 4 location (P2). Then Today.</p></li>
         <li><div><b>Face guide</b><span class="tag p">Proposed</span></div><p>Shows how to frame the photo: head and shoulders, hair visible.</p></li>
         <li><div><b>Privacy promise</b><span class="tag p">Proposed</span></div><p>Matches the test: the selfie is read on the device and then discarded.</p></li>
         <li><div><b>Take or choose</b><span class="tag p">Proposed</span></div><p>"Take a selfie" opens the front camera. "Choose a photo" uses one you already have.</p></li>
@@ -609,30 +638,37 @@ html.single .board{border:0;border-radius:0;transform:none!important}
     <div class="board-body">
       <div class="frame phone">
         <div class="status">9:41<i></i></div>
-        <div class="a row" style="left:18px;top:60px;gap:6px"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="t12 muted" style="margin-left:6px">Step 2 of 3</span></div>
+        <div class="a row" style="left:18px;top:60px;gap:6px"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="t12 muted" style="margin-left:6px">Step 3 of 4</span></div>
         <div class="a t24 xb" style="left:18px;top:90px">Does this look like you?</div>
         <div class="a sky" style="left:115px;top:128px;width:160px;height:160px;overflow:hidden"><svg viewBox="10 0 140 160" style="width:160px;height:183px"><use href="#avatar" width="160" height="300"/></svg></div>
         <div class="a" style="left:290px;top:132px;width:56px;height:56px;border-radius:50%;background:var(--fill-2);border:2px solid #fff;box-shadow:0 0 0 1.5px var(--wire)"></div>
-        <div class="a lbl" style="left:18px;top:300px">Skin tone</div>
-        <div class="a" style="left:16px;top:318px;display:grid;grid-template-columns:repeat(5,44px);gap:8px 26px"><span class="sw" style="background:#f6ede4"></span><span class="sw" style="background:#f3e7db"></span><span class="sw" style="background:#f7ead0"></span><span class="sw" style="background:#eadaba"></span><span class="sw" style="background:#d7bd96"></span><span class="sw" style="background:#a07e56"></span><span class="sw on" style="background:#825c43"></span><span class="sw" style="background:#604134"></span><span class="sw" style="background:#3a312a"></span><span class="sw" style="background:#292420"></span></div>
-        <div class="a lbl" style="left:18px;top:424px">Hair color</div>
-        <div class="a" style="left:16px;top:442px;display:grid;grid-template-columns:repeat(8,38px);gap:6px"><span class="sw" style="width:38px;height:38px;background:#1d1a18"></span><span class="sw on" style="width:38px;height:38px;background:#3b2a20"></span><span class="sw" style="width:38px;height:38px;background:#61402b"></span><span class="sw" style="width:38px;height:38px;background:#8c6443"></span><span class="sw" style="width:38px;height:38px;background:#c9a467"></span><span class="sw" style="width:38px;height:38px;background:#e2d5b5"></span><span class="sw" style="width:38px;height:38px;background:#8a3a20"></span><span class="sw" style="width:38px;height:38px;background:#9b9a96"></span></div>
-        <div class="a lbl" style="left:18px;top:496px">Hairstyle</div>
-        <div class="a row scroll" style="left:16px;right:0;top:514px;gap:6px;overflow:hidden"><span class="chip">Bald</span><span class="chip">Buzz</span><span class="chip on">Short crop</span><span class="chip">Short curls or coils</span><span class="chip">Afro</span><span class="chip">Medium straight</span><span class="chip">Medium curly</span><span class="chip">Long straight</span><span class="chip">Long curly</span><span class="chip">Braids or locs</span><span class="chip">Bun or ponytail</span></div>
-        <div class="a lbl" style="left:18px;top:566px">Facial hair</div>
-        <div class="a row" style="left:16px;top:584px;width:228px;gap:6px"><span class="seg">None</span><span class="seg on">Stubble</span><span class="seg">Beard</span></div>
-        <div class="a lbl" style="left:262px;top:566px">Glasses</div>
-        <div class="a row" style="left:262px;top:584px;width:112px;gap:6px"><span class="seg on">Off</span><span class="seg">On</span></div>
+        <div class="a lbl" style="left:18px;top:298px">Gender</div>
+        <div class="a row" style="left:16px;top:316px;width:132px;gap:6px"><span class="seg">Woman</span><span class="seg on">Man</span></div>
+        <div class="a lbl" style="left:162px;top:298px">Body</div>
+        <div class="a row" style="left:160px;top:316px;width:100px;gap:6px"><span class="seg">A</span><span class="seg on">B</span></div>
+        <div class="a lbl" style="left:274px;top:298px">Face</div>
+        <div class="a row" style="left:272px;top:316px;width:102px;gap:6px"><span class="seg">A</span><span class="seg on">B</span></div>
+        <div class="a lbl" style="left:18px;top:370px">Skin tone</div>
+        <div class="a" style="left:16px;top:388px;display:grid;grid-template-columns:repeat(5,44px);gap:8px 26px"><span class="sw" style="background:#f6ede4"></span><span class="sw" style="background:#f3e7db"></span><span class="sw" style="background:#f7ead0"></span><span class="sw" style="background:#eadaba"></span><span class="sw" style="background:#d7bd96"></span><span class="sw" style="background:#a07e56"></span><span class="sw on" style="background:#825c43"></span><span class="sw" style="background:#604134"></span><span class="sw" style="background:#3a312a"></span><span class="sw" style="background:#292420"></span></div>
+        <div class="a lbl" style="left:18px;top:494px">Hair color</div>
+        <div class="a" style="left:16px;top:512px;display:grid;grid-template-columns:repeat(8,38px);gap:6px"><span class="sw" style="width:38px;height:38px;background:#1d1a18"></span><span class="sw on" style="width:38px;height:38px;background:#3b2a20"></span><span class="sw" style="width:38px;height:38px;background:#61402b"></span><span class="sw" style="width:38px;height:38px;background:#8c6443"></span><span class="sw" style="width:38px;height:38px;background:#c9a467"></span><span class="sw" style="width:38px;height:38px;background:#e2d5b5"></span><span class="sw" style="width:38px;height:38px;background:#8a3a20"></span><span class="sw" style="width:38px;height:38px;background:#9b9a96"></span></div>
+        <div class="a lbl" style="left:18px;top:566px">Hairstyle</div>
+        <div class="a row scroll" style="left:16px;right:0;top:584px;gap:6px;overflow:hidden"><span class="chip">Bald</span><span class="chip">Buzz</span><span class="chip on">Short crop</span><span class="chip">Short curls or coils</span><span class="chip">Afro</span><span class="chip">Medium straight</span><span class="chip">Medium curly</span><span class="chip">Long straight</span><span class="chip">Long curly</span><span class="chip">Braids or locs</span><span class="chip">Bun or ponytail</span></div>
+        <div class="a lbl" style="left:18px;top:636px">Facial hair</div>
+        <div class="a row" style="left:16px;top:654px;width:228px;gap:6px"><span class="seg">None</span><span class="seg on">Stubble</span><span class="seg">Beard</span></div>
+        <div class="a lbl" style="left:262px;top:636px">Glasses</div>
+        <div class="a row" style="left:262px;top:654px;width:112px;gap:6px"><span class="seg on">Off</span><span class="seg">On</span></div>
         <div class="a btn" style="left:16px;top:756px;width:120px">Retake</div>
         <div class="a btn pri" style="left:148px;right:16px;top:756px">Looks good</div>
         <div class="home"></div>
-        <span class="n" style="left:106px;top:120px">1</span><span class="n" style="left:340px;top:124px">2</span><span class="n" style="left:94px;top:294px">3</span><span class="n" style="left:94px;top:490px">4</span><span class="n" style="left:108px;top:560px">5</span><span class="n" style="left:8px;top:748px">6</span>
+        <span class="n" style="left:106px;top:120px">1</span><span class="n" style="left:340px;top:124px">2</span><span class="n" style="left:72px;top:292px">3</span><span class="n" style="left:94px;top:364px">4</span><span class="n" style="left:94px;top:560px">5</span><span class="n" style="left:108px;top:630px">6</span><span class="n" style="left:8px;top:748px">7</span>
       </div>
       <ol class="notes">
         <li><div><b>Avatar preview</b><span class="tag p">Proposed</span></div><p>Updates as you adjust. Pre-filled from the selfie, as in the selfie test.</p></li>
         <li><div><b>Selfie thumbnail</b><span class="tag p">Proposed</span></div><p>Shown for comparison during setup only, then discarded.</p></li>
+        <li><div><b>Gender, body and face</b><span class="tag r">Revised</span></div><p>Gender starts as picked on P9. Changing it resets Body, Face and the starter outfits to that gender's. Body and Face can also be changed on their own (R40). Names for A and B are chosen with the art in C2.</p></li>
         <li><div><b>Skin tone and hair color</b><span class="tag p">Proposed</span></div><p>Monk Skin Tone Scale and eight hair colors, with the closest match pre-selected.</p></li>
-        <li><div><b>Hairstyle</b><span class="tag p">Proposed</span></div><p>11 named styles in a row that scrolls sideways. The hair length read from the selfie pre-selects the closest one.</p></li>
+        <li><div><b>Hairstyle</b><span class="tag p">Proposed</span></div><p>11 named styles in a row that scrolls sideways. The hair length read from the selfie pre-selects the closest one. Set up by hand, it starts on the gender's default: Long straight for Woman, Short crop for Man.</p></li>
         <li><div><b>Facial hair and glasses</b><span class="tag p">Proposed</span></div><p>Not detected from the photo, so you choose: none, stubble or beard; glasses off or on.</p></li>
         <li><div><b>Retake or continue</b><span class="tag p">Proposed</span></div><p>"Looks good" goes on to location (P2). The same screen opens later from "Edit avatar" in the Closet.</p></li>
       </ol>
@@ -837,12 +873,38 @@ html.single .board{border:0;border-radius:0;transform:none!important}
     </div>
   </section></div>
 
+  <!-- L9 Setup: woman or man (added 2026-10-10, R40) -->
+  <div class="fit"><section class="board lap" id="laptop-09-setup-gender">
+    <header class="board-head"><span class="code">L9</span><h2>First setup, woman or man</h2></header>
+    <div class="board-body">
+      <div class="frame laptop">
+        <div class="lbar"><span class="logo">Quick Dresser</span><span style="flex:1"></span><span class="row" style="gap:6px"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="t13 muted" style="margin-left:6px">Step 1 of 4</span></span></div>
+        <div class="a box" style="left:190px;top:120px;width:900px;height:560px;padding:32px;display:grid;grid-template-rows:auto 1fr auto;gap:22px">
+          <div style="display:grid;gap:10px">
+            <div class="t28 xb">Make your avatar</div>
+            <div class="t15 muted">Pick one to start. It sets your avatar's body, face and starter outfits. You can change any of them later.</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div class="box" style="display:grid;grid-template-rows:1fr auto;gap:12px;padding:14px"><div class="ph" style="display:grid;place-items:center"><span class="t13 muted">Body A preview</span></div><div class="t17 xb" style="text-align:center">Woman</div></div>
+            <div class="box" style="display:grid;grid-template-rows:1fr auto;gap:12px;padding:14px"><div class="ph" style="display:grid;place-items:center"><span class="t13 muted">Body B preview</span></div><div class="t17 xb" style="text-align:center">Man</div></div>
+          </div>
+          <div class="row" style="justify-content:space-between"><div class="row t13 muted" style="gap:6px"><svg class="ico s"><use href="#i-lock"/></svg>Saved only on this device. Never sent.</div><div class="btn pri" style="width:180px;opacity:.35">Continue</div></div>
+        </div>
+        <span class="n" style="left:212px;top:248px">1</span><span class="n" style="left:888px;top:648px">2</span>
+      </div>
+      <ol class="notes">
+        <li><div><b>Woman or Man</b><span class="tag r">Revised</span></div><p>Same choice as P9: two cards, each with a preview of its starting body. Picked with a click, or with Tab and Enter.</p></li>
+        <li><div><b>Continue</b><span class="tag r">Revised</span></div><p>Disabled until one is picked. Goes on to the selfie (L7).</p></li>
+      </ol>
+    </div>
+  </section></div>
+
   <!-- L7 Setup: selfie -->
   <div class="fit"><section class="board lap" id="laptop-07-setup-selfie">
     <header class="board-head"><span class="code">L7</span><h2>First setup, take a selfie</h2></header>
     <div class="board-body">
       <div class="frame laptop">
-        <div class="lbar"><span class="logo">Quick Dresser</span><span style="flex:1"></span><span class="row" style="gap:6px"><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="t13 muted" style="margin-left:6px">Step 1 of 3</span></span></div>
+        <div class="lbar"><span class="logo">Quick Dresser</span><span style="flex:1"></span><span class="row" style="gap:6px"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="t13 muted" style="margin-left:6px">Step 2 of 4</span></span></div>
         <div class="a box" style="left:190px;top:120px;width:900px;height:560px;padding:32px;display:grid;grid-template-columns:400px 1fr;gap:40px">
           <div style="border-radius:18px;background:var(--fill);display:grid;place-items:center;position:relative"><div style="width:280px;height:280px;border-radius:50%;border:2.5px dashed var(--ink-2);overflow:hidden"><svg viewBox="10 0 140 160" style="width:100%;height:100%;margin-top:34px"><use href="#avatar" width="160" height="300"/></svg></div></div>
           <div style="display:grid;align-content:center;gap:16px">
@@ -868,12 +930,13 @@ html.single .board{border:0;border-radius:0;transform:none!important}
     <header class="board-head"><span class="code">L8</span><h2>First setup, review the avatar</h2></header>
     <div class="board-body">
       <div class="frame laptop">
-        <div class="lbar"><span class="logo">Quick Dresser</span><span style="flex:1"></span><span class="row" style="gap:6px"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="t13 muted" style="margin-left:6px">Step 2 of 3</span></span></div>
+        <div class="lbar"><span class="logo">Quick Dresser</span><span style="flex:1"></span><span class="row" style="gap:6px"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="t13 muted" style="margin-left:6px">Step 3 of 4</span></span></div>
         <div class="a t28 xb" style="left:120px;top:96px">Does this look like you?</div>
         <div class="a" style="left:120px;top:160px;width:200px"><div class="ph" style="height:240px"></div><div class="t13 muted" style="margin-top:8px">Your selfie, for comparison</div><div class="link t14" style="margin-top:8px">Retake</div></div>
         <div class="a sky" style="left:350px;top:160px;width:340px;height:520px;overflow:hidden"><svg style="position:absolute;left:40px;top:20px;width:260px;height:488px"><use href="#avatar"/></svg></div>
         <div class="a" style="left:730px;top:160px;width:430px;display:grid;gap:10px">
-          <div class="lbl">Skin tone</div>
+          <div class="row" style="gap:20px;align-items:flex-start"><div class="col" style="width:170px"><div class="lbl">Gender</div><div class="row" style="gap:6px"><span class="seg">Woman</span><span class="seg on">Man</span></div></div><div class="col" style="width:100px"><div class="lbl">Body</div><div class="row" style="gap:6px"><span class="seg">A</span><span class="seg on">B</span></div></div><div class="col" style="width:100px"><div class="lbl">Face</div><div class="row" style="gap:6px"><span class="seg">A</span><span class="seg on">B</span></div></div></div>
+          <div class="lbl" style="margin-top:6px">Skin tone</div>
           <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:6px"><span class="sw" style="width:auto;background:#f6ede4"></span><span class="sw" style="width:auto;background:#f3e7db"></span><span class="sw" style="width:auto;background:#f7ead0"></span><span class="sw" style="width:auto;background:#eadaba"></span><span class="sw" style="width:auto;background:#d7bd96"></span><span class="sw" style="width:auto;background:#a07e56"></span><span class="sw on" style="width:auto;background:#825c43"></span><span class="sw" style="width:auto;background:#604134"></span><span class="sw" style="width:auto;background:#3a312a"></span><span class="sw" style="width:auto;background:#292420"></span></div>
           <div class="lbl" style="margin-top:6px">Hair color</div>
           <div style="display:grid;grid-template-columns:repeat(8,44px);gap:8px"><span class="sw" style="background:#1d1a18"></span><span class="sw on" style="background:#3b2a20"></span><span class="sw" style="background:#61402b"></span><span class="sw" style="background:#8c6443"></span><span class="sw" style="background:#c9a467"></span><span class="sw" style="background:#e2d5b5"></span><span class="sw" style="background:#8a3a20"></span><span class="sw" style="background:#9b9a96"></span></div>
@@ -887,7 +950,7 @@ html.single .board{border:0;border-radius:0;transform:none!important}
       <ol class="notes">
         <li><div><b>Selfie beside the result</b><span class="tag p">Proposed</span></div><p>Shown during setup only, then discarded. Retake goes back to L7.</p></li>
         <li><div><b>Full-body avatar</b><span class="tag p">Proposed</span></div><p>Large in the center, like Today.</p></li>
-        <li><div><b>Adjust controls</b><span class="tag p">Proposed</span></div><p>Same choices as the phone: skin tone, hair color, 11 hairstyles, facial hair and glasses.</p></li>
+        <li><div><b>Adjust controls</b><span class="tag r">Revised</span></div><p>Same choices as the phone: gender, body, face, skin tone, hair color, 11 hairstyles, facial hair and glasses. Gender, Body and Face work as on P8 (R40).</p></li>
         <li><div><b>Continue</b><span class="tag p">Proposed</span></div><p>Goes on to location (L2). Opens later from "Edit avatar".</p></li>
       </ol>
     </div>

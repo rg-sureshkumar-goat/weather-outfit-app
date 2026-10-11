@@ -162,6 +162,7 @@ Record new evidence or changed decisions and explain why they changed.
 - **2026-10-03 — "Layer for later" threshold.** With Austin's real forecast, the original rule (any drop to a colder band) asked for a layer on evenings that still felt like 72–80°F. Now it fires only when the coldest hour is below 70°F.
 - **2026-10-03 — Avatar generated from a selfie.** The approved decision had the User pick from a few skin tones and hairstyles. The Developer chose to generate the avatar from a setup selfie, read on the device. An image-AI cartoon was rejected because it sends the face to a server, needs a proxy, and returns a flat image the garment templates can't layer onto. The selfie test confirmed the approach.
 - **2026-10-03 — Shuffle moves down; location stays up.** The Developer's main-screen drawing placed location and Shuffle at the top, against the thumb-zone decision. The Developer chose a split: the date strip and Shuffle in the lower half, and location at the top because it is saved and rarely changed.
+- **2026-10-10 — Woman or man added to setup (build phase).** The Developer added a gender choice that sets the avatar's body, face details, default hairstyle and starter outfits. The art estimate above is superseded: two bodies and two face-detail sets, with each garment template fitted to both bodies, and 30 starter outfits. Requirement, reasoning and trade-offs: `spec.md` R40 and Revisions.
 
 ## Approval
 

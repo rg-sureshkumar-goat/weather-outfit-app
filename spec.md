@@ -43,13 +43,14 @@ The Developer hand-drew four phone screens: Today, Location setup, Closet and Ad
 | Add item | [P4a camera](reference/screens/phone-04a-add-camera.png), [P4b cut out](reference/screens/phone-04b-add-cutout.png), [P4c type](reference/screens/phone-04c-add-type.png), [P4d confirm](reference/screens/phone-04d-add-confirm.png) | [L4](reference/screens/laptop-04-add-item.png) |
 | Item detail | [P5](reference/screens/phone-05-item-detail.png) | Part of L3 |
 | Info | [P6](reference/screens/phone-06-info.png) | [L6](reference/screens/laptop-06-info.png) |
+| Setup: woman or man (added 2026-10-10) | [P9](reference/screens/phone-09-setup-gender.png) | [L9](reference/screens/laptop-09-setup-gender.png) |
 | Setup: selfie | [P7](reference/screens/phone-07-setup-selfie.png) | [L7](reference/screens/laptop-07-setup-selfie.png) |
-| Setup: review avatar | [P8](reference/screens/phone-08-setup-review.png) | [L8](reference/screens/laptop-08-setup-review.png) |
+| Setup: review avatar (revised 2026-10-10) | [P8](reference/screens/phone-08-setup-review.png) | [L8](reference/screens/laptop-08-setup-review.png) |
 
 **Navigation:**
 - Phone: bottom tabs for Today, Closet and Add item. Info opens from a button beside the location on Today, and "Edit avatar" is in the Closet.
 - Laptop: the same tabs in a top bar, with location and Info on the right.
-- First run: selfie, then review the avatar, then location, then Today.
+- First run: woman or man, then selfie, then review the avatar, then location, then Today.
 
 **Placement:** on the phone, location sits at the top, and the date strip, Shuffle and tabs sit in the lower half. Primary controls are at least 44×44 px.
 
@@ -86,7 +87,7 @@ Translate every fixed brief requirement and the selected research-driven feature
 | R11 | **Outfit variations.** Every band has at least 3 possible outfits. Candidates are the combinations of eligible items, with the User's items first. If they make fewer than 3 distinct outfits, starter items are mixed in until there are 3. | With an empty closet, each band shows 3 different starter outfits across Shuffles. With one tee, Hot outfits still vary |
 | R12 | **Wording variations.** Each reminder type, and each band's summary line, has at least 3 wordings (see Content variation). | Every wording in the content list appears across repeated tests |
 | R13 | **Chosen independently.** The outfit and each reminder's wording are drawn separately at random, so the same outfit can appear with different wording, and the reverse. | Across 30 test draws, the same outfit appears with at least two different wordings |
-| R14 | **Same date, same look, after reloads too.** Returning to a date shows the same outfit and wording, including after the page reloads. Picks are saved on this device for the current location only (item IDs and wording numbers, nothing else) and cleared when the location changes or the date passes. Shuffle draws a different outfit (wording stays), which becomes the date's outfit. If the band changes after a forecast update, or a chosen item is deleted, only the affected part is re-picked. | Select Mon, then Tue, then Mon again: identical. Shuffle on Mon, reload, return to Mon: the shuffled outfit stays. Change location: saved picks are gone. Yesterday's picks are gone the next day |
+| R14 | **Same date, same look, after reloads too.** Returning to a date shows the same outfit and wording, including after the page reloads. Picks are saved on this device for the current location only (item IDs and wording numbers, nothing else) and cleared when the location changes or the date passes. Shuffle draws a different outfit (wording stays), which becomes the date's outfit. If the band changes after a forecast update, or a chosen item is deleted, only the affected part is re-picked. If the gender changes (R40), only slots holding starter items are re-picked. | Select Mon, then Tue, then Mon again: identical. Shuffle on Mon, reload, return to Mon: the shuffled outfit stays. Change location: saved picks are gone. Yesterday's picks are gone the next day |
 
 ### Closet
 
@@ -98,17 +99,18 @@ Translate every fixed brief requirement and the selected research-driven feature
 | R18 | **Kept on this device.** Each item (cut-out image, type, colors, name, date added) is stored in the browser's on-device storage and never uploaded. Items survive reloads. If storage is full, a message says so and nothing is half-saved. | The network log shows no upload on save. Items remain after a reload. A simulated storage error shows the message |
 | R19 | **Browse the closet.** Items are grouped by type (Tops, Pants, Outer layers, Shoes) with counts. The rack header shows the 3 most recently added. Opening an item shows its detail (P5; beside the grid on a laptop, L3). | After adding an item, it appears on the rack and in its group, and the count goes up |
 | R20 | **Edit and delete.** Edit reopens the confirm step. Delete asks for confirmation in the page, then permanently removes the item from the device. Outfits that used it re-pick that slot (R14). | Delete, then Cancel: the item stays. Delete, then Delete: the item is gone after a reload, and Today shows a replacement |
-| R21 | **Starter items.** Starter items are always listed in the Closet, marked "Starter", and can't be edited or deleted. An empty closet also shows a prompt to add the first item, and Today uses starter outfits (R9). | On a fresh install, the Closet shows starter items and the prompt, and Today's "Wearing" list says "Starter item" |
+| R21 | **Starter items.** Starter items from the User's gender set (R40) are always listed in the Closet, marked "Starter", and can't be edited or deleted. An empty closet also shows a prompt to add the first item, and Today uses starter outfits (R9). | On a fresh install, the Closet shows starter items and the prompt, and Today's "Wearing" list says "Starter item" |
 
 ### Avatar and first setup
 
 | ID | Requirement | Acceptance check |
 |---|---|---|
-| R22 | **First setup.** On first open: selfie (P7, L7), then review the avatar (P8, L8), then location (P2, L2), then Today. "Take a selfie" opens the phone's front camera, or the webcam in the page on a laptop. "Choose a photo" and "Set it up by hand" are always offered. | A fresh install walks through the 3 steps in order. "Set it up by hand" skips straight to the review with default values |
+| R22 | **First setup.** On first open: woman or man (P9, L9; R40), then selfie (P7, L7), then review the avatar (P8, L8), then location (P2, L2), then Today. "Take a selfie" opens the phone's front camera, or the webcam in the page on a laptop. "Choose a photo" and "Set it up by hand" are always offered. | A fresh install walks through the 4 steps in order. "Set it up by hand" skips straight to the review with the gender's default values |
 | R23 | **Read on the device, then discarded.** MediaPipe face and hair models read the selfie on the device. Skin tone is sampled from the cheeks and forehead and snapped to the nearest Monk tone. Hair color is matched to the nearest of 8. Hair length pre-selects a hairstyle (bald → Bald, very short → Buzz, short → Short crop, medium → Medium straight, long → Long straight). The selfie is never uploaded or stored, and it's discarded when setup ends. Only the chosen avatar values are saved. | The network log shows no image upload. After setup, on-device storage holds no image. Reloading during the review loses the selfie |
-| R24 | **Review and adjust.** Skin tone (10 Monk tones), hair color (8), hairstyle (bald, buzz, short crop, short curls or coils, afro, medium straight, medium curly, long straight, long curly, braids or locs, bun or ponytail), facial hair (none, stubble, beard) and glasses (on or off). The preview updates as each one changes. "Looks good" saves the avatar values on this device. | Each control changes the preview right away. After a reload, the avatar matches the saved values |
+| R24 | **Review and adjust.** Gender (Woman, Man), body (A, B) and face details (A, B), which work as R40 describes; skin tone (10 Monk tones), hair color (8), hairstyle (bald, buzz, short crop, short curls or coils, afro, medium straight, medium curly, long straight, long curly, braids or locs, bun or ponytail), facial hair (none, stubble, beard) and glasses (on or off). The preview updates as each one changes. "Looks good" saves the avatar values on this device. | Each control changes the preview right away. After a reload, the avatar matches the saved values |
 | R25 | **Setup problems.** No face found: "No face found. Try a front-facing photo in even light, or set it up by hand," with the adjust controls ready. Camera denied or unavailable: a message, and choosing a photo still works. | A photo without a face shows the message and controls. Denying the camera shows the message, and Choose a photo works |
 | R26 | **Edit later.** "Edit avatar" in the Closet opens the review screen with the current values, plus Retake. | Change the hairstyle there: Today's avatar shows it |
+| R40 | **Woman or man** (added 2026-10-10). The first setup step asks "Woman" or "Man". One must be picked to continue, and there is no third option (see Revisions). Gender sets the starting body (Woman: A, Man: B), face details (Woman: A, Man: B), the hairstyle for hand setup (Woman: Long straight, Man: Short crop; facial hair starts on None for both) and the starter outfit set (Content variation). It limits nothing: on the review screen, Body and Face can be changed on their own, and every hairstyle, facial-hair option, glasses choice and closet item type stays open to both. Changing Gender there resets Body, Face and the starter set to that gender's, and keeps skin, hair, facial hair and glasses. A hairstyle read from a selfie (R23) overrides the gender default. Gender is never read from the selfie. It is saved on this device with the avatar values, never sent, and can be changed in "Edit avatar" (R26). | A fresh install shows this step first, and Continue stays disabled until one is picked. Man, then "Set it up by hand": the review shows body B, face B and Short crop. Woman: body A, face A and Long straight. Changing Body on the review changes only the body. With an empty closet, Hot days use the Woman set for Woman and the Man set for Man. No network request carries the gender |
 
 ### Info, states and quality
 
@@ -123,11 +125,11 @@ Location denied, camera denied, no face, failed cut-out and empty closet are cov
 | R31 | **Responsive layouts.** Below 900 px wide: the phone layout (P screens). At 900 px and wider: the laptop layout (L screens). Touch on phones, mouse and keyboard on laptops. No sideways scrolling down to 320 px. | Resizing from 320 to 1440 px switches the layout at 900 px, with no sideways scroll and nothing clipped |
 | R32 | **One-handed phone use.** The date strip, Shuffle and tabs are in the lower half of the screen. Primary controls are at least 44×44 px. | In dev tools, every primary control measures ≥44 px. On a real phone, they can be reached with the thumb of the holding hand |
 | R33 | **Accessibility (WCAG 2.2 AA).** Text contrast is at least 4.5:1 on every sky backdrop. Every target is at least 24 px. Everything works by keyboard on a laptop, with visible focus. The avatar has a text description listing the full outfit, and icons have text labels. Reduced motion is respected. The app works at 200% zoom. | An automated audit shows no contrast or naming errors. A keyboard-only run works through Today, Closet and Add item. VoiceOver reads the outfit |
-| R34 | **Privacy.** Stored only on this device: the latest location, avatar values, closet items and saved picks. Sent off the device: rounded coordinates to Open-Meteo, and one Nominatim lookup per "Use my location" tap. No accounts, cookies, analytics or ads. Selfies and item photos never leave the device. Info explains all of this, including Open-Meteo's 90-day and OpenStreetMap's 180-day log retention. | A full run's network log shows only the app's own host, Open-Meteo and Nominatim. On-device storage matches this list |
-| R35 | **Delete all my data.** A button on Info clears the location, avatar, closet and saved picks from this device after an in-page confirmation, then returns to first setup. | Confirm: storage is empty and setup starts. Cancel: nothing changes |
+| R34 | **Privacy.** Stored only on this device: the latest location, avatar values (including gender), closet items and saved picks. Sent off the device: rounded coordinates to Open-Meteo, and one Nominatim lookup per "Use my location" tap. No accounts, cookies, analytics or ads. Selfies and item photos never leave the device. Info explains all of this, including Open-Meteo's 90-day and OpenStreetMap's 180-day log retention. | A full run's network log shows only the app's own host, Open-Meteo and Nominatim. On-device storage matches this list |
+| R35 | **Delete all my data.** A button on Info clears the location, avatar (including gender), closet and saved picks from this device after an in-page confirmation, then returns to first setup. | Confirm: storage is empty and setup starts. Cancel: nothing changes |
 | R36 | **Credits.** Open-Meteo (CC BY 4.0), OpenStreetMap contributors (ODbL), Google MediaPipe models (Apache 2.0), Monk Skin Tone Scale by Ellis Monk (CC BY 4.0), original artwork, and any fonts with their licenses. | Every third-party asset in the Assets list appears in Credits |
 | R37 | **Download size.** Today never loads the vision models. Setup loads the runtime plus the face and hair models (about 16.5 MB, once). Add item loads the cut-out model (6.2 MB, once). All are hosted with the app and cached by the browser. | After setup, reloading Today shows no model downloads in the network log |
-| R38 | **Deployment.** A public HTTPS URL on GitHub Pages, tested on a real phone and a laptop, separately from the local version. | The URL loads over HTTPS, location permission works, and plan.md records the device tests |
+| R38 | **Deployment.** A public HTTPS URL on GitHub Pages, tested on a real phone and a laptop, separately from the local version. On an iPhone it can be added to the Home Screen from Safari and opens full-screen as a web app, with its own icon (added 2026-10-10). No offline support is added. | The URL loads over HTTPS, location permission works, and plan.md records the device tests. On an iPhone, Share → Add to Home Screen shows the Quick Dresser icon, and opening it shows the app without Safari's toolbars |
 | R39 | **Peer-tested improvement.** Three peers test the deployed app, and at least one improvement supported by the findings is built. | plan.md has 3 session notes, and the Revisions section records the change and its evidence |
 
 ## Recommendation state and data flow
@@ -158,11 +160,11 @@ Define the weather inputs, recommendation categories, coded rules, and shared st
 | Window values | Derived above |
 | Band | Highest feels-like |
 | Reminders: type, wording number, values | R8 plus saved picks |
-| Outfit: top, bottom, shoes, outer layer, each marked closet or starter | Closet, the garment table and saved picks |
+| Outfit: top, bottom, shoes, outer layer, each marked closet or starter | Closet, the garment table, the gender's starter set (R40) and saved picks |
 | Summary wording number | Saved picks |
-| Avatar look | Avatar values (R24) |
+| Avatar look, including gender, body and face | Avatar values (R24, R40) |
 
-**Flow.** Location and date → Open-Meteo forecast → window values → band, reminders and condition → eligible items (closet first, then starters) → saved or new picks (R14) → **state** → avatar, weather icon, summary, reminders and "Wearing" list. Shuffle and closet changes re-enter at the picks step. A new location or date starts from the top. Nothing on screen reads weather or storage directly.
+**Flow.** Location and date → Open-Meteo forecast → window values → band, reminders and condition → eligible items (closet first, then the gender's starters) → saved or new picks (R14) → **state** → avatar, weather icon, summary, reminders and "Wearing" list. Shuffle, closet changes and a gender change re-enter at the picks step. A new location or date starts from the top. Nothing on screen reads weather or storage directly.
 
 ### Garment types by band
 
@@ -186,9 +188,9 @@ Which of the User's items can be picked for each band (Developer's judgement; re
 
 Define at least three outfit variations for each recommendation category and at least three wording variations for each reminder type. Define how outfit and reminder variations are chosen independently at random, and how a previously selected date keeps the same variations, including whether they persist after the page reloads.
 
-Selection and persistence rules: R11–R14. Outfits use the User's items first; these starter outfits fill in until the closet can make 3 outfits for a band. Each item is a drawn template in a starter colorway.
+Selection and persistence rules: R11–R14. Outfits use the User's items first; the starter outfits for the User's gender (R40) fill in until the closet can make 3 outfits for a band. Each item is a drawn template in a starter colorway, fitted to the avatar's body.
 
-### Starter outfits
+### Starter outfits: Man set
 
 | Band | Outfit 1 | Outfit 2 | Outfit 3 |
 |---|---|---|---|
@@ -198,7 +200,19 @@ Selection and persistence rules: R11–R14. Outfits use the User's items first; 
 | **Cold** 35–54 | Grey sweater · dark jeans · brown boots · navy coat | White long-sleeve shirt · black pants · grey sneakers · charcoal coat | Maroon hoodie · dark jeans · brown boots · olive coat |
 | **Freezing** <35 | Navy sweater · dark jeans · brown boots · black coat | Grey hoodie · black pants · black boots · red coat | Cream sweater · khaki pants · brown boots · navy coat |
 
-Plus one starter **yellow hooded rain jacket** for the rain-and-wind rule.
+### Starter outfits: Woman set
+
+Added 2026-10-10 (R40). Skirts appear only where the garment table allows them (Hot and Warm).
+
+| Band | Outfit 1 | Outfit 2 | Outfit 3 |
+|---|---|---|---|
+| **Hot** ≥85°F | White tee · denim skirt · white sneakers | Coral short-sleeve button-up · white shorts · white sneakers | Lavender tee · khaki skirt · grey sneakers |
+| **Warm** 70–84 | Sage tee · light jeans · white sneakers | White short-sleeve button-up · navy skirt · white sneakers | Rose long-sleeve shirt · light jeans · white sneakers |
+| **Chilly** 55–69 | Cream sweater · light jeans · white sneakers · denim jacket | White long-sleeve shirt · black pants · grey sneakers · tan light jacket | Lavender hoodie · dark jeans · white sneakers · olive light jacket |
+| **Cold** 35–54 | Cream sweater · dark jeans · brown boots · camel coat | Rose hoodie · black pants · black boots · charcoal coat | Navy long-sleeve shirt · light jeans · brown boots · burgundy coat |
+| **Freezing** <35 | Grey sweater · black pants · black boots · camel coat | Cream hoodie · dark jeans · brown boots · burgundy coat | Navy sweater · khaki pants · brown boots · forest-green coat |
+
+Both sets share one starter **yellow hooded rain jacket** for the rain-and-wind rule.
 
 ### Wordings
 
@@ -233,10 +247,10 @@ List every art and graphical asset: the character, each outfit variation, icons,
 
 | Asset | Where it appears | Format | Source and credit |
 |---|---|---|---|
-| Character base: body and face, recolored to 10 skin tones | Today, setup, add-item preview | SVG | Created by the Agent, art-directed by the Developer: "Original artwork created for this project" |
+| Character base: two bodies (A, B) and two sets of face details (A, B), recolored to 10 skin tones | Today, setup, add-item preview | SVG | Created by the Agent, art-directed by the Developer: "Original artwork created for this project" |
 | 11 hairstyles in 8 colors; stubble, beard, glasses | Avatar | SVG | Created (as above) |
-| 12 garment templates (recolorable base and print) | Avatar, add-item preview | SVG | Created |
-| 15 starter outfits and the yellow rain jacket | Outfits, Closet | Color data on the templates | Created |
+| 12 garment templates (recolorable base and print), each fitted to both bodies | Avatar, add-item preview | SVG | Created |
+| 30 starter outfits (15 per gender) and the yellow rain jacket | Outfits, Closet | Color data on the templates | Created |
 | 12 garment-type icons | Type picker, Closet tiles for starter items | SVG | Created |
 | 7 weather icons (clear, partly cloudy, cloudy, fog, rain, storm, snow) | Today, date strip, week list | SVG | Created |
 | 7 reminder icons (umbrella, sunscreen, water, layer, wind, rain jacket, snow) | Reminders | SVG | Created |
@@ -244,7 +258,8 @@ List every art and graphical asset: the character, each outfit variation, icons,
 | 4 sky backdrops (clear, overcast, rain, snow) | Today's avatar stage | CSS/SVG | Created |
 | Closet rack with a decorative shelf (cap, folded clothes, umbrella) | Closet header | SVG | Created |
 | Decorative map | Location setup | SVG | Created (abstract shapes, not map data) |
-| App icon and favicon | Browser tab, home screen | SVG/PNG | Created |
+| App icon and favicon | Browser tab, home screen | SVG/PNG | Created; a placeholder (white hanger on coral) from C0, final in C10 |
+| Web app manifest | Home Screen install (R38) | JSON | Created |
 | Rounded web font | All text | WOFF2 | A Google Font under the SIL Open Font License, chosen during the build and credited |
 | MediaPipe runtime; Face Landmarker, Hair Segmenter and MagicTouch models | Setup, add item | JS, WASM, model files | Licensed, Apache 2.0, hosted with the app |
 | Monk Skin Tone Scale colors | Skin palette | Color values | Licensed, CC BY 4.0 (Ellis Monk) |
@@ -255,7 +270,8 @@ Record features intentionally excluded from this project.
 
 - The occasion picker (interview, party, hike); research moved it to future work.
 - Exact garments on the avatar, photo-real try-on and 3D avatars.
-- Dresses and other one-piece garments; accessories as closet items (hats, bags); body-shape options.
+- Dresses and other one-piece garments; accessories as closet items (hats, bags); body shapes beyond the two bodies in R40.
+- Gender options other than Woman and Man (Developer's decision, 2026-10-10; see Revisions).
 - Accounts, cloud sync and use on more than one device.
 - Non-US locations, metric units, forecasts beyond 7 days, and an hourly view.
 - Notifications and alarms; outfit history, laundry tracking and calendars.
@@ -266,6 +282,17 @@ Record features intentionally excluded from this project.
 ## Revisions
 
 After implementation or testing, record requirement changes and the evidence that prompted them. Update the screen drawings when a material layout or interaction changes.
+
+- **2026-10-10 — Woman or man in setup (new R40).** The Developer directed that setup let the User pick their gender and build the avatar from it. In the decisions that followed, the Developer chose:
+  - Gender sets the body, face details, default hairstyle and starter outfits.
+  - Only Woman and Man are offered.
+  - Nothing is limited by gender.
+  - Gender gets its own first setup step.
+  - **Trade-offs accepted:** anyone who is neither a woman nor a man has no fitting option. Two bodies double the garment art (12 templates, each fitted to both bodies) and the starter outfits (15 → 30), so Core deploy (C0–C6) lands later.
+  - Gender is chosen by the User and never read from the selfie: MediaPipe's face models don't classify gender, and guessing it risks getting it wrong.
+  - **Changed:** R14, R21, R22, R24, R34, R35, the shared state and flow, Content variation (new Woman set), Assets and Out of scope ("body-shape options" narrowed).
+  - **Wireframes:** P9 and L9 added; P7, P8, L7 and L8 updated with the 4-step count and the Gender, Body and Face controls.
+- **2026-10-10 — Home Screen web app (R38).** The Developer wants to test on their iPhone as the app is built. A native iOS app was considered and not chosen: the brief requires a browser-based app, free Xcode installs expire after 7 days, and TestFlight needs a paid developer account. The app instead gets a web app manifest and a home-screen icon, so Safari's Add to Home Screen installs it and it opens full-screen. A Home Screen app keeps its own on-device storage, separate from Safari's. No service worker: offline use stays out of scope.
 
 ## Approval
 
