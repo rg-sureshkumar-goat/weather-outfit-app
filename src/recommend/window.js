@@ -59,7 +59,6 @@ export function deriveValues(hours) {
     uv: uv === null,
     gust: gust === null,
     snow: snowHours.length === 0,
-    code: hours.every((h) => h.code === null || h.code === undefined),
   };
 
   return {

@@ -46,12 +46,13 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 
 # Project
 
-**Quick Dresser.** A static single-page app: Vite and plain JavaScript modules, no UI framework. Source of truth: `spec.md` (R1–R40) and `plan.md` (checkpoints C0–C12). Needs Node 22.12 or newer (developed on Node 24).
+**Quick Dresser.** A static single-page app: Vite and plain JavaScript modules, no UI framework. Source of truth: `spec.md` (R1–R42) and `plan.md` (checkpoints C0–C12, plus C7a–C7d). Needs Node 22.12 or newer (developed on Node 24).
 
 **Run locally**
 - `npm install`, once.
 - `npm run dev`, then open `http://localhost:5173/weather-outfit-app/`. The app lives under the Pages base path even locally, so `http://localhost:5173/` alone shows nothing.
 - `npm run build` writes `dist/`, and `npm run preview` serves it.
+- **Test weather:** with `npm run dev` running, add `?fixture=<name>` to the URL to show a saved forecast from `tests/fixtures/` instead of live weather, for example `?fixture=synthetic-snow`. A yellow "Test weather" line shows it's on. Dev only: the deployed build leaves it out.
 - **Art review page:** with `npm run dev` running, open `http://localhost:5173/weather-outfit-app/art.html`. It shows every body, tone, garment and accessory. It's local-only and never part of the build.
 - `dev` and `build` first run `scripts/copy-mediapipe.mjs`, which copies the MediaPipe runtime from `node_modules` into `public/mediapipe/`. That folder is generated and not committed.
 - The dev server stays on this Mac. Never run it with `--host`: it can serve project files, and `vite.config.js` only blocks the private photo folders and HEIC files.
@@ -61,7 +62,8 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 - **After a deploy:** open the live URL in Safari, then Share → Add to Home Screen. The installed app updates itself on each deploy and keeps its own storage, separate from Safari's.
 
 **Test**
-- `npm test` runs Vitest once. Tests live in `tests/`. `tests/fixtures/` holds real Open-Meteo responses from six places, saved 2026-10-10. `tests/helpers.js` builds synthetic days for rule edges and provides a seeded random source, so draws repeat exactly.
+- `npm test` runs Vitest once. Tests live in `tests/`. `tests/fixtures/` holds real Open-Meteo responses from six places, plus geocoding and reverse-lookup responses. When the forecast request changes, re-save the six with `node tests/fixtures/save-forecasts.mjs` (it uses the app's own request), then rebuild the four `synthetic-*` forecasts (rain with wind, snow, no UV, a missing day 7) from the Austin one with `node tests/fixtures/make-synthetic.mjs`. `tests/helpers.js` builds synthetic days for rule edges and provides a seeded random source, so draws repeat exactly.
+- Weather icons and words come straight from Open-Meteo's codes via `src/content/weatherCodes.js` (R10); the app never works out a condition itself.
 - `buildState()` in `src/recommend/state.js` is the single source of everything on Today (R7). It is a pure function: pass the forecast, date, closet, avatar, saved picks and a random source.
 
 **Deploy**
@@ -85,4 +87,4 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 
 Every garment is one drawing fitted from body measurements, so it fits both bodies.
 
-**Keep private:** `test-garments/`, `test-selfie/` and `*.HEIC` stay ignored. Check `git status` before every commit.
+**Keep private:** `test-garments/`, `test-selfie/`, `reference/Art/` and `*.HEIC` stay ignored. Check `git status` before every commit.

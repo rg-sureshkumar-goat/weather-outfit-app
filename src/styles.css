@@ -111,6 +111,7 @@ input {
 }
 
 .pill {
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -267,50 +268,726 @@ input {
   font-size: 14px;
 }
 
-/* ---- Home until Today arrives (C4) ---------------------------------------- */
+/* ---- Shared pieces --------------------------------------------------------- */
 
-.home {
-  min-height: 100vh;
-  display: grid;
-  align-content: start;
-  gap: 24px;
-  padding: 16px;
+.card {
+  padding: 16px 18px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--cream);
 }
 
-.home-bar {
-  display: flex;
+.section-title {
+  margin: 0 0 8px;
+  font: 700 12px/1.2 'Nunito Variable', system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.badge {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.home-bar .logo {
-  font-size: 20px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 13px;
   font-weight: 800;
 }
 
-.home-card {
-  max-width: 520px;
-  padding: 24px;
-  border-radius: var(--radius);
-  background: var(--cream);
-  box-shadow: var(--shadow);
+.badge-forecast {
+  background: #fff;
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
 }
 
-.home-card h1 {
+.swatch {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(31, 42, 55, 0.25);
+}
+
+.test-weather {
+  margin: 0 16px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #fff3c4;
+  color: #5a4500;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---- Today (P1a, P1b, L1) -------------------------------------------------- */
+
+.today {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.bar {
+  display: none;
+}
+
+/* Phone header (P1a): pill, info and the weather icon on the first row;
+   the date and the temperature on the second; feels-like and Open-Meteo's
+   words across the full width on the third, so long ones still fit. */
+.phone-top {
+  display: grid;
+  gap: 2px;
+  padding: 12px 16px 4px;
+}
+
+.phone-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.phone-row .grow {
+  flex: 1;
+}
+
+.phone-row .date-line {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.phone-feels {
+  text-align: right;
+}
+
+.date-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-weight: 800;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.now-temp {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.temp {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.temp-label {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--ink-2);
+}
+
+.feels {
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+/* The weather words move to a line of their own as one unit when they
+   don't fit ("Thunderstorm with slight hail"), instead of splitting after
+   the first word. */
+.feels .word {
+  display: inline-block;
+}
+
+.layout {
+  display: grid;
+  gap: 14px;
+  padding: 8px 16px calc(190px + env(safe-area-inset-bottom));
+}
+
+/* Laptop columns; on the phone their contents flow in one column. */
+.col-left,
+.col-right {
+  display: contents;
+}
+
+.now,
+.week {
+  display: none;
+}
+
+.stage {
+  display: grid;
+  grid-template-columns: 1fr 76px;
+  gap: 10px;
+}
+
+/* Tiles at the top, Shuffle at the bottom, within the avatar's height. */
+.stage-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 0;
+}
+
+.avatar {
+  border-radius: 20px;
+  overflow: hidden;
+  /* Leaves room for the one-liner and chips above the bottom dock; never
+     shorter than five small tiles plus Shuffle. */
+  height: clamp(360px, 46vh, 440px);
+}
+
+.avatar svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.placeholder-avatar {
+  background: var(--fill);
+}
+
+.is-loading .placeholder-avatar {
+  background: linear-gradient(100deg, var(--fill) 30%, #f4efe7 50%, var(--fill) 70%);
+  background-size: 300% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.sky-clear { background: linear-gradient(#cfe3f6, #f6f0e5); }
+.sky-overcast { background: linear-gradient(#d5dce4, #efece7); }
+.sky-rain { background: linear-gradient(#b8c6d6, #e4e8ed); }
+.sky-snow { background: linear-gradient(#e3ecf5, #ffffff); }
+
+.wear-mini {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.wear-mini li {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.wear-mini span {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.wear-mini .swatch {
+  width: 36px;
+  height: 36px;
+}
+
+.wear-mini.many {
+  gap: 6px;
+}
+
+.wear-mini.many li {
+  padding: 6px 4px;
+  gap: 3px;
+}
+
+.wear-mini.many .swatch {
+  width: 26px;
+  height: 26px;
+}
+
+.shuffle {
+  align-self: center;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+.shuffle:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.shuffle-word {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.one-liner {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.chips {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--fill);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.rec h2 {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.rec p {
+  color: var(--ink);
+}
+
+.reminders ul,
+.wearing ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.rem {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.rem .icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 9px;
+  border-radius: 12px;
+  background: var(--fill);
+}
+
+.g-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.g-value {
+  font-weight: 800;
+  font-size: 17px;
+}
+
+.g-label {
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.missing-note {
+  margin-top: 10px;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.wearing li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.item-name {
+  font-weight: 800;
+}
+
+.item-from {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.credit {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.credit a {
+  color: var(--ink);
+}
+
+.status-card {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+
+.refresh-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 16px 0;
+}
+
+/* Bottom dock: date strip and tabs, fixed in the thumb zone (R32). */
+.bottom-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px calc(6px + env(safe-area-inset-bottom));
+  background: var(--cream);
+  border-top: 1.5px solid var(--line);
+}
+
+.strip {
+  display: grid;
+  /* 44 px wide from 342 px screens up; narrower phones get 40 px so all
+     seven days fit (spec.md, R32 revision 2026-10-11). */
+  grid-template-columns: repeat(7, minmax(40px, 1fr));
+  gap: 5px;
+}
+
+@media (max-width: 369px) {
+  .bottom-dock {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .strip {
+    gap: 3px;
+  }
+}
+
+.day {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-height: 72px;
+  padding: 6px 0;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.day[aria-pressed='true'] {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+.day:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.d-name {
+  font-size: 12px;
+}
+
+.tabs {
+  display: flex;
+  justify-content: space-around;
+}
+
+.tab {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 88px;
+  min-height: 52px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tab[aria-current='page'] {
+  color: var(--ink);
+}
+
+.tab[aria-current='page'] .icon {
+  box-sizing: content-box;
+  padding: 2px 16px;
+  border: 1.6px solid var(--ink);
+  border-radius: 999px;
+}
+
+.tabs-top {
+  display: none;
+}
+
+/* "Coming soon" pages until C6 and C7. */
+.soon-page {
+  display: grid;
+  gap: 16px;
+  max-width: 560px;
+  padding: 16px;
+}
+
+.soon-page h1 {
   font-size: 24px;
   font-weight: 800;
   margin-bottom: 6px;
 }
 
-.home-card p {
-  color: var(--ink-2);
+/* ---- Laptop layout, 900 px and up (R31) ------------------------------------ */
+
+@media (min-width: 900px) {
+  .phone-top,
+  .bottom-dock,
+  .headline,
+  .wear-mini,
+  .phone-credit {
+    display: none;
+  }
+
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    height: 68px;
+    padding: 0 28px;
+    background: var(--cream);
+    border-bottom: 1.5px solid var(--line);
+  }
+
+  .bar .logo {
+    font-size: 19px;
+    font-weight: 800;
+  }
+
+  .bar-gap {
+    flex: 1;
+  }
+
+  .tabs-top {
+    display: flex;
+    gap: 6px;
+    height: 100%;
+  }
+
+  .tabs-top .tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 0 12px;
+    font-size: 16px;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+  }
+
+  .tabs-top .tab[aria-current='page'] {
+    border-bottom-color: var(--ink);
+  }
+
+  .tabs-top .tab[aria-current='page'] .icon {
+    padding: 0;
+    border: 0;
+  }
+
+  .test-weather {
+    margin: 12px 28px 0;
+  }
+
+  .refresh-error {
+    margin: 12px 28px 0;
+  }
+
+  .layout {
+    /* Side columns scale with the window so the avatar keeps the most room,
+       from about 280 px wide at 900 to 450+ px at 1280. */
+    grid-template-columns: clamp(260px, 26vw, 340px) minmax(0, 1fr) clamp(260px, 29vw, 380px);
+    grid-auto-rows: min-content;
+    /* Cards keep their own height instead of stretching to the row. */
+    align-items: start;
+    gap: 18px 24px;
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 20px 28px 28px;
+  }
+
+  .col-left,
+  .col-right {
+    display: grid;
+    align-content: start;
+    gap: 18px;
+  }
+
+  .col-left { grid-column: 1; }
+  .col-right { grid-column: 3; }
+
+  .now {
+    display: grid;
+    gap: 8px;
+  }
+
+  .now .date-line {
+    margin-top: 0;
+  }
+
+  .now .now-temp .temp {
+    font-size: 44px;
+  }
+
+  .now .now-temp .icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .week {
+    display: block;
+  }
+
+  .week-list {
+    display: grid;
+    gap: 4px;
+  }
+
+  .week-day {
+    display: grid;
+    grid-template-columns: 64px 24px 1fr 44px;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 12px;
+    background: none;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .week-day:hover {
+    background: var(--fill);
+  }
+
+  .week-day[aria-pressed='true'] {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .week-day:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .w-rain {
+    text-align: right;
+    font-weight: 600;
+  }
+
+  .stage-side {
+    display: contents;
+  }
+
+  .stage {
+    grid-column: 2;
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    align-content: start;
+    gap: 14px;
+  }
+
+  .avatar {
+    width: 100%;
+    height: calc(100vh - 190px);
+    min-height: 520px;
+    max-height: 820px;
+  }
+
+  .shuffle {
+    position: static;
+    display: inline-flex;
+    gap: 8px;
+    width: auto;
+    height: 52px;
+    padding: 0 24px;
+    border-radius: 14px;
+    box-shadow: none;
+    font-weight: 800;
+  }
+
+  .shuffle-word {
+    position: static;
+    width: auto;
+    height: auto;
+    clip: auto;
+  }
+
+  .status-card {
+    grid-column: 2;
+  }
+
+  .soon-page {
+    padding: 28px;
+  }
+}
+
+/* Narrow laptop windows: the at-a-glance values sit two by two. */
+@media (min-width: 900px) and (max-width: 1179px) {
+  .g-grid {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 12px;
+  }
 }
 
 @media (min-width: 900px) {
-  .home {
-    padding: 24px 40px;
-  }
   .loc-card {
     max-width: 520px;
     padding: 28px 28px 22px;

@@ -32,7 +32,7 @@ describe('one recommendation state (R7)', () => {
     runs.forEach((s) => {
       expect(s.band).toBe('hot');
       expect(s.reminders.map((r) => r.type)).toEqual(['umbrella', 'sunscreen', 'waterStrong', 'layer']);
-      expect(s.condition).toBe('clear');
+      expect(s.dayWeather.icon).toBe('clear');
     });
   });
 
@@ -67,11 +67,12 @@ describe('one recommendation state (R7)', () => {
   });
 
   it('after 9 pm, Today still covers the full 9 am to 9 pm window (R5)', () => {
-    const austin = loadFixture('austin-tx');
-    expect(austin.now.slice(11)).toBe('23:30');
-    const { state } = buildState({ forecast: austin, date: austin.today, location: AUSTIN, avatar: MAN, rng: seededRng(1) });
+    const lateEvening = { ...makeForecast([hotMonday, chillyTuesday]), now: `${MON}T23:30` };
+    const { state } = buildState({ forecast: lateEvening, date: MON, location: AUSTIN, avatar: MAN, rng: seededRng(1) });
     expect(state.available).toBe(true);
     expect(state.label).toBe('Now');
+    expect(state.band).toBe('hot');
+    expect(state.values.feelsMax).toBe(92);
   });
 });
 

@@ -1,8 +1,9 @@
-// R8 threshold edges, R10 condition icon, R29 missing data.
+// R8 threshold edges, R10 weather icon and word, R29 missing data.
 
 import { describe, expect, it } from 'vitest';
 import { windowHours, deriveValues, hourLabel } from '../src/recommend/window.js';
-import { bandFor, weatherReminders, windowCondition } from '../src/recommend/rules.js';
+import { bandFor, weatherReminders } from '../src/recommend/rules.js';
+import { WEATHER_CODES, WEATHER_ICONS, describeWeather } from '../src/content/weatherCodes.js';
 import { buildState } from '../src/recommend/state.js';
 import { makeDay, makeForecast, seededRng, MAN } from './helpers.js';
 
@@ -106,37 +107,51 @@ describe('reminders at each threshold edge (R8)', () => {
   });
 });
 
-describe('condition icon (R10)', () => {
-  const codes = (list) => (hour) => ({ code: list[hour - 9] });
-  const condition = (list) => windowCondition(windowHours(makeDay(DATE, codes(list))));
-  const repeat = (code, n) => Array(n).fill(code);
+describe('weather icon and word (R10)', () => {
+  // Open-Meteo's code table (open-meteo.com/en/docs, checked 2026-10-11).
+  const OPEN_METEO_CODES = [0, 1, 2, 3, 45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 97, 99];
 
-  it('3 rain hours and 10 clear hours shows rain', () => {
-    expect(condition([...repeat(61, 3), ...repeat(0, 10)])).toBe('rain');
+  it("covers every code in Open-Meteo's table, each with a word and one of the 10 icons", () => {
+    expect(Object.keys(WEATHER_CODES).map(Number)).toEqual(OPEN_METEO_CODES);
+    for (const code of OPEN_METEO_CODES) {
+      const w = describeWeather(code);
+      expect(w.text.length).toBeGreaterThan(0);
+      expect(WEATHER_ICONS).toContain(w.icon);
+    }
+    expect(new Set(OPEN_METEO_CODES.map((c) => describeWeather(c).icon)).size).toBe(WEATHER_ICONS.length);
   });
 
-  it('2 rain hours is not enough: the most frequent (clear) shows', () => {
-    expect(condition([...repeat(61, 2), ...repeat(0, 11)])).toBe('clear');
+  it("uses Open-Meteo's own words", () => {
+    expect(describeWeather(51)).toEqual({ code: 51, text: 'Light drizzle', icon: 'drizzle' });
+    expect(describeWeather(3)).toEqual({ code: 3, text: 'Overcast', icon: 'overcast' });
+    expect(describeWeather(95)).toEqual({ code: 95, text: 'Thunderstorm', icon: 'thunderstorm' });
+    expect(describeWeather(80).icon).toBe('showers');
+    expect(describeWeather(66).icon).toBe('freezingRain');
+    expect(describeWeather(85).icon).toBe('snow');
   });
 
-  it('8 rain hours and 3 storm hours shows storm (most severe wins)', () => {
-    expect(condition([...repeat(61, 8), ...repeat(95, 3), ...repeat(0, 2)])).toBe('storm');
+  it('a missing or unknown code gives no icon instead of a guess', () => {
+    for (const code of [null, undefined, 4, 100, -1]) expect(describeWeather(code)).toBeNull();
   });
 
-  it('3 snow and 3 rain hours shows snow', () => {
-    expect(condition([...repeat(71, 3), ...repeat(61, 3), ...repeat(0, 7)])).toBe('snow');
+  const state = (forecast, date) => buildState({ forecast, date, location: {}, avatar: MAN, rng: seededRng(1) }).state;
+
+  it("each day shows its own daily code, whatever the hours look like", () => {
+    // Rain likely all afternoon, but Open-Meteo calls the day overcast: the app shows overcast.
+    const day = makeDay(DATE, (h) => ({ rain: h >= 14 ? 80 : 0 }), { code: 3 });
+    const s = state(makeForecast([day]), DATE);
+    expect(s.dayWeather).toEqual({ code: 3, text: 'Overcast', icon: 'overcast' });
+    expect(s.reminders.map((r) => r.type)).toContain('umbrella');
   });
 
-  it('a tie for most frequent goes to the more severe: cloudy over clear', () => {
-    expect(condition([...repeat(3, 6), ...repeat(0, 6), 45])).toBe('cloudy');
-  });
-
-  it('maps every WMO code group from the spec', () => {
-    const one = (code) => condition(repeat(code, 13));
-    expect([0, 1, 2, 3, 45, 48, 51, 67, 80, 82, 71, 77, 85, 86, 95, 99].map(one)).toEqual([
-      'clear', 'partlyCloudy', 'partlyCloudy', 'cloudy', 'fog', 'fog', 'rain', 'rain', 'rain', 'rain',
-      'snow', 'snow', 'snow', 'snow', 'storm', 'storm',
-    ]);
+  it("Today's header uses the current code; the day keeps its daily code", () => {
+    const forecast = { ...makeForecast([makeDay(DATE, {}, { code: 95 }), makeDay('2026-10-13', {}, { code: 51 })]), current: { temp: 70, feels: 70, code: 0 } };
+    const today = state(forecast, DATE);
+    expect(today.headerWeather.text).toBe('Clear sky');
+    expect(today.dayWeather.text).toBe('Thunderstorm');
+    const tue = state(forecast, '2026-10-13');
+    expect(tue.headerWeather.text).toBe('Light drizzle');
+    expect(tue.dayWeather).toEqual(tue.headerWeather);
   });
 });
 
@@ -165,5 +180,12 @@ describe('missing data (R29)', () => {
 
   it('a day with no feels-like value in any window hour is unavailable', () => {
     expect(state([makeDay(DATE, { feels: null })]).available).toBe(false);
+  });
+
+  it('no weather code for the day: no icon, plus the note', () => {
+    const s = state([makeDay(DATE, {}, { code: null })]);
+    expect(s.available).toBe(true);
+    expect(s.dayWeather).toBeNull();
+    expect(s.notes).toContain("Sky conditions aren't available for this day.");
   });
 });

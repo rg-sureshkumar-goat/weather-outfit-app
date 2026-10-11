@@ -36,7 +36,8 @@ export function shuffleOutfit(cands, current, rng) {
 // or no longer valid. Reminder types can depend on the outfit (snow without
 // boots), so they come from a function of it. Returns the chosen values and
 // the picks to save.
-export function resolvePicks({ cands, reminderTypesFor, jackets, saved = {}, rng }) {
+export function resolvePicks({ cands, reminderTypesFor, jackets, saved: stored, rng }) {
+  const saved = stored ?? {}; // nothing saved yet, or a null left in storage
   const outfit = chooseOutfit(cands, saved.outfit, rng);
   const reminderTypes = reminderTypesFor(outfit);
 

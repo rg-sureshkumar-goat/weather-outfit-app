@@ -1,4 +1,5 @@
-// Band, weather-triggered reminders and the condition icon (R8, R10, R29).
+// Band, weather-triggered reminders and missing-data notes (R8, R29). The
+// weather icon comes straight from Open-Meteo's codes (R10, weatherCodes.js).
 
 import { BANDS } from '../content/garments.js';
 import { MISSING_NOTES } from '../content/wordings.js';
@@ -50,42 +51,10 @@ export function layerBand(values, band) {
 export const rainAndWind = (values) =>
   values.rain !== null && values.rain >= THRESHOLDS.rain && values.gust !== null && values.gust >= THRESHOLDS.gust;
 
-// Notes for values missing across the whole window (R29).
-export function missingNotes(values) {
+// Notes for data missing for the whole day (R29): window values missing
+// in every hour, or no weather code for the day (`code`).
+export function missingNotes(missing) {
   return Object.keys(MISSING_NOTES)
-    .filter((key) => values.missing[key])
+    .filter((key) => missing[key])
     .map((key) => MISSING_NOTES[key]);
-}
-
-// WMO weather codes to the 7 icon conditions (spec.md, Condition codes).
-export function conditionForCode(code) {
-  if (code === 0) return 'clear';
-  if (code === 1 || code === 2) return 'partlyCloudy';
-  if (code === 3) return 'cloudy';
-  if (code === 45 || code === 48) return 'fog';
-  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return 'rain';
-  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return 'snow';
-  if (code >= 95 && code <= 99) return 'storm';
-  return null;
-}
-
-// Most severe first; used to break ties (spec.md R10).
-export const SEVERITY = ['storm', 'snow', 'rain', 'fog', 'cloudy', 'partlyCloudy', 'clear'];
-const WET = new Set(['storm', 'snow', 'rain']);
-
-// The window's condition: rain, storm or snow wins with 3 or more hours;
-// otherwise the most frequent. Ties go to the most severe.
-export function windowCondition(hours) {
-  const counts = new Map();
-  for (const h of hours) {
-    const c = conditionForCode(h.code);
-    if (c) counts.set(c, (counts.get(c) || 0) + 1);
-  }
-  if (counts.size === 0) return null;
-
-  const wet = SEVERITY.filter((c) => WET.has(c) && (counts.get(c) || 0) >= 3);
-  if (wet.length > 0) return wet[0];
-
-  const most = Math.max(...counts.values());
-  return SEVERITY.find((c) => counts.get(c) === most);
 }

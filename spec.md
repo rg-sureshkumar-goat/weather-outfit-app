@@ -75,10 +75,10 @@ Translate every fixed brief requirement and the selected research-driven feature
 
 | ID | Requirement | Acceptance check |
 |---|---|---|
-| R7 | **One recommendation state.** For the selected location and date, the app builds one state from Open-Meteo's 9 am–9 pm hours: band, condition icon, reminders, outfit items and the chosen wording. The avatar, weather icon, written recommendation, reminders and "Wearing" list are drawn only from this state. | Changing the location, date or Shuffle updates all five outputs together. Fixed test weather always gives the same band and reminders |
+| R7 | **One recommendation state.** For the selected location and date, the app builds one state from Open-Meteo's 9 am–9 pm hours and weather codes: band, weather icon and word, reminders, outfit items and the chosen wording. The avatar, weather icon, written recommendation, reminders and "Wearing" list are drawn only from this state. | Changing the location, date or Shuffle updates all five outputs together. Fixed test weather always gives the same band and reminders |
 | R8 | **Rules from research.md.** The band comes from the warmest feels-like hour. Reminders: "layer for later" when the coldest hour is below 70°F and in a colder band; umbrella at 40% rain chance or more; sunscreen at UV 3 or more; water at a feels-like of 80°F or more (stronger wording at 90°F); wind at gusts of 25 mph or more; snow if any falls. When gusts reach 25 mph and rain 40%, "Wind and rain" replaces both Umbrella and Wind. On a snow day when the outfit's shoes aren't boots, Snow uses its "no boots" wordings (see Garment types by band). | Tests at each threshold edge: 84°F is Warm and 85°F is Hot; 39% rain gets no umbrella and 40% does; and so on for every rule. Gusts of 25 mph with 40% rain show only "Wind and rain" |
 | R9 | **Outfit from the closet.** Each outfit has a top, a bottom and shoes, plus an outer layer when the band calls for one (see Garment types by band). Each slot uses one of the User's items whose type suits the band. If there isn't one, a starter item fills the slot and is labeled "Starter item". | Empty closet: all starter items. After adding a tee, Hot days use it. The "Wearing" labels match where each item came from |
-| R10 | **Condition icon.** Shows the most frequent condition from 9 am to 9 pm. Rain, storm or snow wins if it occurs in 3 or more hours. Ties, including more than one of rain, storm and snow reaching 3 hours, go to the most severe: storm > snow > rain > fog > cloudy > partly cloudy > clear. | A test day with 3 rain hours and 9 clear hours shows the rain icon. A day with 8 rain hours and 3 storm hours shows the storm icon |
+| R10 | **Weather icon and word.** The app shows Open-Meteo's weather code as given and never works out a condition of its own. Each day in the strip and week list, and a forecast day's header, uses that day's daily code ("the most severe weather condition on a given day", covering all 24 hours). Today's header uses the current code, beside the current temperature. The word is Open-Meteo's own description of the code ("Light drizzle"), and the icon is one of 10 families (see Weather codes). A missing or unknown code shows no icon (R29). | Every strip day's icon and word match the daily codes Open-Meteo returned for that place, and Today's header matches the current code. All 29 codes in Open-Meteo's table have a word and an icon |
 
 ### Variation and Shuffle
 
@@ -122,10 +122,10 @@ Location denied, camera denied, no face, failed cut-out and empty closet are cov
 |---|---|---|
 | R27 | **Info screen.** Shows the creator (RG Sureshkumar), the weather source (Open-Meteo, CC BY 4.0), the place-name source (© OpenStreetMap contributors, ODbL), how outfits are picked (bands and reminder rules, with linked NWS, EPA and CDC sources), privacy (R34), "Delete all my data" (R35) and credits (R36). | Every item is on P6 and L6, and every link opens its source |
 | R28 | **Loading.** While weather loads, Today shows the location and date, a placeholder where the avatar goes, and "Getting the forecast…". Controls that need data are disabled. Model downloads show progress. | On a throttled network the loading state appears, then real data. The screen is never blank |
-| R29 | **Missing data.** If a value is missing for some hours, rules use the hours that exist. If it's missing all day, that rule is skipped and a note says so ("UV data isn't available for this day"). A day with no forecast, including no feels-like value in any 9 am–9 pm hour, is disabled in the strip. | Test data with no UV shows no sunscreen reminder, plus the note. A missing day 7 is disabled |
+| R29 | **Missing data.** If a value is missing for some hours, rules use the hours that exist. If it's missing all day, that rule is skipped and a note says so ("UV data isn't available for this day"). A day with no weather code shows no icon and the note "Sky conditions aren't available for this day." A day with no forecast, including no feels-like value in any 9 am–9 pm hour, is disabled in the strip. | Test data with no UV shows no sunscreen reminder, plus the note. A missing day 7 is disabled |
 | R30 | **Service errors and offline.** If Open-Meteo or Nominatim fails, or the device is offline, a message says what failed and offers Retry. Weather already loaded in this visit stays visible, labeled with its time. Search keeps the typed text. | Blocking Open-Meteo shows the message and Retry. Unblocking and pressing Retry loads the data |
 | R31 | **Responsive layouts.** Below 900 px wide: the phone layout (P screens). At 900 px and wider: the laptop layout (L screens). Touch on phones, mouse and keyboard on laptops. No sideways scrolling down to 320 px. | Resizing from 320 to 1440 px switches the layout at 900 px, with no sideways scroll and nothing clipped |
-| R32 | **One-handed phone use.** The date strip, Shuffle and tabs are in the lower half of the screen. Primary controls are at least 44×44 px. | In dev tools, every primary control measures ≥44 px. On a real phone, they can be reached with the thumb of the holding hand |
+| R32 | **One-handed phone use.** The date strip, Shuffle and tabs are in the lower half of the screen. Primary controls are at least 44×44 px. On screens narrower than 342 px, the strip's day buttons narrow to 40 px wide (they stay over 70 px tall) so all seven days fit. | In dev tools, every primary control measures ≥44 px. On a real phone, they can be reached with the thumb of the holding hand |
 | R33 | **Accessibility (WCAG 2.2 AA).** Text contrast is at least 4.5:1 on every sky backdrop. Every target is at least 24 px. Everything works by keyboard on a laptop, with visible focus. The avatar has a text description listing the full outfit, and icons have text labels. Reduced motion is respected. The app works at 200% zoom. | An automated audit shows no contrast or naming errors. A keyboard-only run works through Today, Closet and Add item. VoiceOver reads the outfit |
 | R34 | **Privacy.** Stored only on this device: the latest location, avatar values (including gender), closet items and saved picks. Sent off the device: rounded coordinates to Open-Meteo, and one Nominatim lookup per "Use my location" tap. No accounts, cookies, analytics or ads. Selfies and item photos never leave the device. Info explains all of this, including Open-Meteo's 90-day and OpenStreetMap's 180-day log retention. | A full run's network log shows only the app's own host, Open-Meteo and Nominatim. On-device storage matches this list |
 | R35 | **Delete all my data.** A button on Info clears the location, avatar (including gender), closet and saved picks from this device after an in-page confirmation, then returns to first setup. | Confirm: storage is empty and setup starts. Cancel: nothing changes |
@@ -139,8 +139,8 @@ Location denied, camera denied, no face, failed cut-out and empty closet are cov
 Define the weather inputs, recommendation categories, coded rules, and shared state. Weather values must come from the provider, and rules must follow the weather guidance cited in `research.md`. The selected location, date, and live weather data must produce one recommendation state that drives every visual and written output.
 
 **Weather inputs.** One Open-Meteo request per location, with coordinates rounded to 2 decimals (all field names verified live 2026-10-03):
-- hourly: `temperature_2m, apparent_temperature, precipitation_probability, uv_index, wind_gusts_10m, snowfall, weather_code`
-- daily: `temperature_2m_max, temperature_2m_min`
+- hourly: `temperature_2m, apparent_temperature, precipitation_probability, uv_index, wind_gusts_10m, snowfall`
+- daily: `temperature_2m_max, temperature_2m_min, weather_code`
 - current: `temperature_2m, apparent_temperature, weather_code`
 - options: °F, mph, inches, local time zone, 7 days
 
@@ -150,7 +150,22 @@ Define the weather inputs, recommendation categories, coded rules, and shared st
 
 **Categories and rules.** Five bands from the highest feels-like: Hot ≥85 · Warm 70–84 · Chilly 55–69 · Cold 35–54 · Freezing <35. Reminders follow R8, the icon follows R10, and outfits follow Garment types by band.
 
-**Condition codes** (WMO codes from Open-Meteo): 0 clear; 1–2 partly cloudy; 3 cloudy; 45, 48 fog; 51–67 and 80–82 rain; 71–77 and 85–86 snow; 95–99 storm.
+**Weather codes** (WMO codes, with Open-Meteo's own descriptions from open-meteo.com/en/docs, checked 2026-10-11). The word on screen is the description; the icon is the family:
+
+| Icon family | Codes and Open-Meteo's words |
+|---|---|
+| Clear | 0 Clear sky |
+| Partly cloudy | 1 Mainly clear · 2 Partly cloudy |
+| Overcast | 3 Overcast |
+| Fog | 45 Fog · 48 Depositing rime fog |
+| Drizzle | 51 Light drizzle · 53 Moderate drizzle · 55 Dense drizzle |
+| Rain | 61 Slight rain · 63 Moderate rain · 65 Heavy rain |
+| Freezing rain | 56 Light freezing drizzle · 57 Dense freezing drizzle · 66 Light freezing rain · 67 Heavy freezing rain |
+| Showers | 80 Slight rain showers · 81 Moderate rain showers · 82 Violent rain showers |
+| Snow | 71 Slight snowfall · 73 Moderate snowfall · 75 Heavy snowfall · 77 Snow grains · 85 Slight snow showers · 86 Heavy snow showers |
+| Thunderstorm | 95 Thunderstorm · 96 Thunderstorm with slight hail · 97 Heavy thunderstorm · 99 Thunderstorm with heavy hail |
+
+The sky backdrop behind the avatar follows the day's family: clear (clear, partly cloudy), overcast (overcast, fog, or no code), rain (drizzle, rain, freezing rain, showers, thunderstorm) or snow.
 
 **Shared state**, one per location and date:
 
@@ -158,7 +173,7 @@ Define the weather inputs, recommendation categories, coded rules, and shared st
 |---|---|
 | Location | Saved location (R4) |
 | Date, is-today | Date strip |
-| Display: Now or Forecast, temperature (current, or high and low), feels-like, condition, update time | Open-Meteo current or daily data |
+| Display: Now or Forecast, temperature (current, or high and low), feels-like, weather icon and word, update time | Open-Meteo current or daily data (R10) |
 | Window values | Derived above |
 | Band | Highest feels-like |
 | Reminders: type, wording number, values | R8 plus saved picks |
@@ -166,7 +181,7 @@ Define the weather inputs, recommendation categories, coded rules, and shared st
 | Summary wording number | Saved picks |
 | Avatar look, including gender, body and face | Avatar values (R24, R40) |
 
-**Flow.** Location and date → Open-Meteo forecast → window values → band, reminders and condition → eligible items (closet first, then the gender's starters) → saved or new picks (R14) → **state** → avatar, weather icon, summary, reminders and "Wearing" list. Shuffle, closet changes and a gender change re-enter at the picks step. A new location or date starts from the top. Nothing on screen reads weather or storage directly.
+**Flow.** Location and date → Open-Meteo forecast → window values and weather codes → band, reminders, icon and word → eligible items (closet first, then the gender's starters) → saved or new picks (R14) → **state** → avatar, weather icon, summary, reminders and "Wearing" list. Shuffle, closet changes and a gender change re-enter at the picks step. A new location or date starts from the top. Nothing on screen reads weather or storage directly.
 
 ### Garment types by band
 
@@ -268,7 +283,7 @@ List every art and graphical asset: the character, each outfit variation, icons,
 | 16 garment templates (recolorable base and print), each fitted to both bodies; sandals and heels show the foot in the wearer's skin tone | Avatar, add-item preview | SVG | Created |
 | 30 starter outfits (15 per gender) and the yellow rain jacket | Outfits, Closet | Color data on the templates | Created |
 | 16 garment-type icons | Type picker, Closet tiles for starter items | SVG | Created |
-| 7 weather icons (clear, partly cloudy, cloudy, fog, rain, storm, snow) | Today, date strip, week list | SVG | Created |
+| 10 weather icons (clear, partly cloudy, overcast, fog, drizzle, rain, freezing rain, showers, snow, thunderstorm) | Today, date strip, week list | SVG | Created |
 | 7 reminder icons (umbrella, sunscreen, water, layer, wind, rain jacket, snow) | Reminders | SVG | Created |
 | Interface icons (location, info, Shuffle, tabs, camera, photos, close, back, search, edit, delete, check, lock) | Throughout | SVG | Created |
 | 4 sky backdrops (clear, overcast, rain, snow) | Today's avatar stage | CSS/SVG | Created |
@@ -356,6 +371,24 @@ After implementation or testing, record requirement changes and the evidence tha
   - "Saskatoon", which has no US match, now tests the not-found message, and "Toronto" tests that only US places are listed.
   - **Also found in C3:** Open-Meteo returned "Toronto Dam" and "Toronto State Park" for "Toronto". Results are now limited to populated places (GeoNames feature codes PPL…), since R2 asks for a city.
   - **Also found in C3:** Open-Meteo returns real towns matched on alternate names, such as Ardmore, TN and Cazadero, CA for "Austin". The Developer chose to hide places whose name doesn't contain the typed text. ZIP searches are unaffected.
+- **2026-10-11 — Weather icons come straight from Open-Meteo (R10, C4).**
+  - **Evidence:** in C4, live Austin data showed Tuesday with a Rain icon at a 3–9% rain chance. Three hours of light drizzle (code 51, 0.1 mm) met R10's "rain wins with 3 or more hours" rule.
+  - **The Developer's direction:** the app shouldn't decide which icon to use. It should show what the weather API gives for the day.
+  - **Agent's finding:** Open-Meteo sends no icons, only a WMO code with a description. Its daily code is documented as "the most severe weather condition on a given day" and covers all 24 hours, not the 9 am–9 pm window.
+  - **The Developer chose:**
+    - Open-Meteo's own words with 10 icon families (over keeping 7 icons, or one icon per code).
+    - On Today, the header shows the current code; each day in the strip shows the daily code.
+  - **Agent defaults:**
+    - The sky backdrop follows the day's code, since the outfit is for the day.
+    - With no code, the backdrop stays neutral (overcast) and the R29 note shows.
+  - **Removed:** the window condition rule, its severity order for ties, and the hourly `weather_code` field, which nothing else used.
+  - **Unchanged:** reminders (an umbrella still follows the rain chance) and outfits.
+  - **Changed:** R7, R10, R29, Weather inputs, Weather codes (was Condition codes), Shared state, Flow and Assets (7 → 10 weather icons). The 2026-10-10 "icon ties" rule no longer applies.
+- **2026-10-11 — Day buttons on narrow phones (R32, C4).**
+  - **Evidence:** at 320 px wide, seven 44 px day buttons plus gaps and margins need about 362 px, so Saturday and part of the "Add item" tab were cut off. With tighter spacing, 44 px holds down to 342 px.
+  - **Options:** narrow the buttons to 40 px so all seven fit, or let the strip scroll sideways and keep 44 px with the last day partly hidden.
+  - **The Developer chose** 40 px buttons. They stay about 75 px tall, so the tap area is still large, and they're well above R33's 24 px minimum.
+  - **Changed:** R32.
 
 ## Approval
 

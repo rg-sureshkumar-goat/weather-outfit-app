@@ -1,24 +1,25 @@
 // Garment types and which ones suit each band (spec.md, Garment types by band).
 
 // The 17 garment types a closet item can have (R17; five added 2026-10-11).
+// `short` fits the small tiles beside the avatar on the phone.
 export const GARMENT_TYPES = {
-  tee: { label: 'Tee', slot: 'top' },
-  buttonUpShort: { label: 'Short-sleeve button-up', slot: 'top' },
-  longSleeve: { label: 'Long-sleeve shirt', slot: 'top' },
-  sweater: { label: 'Sweater or hoodie', slot: 'top' },
-  cropTop: { label: 'Crop top', slot: 'top' },
-  spaghettiTop: { label: 'Spaghetti-strap top', slot: 'top' },
-  lightJacket: { label: 'Light jacket', slot: 'outer' },
-  warmCoat: { label: 'Warm coat', slot: 'outer' },
-  rainJacket: { label: 'Hooded rain jacket', slot: 'rain' },
-  pants: { label: 'Pants', slot: 'bottom' },
-  shorts: { label: 'Shorts', slot: 'bottom' },
-  skirt: { label: 'Skirt', slot: 'bottom' },
-  sneakers: { label: 'Sneakers', slot: 'shoes' },
-  boots: { label: 'Boots', slot: 'shoes' },
-  sandals: { label: 'Sandals', slot: 'shoes' },
-  clogs: { label: 'Clogs', slot: 'shoes' },
-  heels: { label: 'Heels', slot: 'shoes' },
+  tee: { label: 'Tee', short: 'Tee', slot: 'top' },
+  buttonUpShort: { label: 'Short-sleeve button-up', short: 'Button-up', slot: 'top' },
+  longSleeve: { label: 'Long-sleeve shirt', short: 'Long sleeve', slot: 'top' },
+  sweater: { label: 'Sweater or hoodie', short: 'Pullover', slot: 'top' },
+  cropTop: { label: 'Crop top', short: 'Crop top', slot: 'top' },
+  spaghettiTop: { label: 'Spaghetti-strap top', short: 'Strap top', slot: 'top' },
+  lightJacket: { label: 'Light jacket', short: 'Jacket', slot: 'outer' },
+  warmCoat: { label: 'Warm coat', short: 'Coat', slot: 'outer' },
+  rainJacket: { label: 'Hooded rain jacket', short: 'Rain jacket', slot: 'rain' },
+  pants: { label: 'Pants', short: 'Pants', slot: 'bottom' },
+  shorts: { label: 'Shorts', short: 'Shorts', slot: 'bottom' },
+  skirt: { label: 'Skirt', short: 'Skirt', slot: 'bottom' },
+  sneakers: { label: 'Sneakers', short: 'Sneakers', slot: 'shoes' },
+  boots: { label: 'Boots', short: 'Boots', slot: 'shoes' },
+  sandals: { label: 'Sandals', short: 'Sandals', slot: 'shoes' },
+  clogs: { label: 'Clogs', short: 'Clogs', slot: 'shoes' },
+  heels: { label: 'Heels', short: 'Heels', slot: 'shoes' },
 };
 
 // Bands from warmest to coldest. A band applies when the highest feels-like

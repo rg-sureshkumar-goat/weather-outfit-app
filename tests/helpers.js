@@ -23,18 +23,19 @@ export function loadFixture(name) {
   return parseForecast(json);
 }
 
-// A calm, clear 75 °F hour; tests override what they need.
-const CALM = { temp: 75, feels: 75, rain: 0, uv: 0, gust: 5, snow: 0, code: 0 };
+// A calm 75 °F hour; tests override what they need.
+const CALM = { temp: 75, feels: 75, rain: 0, uv: 0, gust: 5, snow: 0 };
 
-// One synthetic day. `window` is either an object applied to every 9 am to
-// 9 pm hour, or a function (hour) => overrides.
-export function makeDay(date, window = {}) {
+// One synthetic day, "Clear sky" (code 0) unless `day` says otherwise.
+// `window` is either an object applied to every 9 am to 9 pm hour, or a
+// function (hour) => overrides.
+export function makeDay(date, window = {}, day = {}) {
   const hours = Array.from({ length: 24 }, (_, hour) => {
     const inWindow = hour >= 9 && hour <= 21;
     const extra = inWindow ? (typeof window === 'function' ? window(hour) : window) : {};
     return { time: `${date}T${String(hour).padStart(2, '0')}:00`, hour, ...CALM, ...extra };
   });
-  return { date, high: 80, low: 60, hours };
+  return { date, high: 80, low: 60, code: 0, hours, ...day };
 }
 
 // A parsed forecast made of synthetic days; the first day is today.

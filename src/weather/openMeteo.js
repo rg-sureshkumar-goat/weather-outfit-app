@@ -2,8 +2,9 @@
 
 export const FORECAST_ENDPOINT = 'https://api.open-meteo.com/v1/forecast';
 
-const HOURLY = ['temperature_2m', 'apparent_temperature', 'precipitation_probability', 'uv_index', 'wind_gusts_10m', 'snowfall', 'weather_code'];
-const DAILY = ['temperature_2m_max', 'temperature_2m_min'];
+const HOURLY = ['temperature_2m', 'apparent_temperature', 'precipitation_probability', 'uv_index', 'wind_gusts_10m', 'snowfall'];
+// The daily weather code is the day's icon and word (R10).
+const DAILY = ['temperature_2m_max', 'temperature_2m_min', 'weather_code'];
 const CURRENT = ['temperature_2m', 'apparent_temperature', 'weather_code'];
 
 // Coordinates are rounded to 2 decimals (about 1 km) before they leave the
@@ -71,7 +72,6 @@ export function parseForecast(json) {
       uv: valueAt(hourly.uv_index, i),
       gust: valueAt(hourly.wind_gusts_10m, i),
       snow: valueAt(hourly.snowfall, i),
-      code: valueAt(hourly.weather_code, i),
     });
   });
 
@@ -79,6 +79,7 @@ export function parseForecast(json) {
     date,
     high: valueAt(daily.temperature_2m_max, i),
     low: valueAt(daily.temperature_2m_min, i),
+    code: valueAt(daily.weather_code, i),
     hours: hoursByDate.get(date) || [],
   }));
 

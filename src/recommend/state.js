@@ -8,7 +8,8 @@ import { BANDS } from '../content/garments.js';
 import { STARTER_SETS } from '../content/starters.js';
 import { REMINDER_BY_TYPE, SUMMARIES, fill } from '../content/wordings.js';
 import { windowHours, deriveValues } from './window.js';
-import { bandFor, weatherReminders, layerBand, rainAndWind, missingNotes, windowCondition } from './rules.js';
+import { describeWeather } from '../content/weatherCodes.js';
+import { bandFor, weatherReminders, layerBand, rainAndWind, missingNotes } from './rules.js';
 import { candidates, layerJackets } from './outfits.js';
 import { resolvePicks, chooseOutfit, shuffleOutfit, idsOf } from './picks.js';
 
@@ -98,6 +99,11 @@ export function buildState({ forecast, date, location, closet = [], avatar, save
     .filter((slot) => outfit[slot])
     .map((slot) => ({ slot, item: outfit[slot], label: sourceLabel(outfit[slot]) }));
 
+  // The icon and word are Open-Meteo's own codes (R10): the day's code for
+  // the day, and on Today the current code beside the current temperature.
+  const dayWeather = describeWeather(ctx.day.code);
+  const headerWeather = isToday ? describeWeather(forecast.current.code) : dayWeather;
+
   const state = {
     ...base,
     available: true,
@@ -109,14 +115,15 @@ export function buildState({ forecast, date, location, closet = [], avatar, save
     },
     band,
     bandLabel: BANDS.find((b) => b.id === band).label,
-    condition: windowCondition(ctx.hours),
+    dayWeather,
+    headerWeather,
     values,
     summary: { wording: picked.summary, title: summaryWording.title, text: fill(summaryWording.line, fillValues) },
     reminders,
     layerJacket: picked.jacket,
     outfit,
     wearing,
-    notes: missingNotes(values),
+    notes: missingNotes({ ...values.missing, code: !dayWeather }),
   };
   return { state, picks: picked.toSave };
 }

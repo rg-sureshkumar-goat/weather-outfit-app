@@ -16,9 +16,10 @@ describe('forecast request (R1)', () => {
   it('asks for every field the rules need, in °F, mph and inches, for 7 days', () => {
     expect(url.searchParams.get('hourly').split(',')).toEqual([
       'temperature_2m', 'apparent_temperature', 'precipitation_probability',
-      'uv_index', 'wind_gusts_10m', 'snowfall', 'weather_code',
+      'uv_index', 'wind_gusts_10m', 'snowfall',
     ]);
-    expect(url.searchParams.get('daily')).toBe('temperature_2m_max,temperature_2m_min');
+    // The daily weather code is each day's icon and word (R10).
+    expect(url.searchParams.get('daily')).toBe('temperature_2m_max,temperature_2m_min,weather_code');
     expect(url.searchParams.get('current')).toBe('temperature_2m,apparent_temperature,weather_code');
     expect(url.searchParams.get('temperature_unit')).toBe('fahrenheit');
     expect(url.searchParams.get('wind_speed_unit')).toBe('mph');
@@ -36,6 +37,8 @@ describe('reading the response (R1)', () => {
     expect(f.today).toBe(f.days[0].date);
     expect(f.now.startsWith(f.today)).toBe(true);
     expect(typeof f.current.temp).toBe('number');
+    expect(f.days.every((d) => Number.isInteger(d.code))).toBe(true);
+    expect(Number.isInteger(f.current.code)).toBe(true);
   });
 
   it('keeps missing values as null so rules can skip them (R29)', () => {
