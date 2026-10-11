@@ -76,9 +76,9 @@ Translate every fixed brief requirement and the selected research-driven feature
 | ID | Requirement | Acceptance check |
 |---|---|---|
 | R7 | **One recommendation state.** For the selected location and date, the app builds one state from Open-Meteo's 9 am–9 pm hours: band, condition icon, reminders, outfit items and the chosen wording. The avatar, weather icon, written recommendation, reminders and "Wearing" list are drawn only from this state. | Changing the location, date or Shuffle updates all five outputs together. Fixed test weather always gives the same band and reminders |
-| R8 | **Rules from research.md.** The band comes from the warmest feels-like hour. Reminders: "layer for later" when the coldest hour is below 70°F and in a colder band; umbrella at 40% rain chance or more; sunscreen at UV 3 or more; water at a feels-like of 80°F or more (stronger wording at 90°F); wind at gusts of 25 mph or more; snow if any falls. | Tests at each threshold edge: 84°F is Warm and 85°F is Hot; 39% rain gets no umbrella and 40% does; and so on for every rule |
+| R8 | **Rules from research.md.** The band comes from the warmest feels-like hour. Reminders: "layer for later" when the coldest hour is below 70°F and in a colder band; umbrella at 40% rain chance or more; sunscreen at UV 3 or more; water at a feels-like of 80°F or more (stronger wording at 90°F); wind at gusts of 25 mph or more; snow if any falls. When gusts reach 25 mph and rain 40%, "Wind and rain" replaces both Umbrella and Wind. On a snow day when the outfit's shoes aren't boots, Snow uses its "no boots" wordings (see Garment types by band). | Tests at each threshold edge: 84°F is Warm and 85°F is Hot; 39% rain gets no umbrella and 40% does; and so on for every rule. Gusts of 25 mph with 40% rain show only "Wind and rain" |
 | R9 | **Outfit from the closet.** Each outfit has a top, a bottom and shoes, plus an outer layer when the band calls for one (see Garment types by band). Each slot uses one of the User's items whose type suits the band. If there isn't one, a starter item fills the slot and is labeled "Starter item". | Empty closet: all starter items. After adding a tee, Hot days use it. The "Wearing" labels match where each item came from |
-| R10 | **Condition icon.** Shows the most frequent condition from 9 am to 9 pm. Rain, storm or snow wins if it occurs in 3 or more hours. | A test day with 3 rain hours and 9 clear hours shows the rain icon |
+| R10 | **Condition icon.** Shows the most frequent condition from 9 am to 9 pm. Rain, storm or snow wins if it occurs in 3 or more hours. Ties, including more than one of rain, storm and snow reaching 3 hours, go to the most severe: storm > snow > rain > fog > cloudy > partly cloudy > clear. | A test day with 3 rain hours and 9 clear hours shows the rain icon. A day with 8 rain hours and 3 storm hours shows the storm icon |
 
 ### Variation and Shuffle
 
@@ -120,7 +120,7 @@ Location denied, camera denied, no face, failed cut-out and empty closet are cov
 |---|---|---|
 | R27 | **Info screen.** Shows the creator (RG Sureshkumar), the weather source (Open-Meteo, CC BY 4.0), the place-name source (© OpenStreetMap contributors, ODbL), how outfits are picked (bands and reminder rules, with linked NWS, EPA and CDC sources), privacy (R34), "Delete all my data" (R35) and credits (R36). | Every item is on P6 and L6, and every link opens its source |
 | R28 | **Loading.** While weather loads, Today shows the location and date, a placeholder where the avatar goes, and "Getting the forecast…". Controls that need data are disabled. Model downloads show progress. | On a throttled network the loading state appears, then real data. The screen is never blank |
-| R29 | **Missing data.** If a value is missing for some hours, rules use the hours that exist. If it's missing all day, that rule is skipped and a note says so ("UV data isn't available for this day"). A day with no forecast is disabled in the strip. | Test data with no UV shows no sunscreen reminder, plus the note. A missing day 7 is disabled |
+| R29 | **Missing data.** If a value is missing for some hours, rules use the hours that exist. If it's missing all day, that rule is skipped and a note says so ("UV data isn't available for this day"). A day with no forecast, including no feels-like value in any 9 am–9 pm hour, is disabled in the strip. | Test data with no UV shows no sunscreen reminder, plus the note. A missing day 7 is disabled |
 | R30 | **Service errors and offline.** If Open-Meteo or Nominatim fails, or the device is offline, a message says what failed and offers Retry. Weather already loaded in this visit stays visible, labeled with its time. Search keeps the typed text. | Blocking Open-Meteo shows the message and Retry. Unblocking and pressing Retry loads the data |
 | R31 | **Responsive layouts.** Below 900 px wide: the phone layout (P screens). At 900 px and wider: the laptop layout (L screens). Touch on phones, mouse and keyboard on laptops. No sideways scrolling down to 320 px. | Resizing from 320 to 1440 px switches the layout at 900 px, with no sideways scroll and nothing clipped |
 | R32 | **One-handed phone use.** The date strip, Shuffle and tabs are in the lower half of the screen. Primary controls are at least 44×44 px. | In dev tools, every primary control measures ≥44 px. On a real phone, they can be reached with the thumb of the holding hand |
@@ -142,7 +142,7 @@ Define the weather inputs, recommendation categories, coded rules, and shared st
 - current: `temperature_2m, apparent_temperature, weather_code`
 - options: °F, mph, inches, local time zone, 7 days
 
-**Window.** The 13 hourly values from 9 am to 9 pm local time, inclusive. Values are rounded to whole numbers before the rules run, so the numbers on screen match the rules.
+**Window.** The 13 hourly values from 9 am to 9 pm local time, inclusive. Values are rounded to whole numbers before the rules run, so the numbers on screen match the rules. Snowfall is the exception: it's in inches and never shown as a number, and rounding would erase light snow, so any amount above 0 counts.
 
 **Derived values.** Highest feels-like and its time, lowest feels-like and its time, highest rain chance and its time, highest UV and its time, highest gust, and total snowfall with the time of the first snow.
 
@@ -181,7 +181,9 @@ Which of the User's items can be picked for each band (Developer's judgement; re
 | Boots | | | | ✓ | ✓, and any snow day |
 | **Outer layer** | none | none | light jacket | warm coat | warm coat |
 
-- **Hooded rain jacket:** replaces the outer layer, or is added, when rain chance is 40% or more and gusts reach 25 mph (research.md reminder rule).
+- **Hooded rain jacket** (rain chance 40% or more and gusts of 25 mph or more; research.md reminder rule). It is added on Hot and Warm days and replaces the light jacket on Chilly days. On Cold and Freezing days it is worn over the warm coat: both are in the outfit, and the rain jacket is drawn on top. The User's own rain jacket comes first, otherwise the starter one. In summaries, {outer} names the coat when both are worn.
+- **Snow days** (any snowfall from 9 am to 9 pm). If the User owns boots, the shoes are one of their boots. If they own shoes but no boots, the shoes are one of their own shoes, of any type and in any band, and the Snow reminder uses its "no boots" wordings. If they own no shoes, starter boots are used.
+- **Layer for later jacket:** a light jacket if the coldest hour is Chilly, a warm coat if it's Cold or Freezing. It's picked at random, in this order of preference: the User's neutral jackets, the User's other jackets, starter neutral jackets, other starter jackets. Neutral means a starter color marked neutral (white, cream, greys, black, navy, tan, khaki, camel, olive, denim, brown), or, for the User's items, a sampled base color with CIE LCh chroma below 30. The pick is saved with the day's other picks (R14).
 - **Hat and gloves** (Cold and Freezing, per NWS guidance) appear only in the written recommendation, not on the avatar.
 
 ## Content variation
@@ -189,6 +191,12 @@ Which of the User's items can be picked for each band (Developer's judgement; re
 Define at least three outfit variations for each recommendation category and at least three wording variations for each reminder type. Define how outfit and reminder variations are chosen independently at random, and how a previously selected date keeps the same variations, including whether they persist after the page reloads.
 
 Selection and persistence rules: R11–R14. Outfits use the User's items first; the starter outfits for the User's gender (R40) fill in until the closet can make 3 outfits for a band. Each item is a drawn template in a starter colorway, fitted to the avatar's body.
+
+How candidates are built (R9, R11):
+- Starter outfits stay whole, and the User's eligible items replace the matching slot.
+- With an empty closet, a band offers exactly its 3 starter outfits.
+- With one tee, Hot offers the tee with each starter outfit's bottom and shoes.
+- Once the User's own items make 3 or more distinct outfits, starters drop out.
 
 ### Starter outfits: Man set
 
@@ -216,7 +224,7 @@ Both sets share one starter **yellow hooded rain jacket** for the rain-and-wind 
 
 ### Wordings
 
-Words in braces fill in from the selected day's 9 am–9 pm hours or the chosen outfit. Each line keeps the advice in `research.md`.
+Words in braces fill in from the selected day's 9 am–9 pm hours or the chosen outfit. Each line keeps the advice in `research.md`. Times read like "3 pm". Reminders appear in the order of this table.
 
 **Reminders** (the bold title stays fixed; the line varies):
 
@@ -228,8 +236,9 @@ Words in braces fill in from the selected day's 9 am–9 pm hours or the chosen 
 | **Water, strong** (feels ≥90°) | Feels like {feelsMax}° by {maxTime}. Bring a full bottle and drink before you're thirsty. | Serious heat today. Drink more water than usual, even if you're not thirsty. | {feelsMax}° feels-like this afternoon. Refill your bottle whenever you can. |
 | **Layer for later** (coldest <70°, colder band) | Drops to {feelsMin}° by {minTime}. Bring your {jacket}. | Cooler tonight, around {feelsMin}°. Your {jacket} goes with this outfit. | The evening gets chilly ({feelsMin}°). Toss your {jacket} in your bag. |
 | **Wind** (gusts ≥25 mph) | Gusts up to {gust} mph. Expect a blustery walk to class. | Windy today, with gusts near {gust} mph. Keep loose papers zipped away. | Gusty out there ({gust} mph). A zip-up layer helps. |
-| **Wind and rain** (gusts ≥25 and rain ≥40%; replaces Umbrella) | Rain and gusts to {gust} mph. An umbrella won't hold up, so wear the hooded rain jacket. | Wind and rain together today. Skip the umbrella and use your rain jacket's hood. | Gusts near {gust} mph will flip an umbrella. Your hooded rain jacket is the move. |
+| **Wind and rain** (gusts ≥25 and rain ≥40%; replaces Umbrella and Wind) | Rain and gusts to {gust} mph. An umbrella won't hold up, so wear the hooded rain jacket. | Wind and rain together today. Skip the umbrella and use your rain jacket's hood. | Gusts near {gust} mph will flip an umbrella. Your hooded rain jacket is the move. |
 | **Snow** (any snowfall) | Snow expected around {snowTime}. Wear waterproof boots. | Snow on the way. Boots with good grip keep your feet dry. | Slick sidewalks likely with snow today. Waterproof boots, please. |
+| **Snow**, no boots (any snowfall, and the outfit's shoes aren't boots; replaces Snow) | Snow expected around {snowTime}. Your {shoes} will do, but boots would keep your feet drier. | Snow on the way and no boots in your closet. Step carefully in your {shoes}. | Slick, snowy sidewalks likely today. Boots would be a better choice than your {shoes}. |
 
 **Band summaries** (the title is the one-liner on the phone's first view; the sentence follows it):
 
@@ -293,6 +302,15 @@ After implementation or testing, record requirement changes and the evidence tha
   - **Changed:** R14, R21, R22, R24, R34, R35, the shared state and flow, Content variation (new Woman set), Assets and Out of scope ("body-shape options" narrowed).
   - **Wireframes:** P9 and L9 added; P7, P8, L7 and L8 updated with the 4-step count and the Gender, Body and Face controls.
 - **2026-10-10 — Home Screen web app (R38).** The Developer wants to test on their iPhone as the app is built. A native iOS app was considered and not chosen: the brief requires a browser-based app, free Xcode installs expire after 7 days, and TestFlight needs a paid developer account. The app instead gets a web app manifest and a home-screen icon, so Safari's Add to Home Screen installs it and it opens full-screen. A Home Screen app keeps its own on-device storage, separate from Safari's. No service worker: offline use stays out of scope.
+- **2026-10-10 — Rule edges settled before C1.** The spec left five rule edges open. The Developer decided:
+  1. **Layer for later** names a jacket of the right weight, neutral colors first.
+  2. **Rain and wind on Cold and Freezing days:** the hooded rain jacket goes over the warm coat instead of replacing it. Replacing it could leave someone under-dressed below 35 °F, against the NWS layering advice in research.md.
+  3. **Snow days:** the User's own shoes always win, with boots preferred. If they own shoes but no boots, a new "Snow, no boots" warning (3 wordings, approved) replaces the Snow reminder. This holds even on Freezing days, which overrides the garment table there.
+  4. **Wind and rain** replaces both Umbrella and Wind, so the gusts aren't mentioned twice.
+  5. **Icon ties** go to the most severe condition.
+  - **Agent defaults, stated to the Developer before building:** times read "3 pm"; reminders follow the table order; a day with no feels-like data is unavailable. The way candidates are built (R9, R11) is recorded under Content variation.
+  - **Found while building C1:** snowfall isn't rounded. Real fixtures showed 0.249 in of snow in Minneapolis, which rounding would turn into 0, so "snow if any falls" would never fire.
+  - **Changed:** R8, R10, R29, Window, Garment types by band, Content variation and Wordings.
 
 ## Approval
 

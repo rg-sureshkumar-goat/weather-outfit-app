@@ -60,7 +60,8 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 - **After a deploy:** open the live URL in Safari, then Share → Add to Home Screen. The installed app updates itself on each deploy and keeps its own storage, separate from Safari's.
 
 **Test**
-- `npm test` runs Vitest once. Tests and saved Open-Meteo responses (fixtures) live in `tests/`.
+- `npm test` runs Vitest once. Tests live in `tests/`. `tests/fixtures/` holds real Open-Meteo responses from six places, saved 2026-10-10. `tests/helpers.js` builds synthetic days for rule edges and provides a seeded random source, so draws repeat exactly.
+- `buildState()` in `src/recommend/state.js` is the single source of everything on Today (R7). It is a pure function: pass the forecast, date, closet, avatar, saved picks and a random source.
 
 **Deploy**
 - Every push to `main` runs `.github/workflows/deploy.yml`: install, test, build, then publish `dist/` to GitHub Pages. If a test fails, nothing deploys.
