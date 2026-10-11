@@ -1,8 +1,21 @@
-/* Placeholder styles. Nunito (SIL Open Font License) is the app font, chosen in C2. */
+/* Quick Dresser styles. Visual direction (research.md): sky and daylight,
+   warm off-white cards, one coral accent, rounded type (Nunito, SIL OFL).
+   Text colors meet WCAG 2.2 AA on the cards (R33); primary controls are at
+   least 44 px (R32). */
+
 :root {
+  --paper: #f3eee7;
   --cream: #fbf7f2;
   --ink: #1f2a37;
-  --coral: #e8604c;
+  --ink-2: #4b5563; /* 7.0:1 on cream */
+  --line: #d6d0c6;
+  --fill: #ece6dc;
+  --sky: #dbe7f2;
+  --sky-ink: #9fb6cc;
+  --coral: #e8604c; /* accent for fills and focus, never small text */
+  --radius: 16px;
+  --shadow: 0 10px 30px rgba(31, 42, 55, 0.14);
+  --focus: 0 0 0 3px var(--cream), 0 0 0 6px var(--coral);
 }
 
 * {
@@ -12,30 +25,302 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--cream);
+  background: var(--paper);
   color: var(--ink);
   font-family: 'Nunito Variable', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-text-size-adjust: 100%;
 }
 
-.placeholder {
-  display: grid;
-  place-content: center;
-  min-height: 100vh;
-  padding: 16px;
-  text-align: center;
-}
-
-.placeholder h1 {
-  margin: 0 0 8px;
-  font-size: 2rem;
-  /* Coral is decoration only here; text stays dark for contrast. */
-  border-bottom: 4px solid var(--coral);
-  padding-bottom: 4px;
-  justify-self: center;
-}
-
-.placeholder p {
+h1,
+h2,
+p {
   margin: 0;
-  max-width: 32ch;
-  line-height: 1.5;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.icon {
+  flex: none;
+}
+
+/* ---- Buttons ---------------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-outline {
+  width: 100%;
+  background: #fff;
+  color: var(--ink);
+}
+
+.btn-small {
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 15px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid var(--line);
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px 0 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ---- Location setup (P2, L2) -------------------------------------------- */
+
+.loc-screen {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: var(--sky);
+  color: var(--sky-ink);
+  overflow: hidden;
+}
+
+.loc-screen.is-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: rgba(219, 231, 242, 0.96);
+}
+
+.loc-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.loc-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  display: grid;
+  gap: 12px;
+  padding: 24px 22px 20px;
+  border-radius: 20px;
+  background: var(--cream);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.loc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.loc-head h1 {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 14px;
+  border: 1.5px solid var(--ink-2);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.field:focus-within {
+  box-shadow: var(--focus);
+}
+
+.field input {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  border: 0;
+  background: transparent;
+  font-size: 17px; /* 16 px or more stops iOS zooming into the field */
+}
+
+.field input:focus-visible {
+  box-shadow: none;
+}
+
+.matches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.matches [role='option'] {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.matches [role='option']:hover,
+.matches [role='option'][aria-selected='true'] {
+  background: var(--fill);
+  font-weight: 700;
+}
+
+.status:empty {
+  display: none;
+}
+
+.status p {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.or::before,
+.or::after {
+  content: '';
+  flex: 1;
+  height: 1.5px;
+  background: var(--line);
+}
+
+.note {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+/* ---- Home until Today arrives (C4) ---------------------------------------- */
+
+.home {
+  min-height: 100vh;
+  display: grid;
+  align-content: start;
+  gap: 24px;
+  padding: 16px;
+}
+
+.home-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.home-bar .logo {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.home-card {
+  max-width: 520px;
+  padding: 24px;
+  border-radius: var(--radius);
+  background: var(--cream);
+  box-shadow: var(--shadow);
+}
+
+.home-card h1 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.home-card p {
+  color: var(--ink-2);
+}
+
+@media (min-width: 900px) {
+  .home {
+    padding: 24px 40px;
+  }
+  .loc-card {
+    max-width: 520px;
+    padding: 28px 28px 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
 }
