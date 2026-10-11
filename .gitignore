@@ -18,5 +18,11 @@ test-selfie/
 *.HEIC
 *.heic
 
-# Saved feasibility-test pages: in the submission zip only, kept off the public repo
-reference/feasibility/
+# Feasibility tests: the three avatar previews embed the Developer's shirt photo (kept private),
+# and the selfie test's MediaPipe runtime and models (~17 MB) duplicate files the app hosts.
+# The rest of reference/feasibility/ is committed.
+reference/feasibility/photo-on-2d-character.html
+reference/feasibility/stylized-3d-avatar.html
+reference/feasibility/illustrated-2d-avatar.html
+reference/feasibility/selfie-avatar-test/vendor/
+reference/feasibility/selfie-avatar-test/models/

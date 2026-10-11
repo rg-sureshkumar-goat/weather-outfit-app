@@ -1,0 +1,494 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Selfie Avatar Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one working column on phones; on laptops the photo analysis sits left and the avatars with their adjust controls sit right. */
+:root{
+  --bg:#eef1f4; --surface:#ffffff; --ink:#1b2230; --muted:#5a6476; --line:#d8dee6;
+  --accent:#b8432a; --accent-ink:#ffffff; --sky-top:#cfe6fb; --sky-bottom:#f4f8fc;
+  --hair-tint:#14a3b8; --ok:#1f7a45; --warn:#8a5200;
+  --font-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --font-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#11151c; --surface:#1a2029; --ink:#e7eaf0; --muted:#9aa4b4; --line:#2b3340; --accent:#f07457; --accent-ink:#1a0f0b; --sky-top:#2a4560; --sky-bottom:#1c2633; --hair-tint:#3fd0e4; --ok:#5fcf8c; --warn:#f0b452; color-scheme:dark; }
+}
+:root[data-theme="dark"]{ --bg:#11151c; --surface:#1a2029; --ink:#e7eaf0; --muted:#9aa4b4; --line:#2b3340; --accent:#f07457; --accent-ink:#1a0f0b; --sky-top:#2a4560; --sky-bottom:#1c2633; --hair-tint:#3fd0e4; --ok:#5fcf8c; --warn:#f0b452; color-scheme:dark; }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--font-body);padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:grid;gap:18px}
+.eyebrow{font:500 12px var(--font-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+h1{font:800 clamp(28px,4.4vw,40px)/1.05 var(--font-display);margin:4px 0 0;letter-spacing:-.01em;text-wrap:balance}
+h2{font:700 19px/1.2 var(--font-display);margin:0;text-wrap:balance}
+h3{font:600 12px var(--font-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0}
+.intro p{margin:8px 0 0;color:var(--muted);max-width:66ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px;display:grid;gap:14px;min-width:0}
+.step{display:flex;gap:10px;align-items:baseline}
+.step .n{font:700 13px var(--font-mono);color:var(--accent)}
+
+/* Capture */
+.capture{grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.capture .lead p{margin:6px 0 0;color:var(--muted);max-width:60ch}
+.buttons{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:14px;font:700 15px var(--font-body);cursor:pointer;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn svg{width:20px;height:20px}
+.btn:focus-within,.btn:focus-visible,button:focus-visible,input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.status{grid-column:1/-1;margin:0;font:500 13px var(--font-mono);color:var(--muted);display:flex;gap:8px;align-items:center}
+.status i{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+.status[data-tone="ok"] i{background:var(--ok)} .status[data-tone="warn"] i{background:var(--warn)} .status[data-tone="busy"] i{background:var(--accent);animation:pulse 1s infinite alternate}
+@keyframes pulse{to{opacity:.25}}
+.privacy{grid-column:1/-1;margin:0;font-size:13px;color:var(--muted)}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px;align-items:start}
+@media (max-width:860px){ .grid{grid-template-columns:1fr} .capture{grid-template-columns:1fr} }
+
+/* Analysis */
+.photo{position:relative;border-radius:14px;overflow:hidden;background:var(--bg);aspect-ratio:3/4;max-width:100%;display:grid;place-items:center}
+.photo canvas{width:100%;height:100%;object-fit:contain;display:block}
+.photo .empty{padding:24px;text-align:center;color:var(--muted);font-size:14px;max-width:30ch}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:0;padding:0;list-style:none;font-size:13px;color:var(--muted)}
+.legend li{display:flex;align-items:center;gap:6px}
+.key{width:14px;height:14px;border-radius:4px;flex:none}
+.key.hair{background:var(--hair-tint);opacity:.7}
+.key.sample{border:2px solid #fff;outline:1.5px solid #111;border-radius:50%}
+.key.line{height:3px;border-radius:2px;background:#ffcc33}
+.readings{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 16px;margin:0}
+.readings dt{font:500 12px var(--font-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding-top:2px}
+.readings dd{margin:0;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-variant-numeric:tabular-nums}
+.chip{display:inline-block;width:22px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.15);vertical-align:middle}
+.mono{font:500 13px var(--font-mono)}
+.sub{color:var(--muted);font-size:13px}
+
+/* Avatars */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+figure{margin:0;display:grid;gap:8px}
+.stage{border-radius:16px;background:linear-gradient(var(--sky-top),var(--sky-bottom));aspect-ratio:220/290;max-width:100%;overflow:hidden}
+.stage svg{display:block;width:100%;height:100%}
+figcaption{display:grid;gap:1px}
+figcaption b{font:700 15px var(--font-display)}
+figcaption span{font-size:13px;color:var(--muted)}
+fieldset{border:0;margin:0;padding:0;display:grid;gap:8px;min-width:0}
+legend{padding:0;margin-bottom:8px}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.swatch{position:relative;cursor:pointer}
+.swatch input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.swatch span{display:block;width:44px;height:44px;border-radius:12px;border:2px solid var(--line)}
+.swatch input:checked+span{border-color:var(--ink);box-shadow:0 0 0 3px var(--surface) inset}
+.segs{display:flex;flex-wrap:wrap;gap:6px}
+.seg{position:relative}
+.seg input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.seg span{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:12px;border:1.5px solid var(--line);font-weight:600;font-size:14px;cursor:pointer}
+.seg input:checked+span{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.adjust{display:grid;gap:16px;border-top:1px solid var(--line);padding-top:14px}
+.adjust-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.linkbtn{background:none;border:0;padding:8px 4px;min-height:44px;font:600 14px var(--font-body);color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+/* Notes */
+.notes{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:18px}
+.notes ul{margin:8px 0 0;padding-left:20px;display:grid;gap:6px}
+.notes li::marker{color:var(--accent)}
+.notes p{margin:8px 0 0;color:var(--muted);font-size:14px}
+.credits{font-size:12px;color:var(--muted);margin:0}
+.credits a{color:inherit}
+@media (prefers-reduced-motion: reduce){ .status[data-tone="busy"] i{animation:none} }
+</style>
+
+<main class="wrap">
+  <header class="intro">
+    <div class="eyebrow">Feasibility test · not the app</div>
+    <h1>Selfie Avatar Test</h1>
+    <p>Reads skin tone, hair color and hair length from a selfie on this device, then dresses the 2D character in those values. Compare the exact colors with the nearest preset tones, and try the adjust controls.</p>
+  </header>
+
+  <section class="card capture" aria-labelledby="h-capture">
+    <div class="lead">
+      <div class="step"><span class="n">1</span><h2 id="h-capture">Your selfie</h2></div>
+      <p>Face the camera with your hair visible, in even light. Head and shoulders in frame works best.</p>
+    </div>
+    <div class="buttons">
+      <label class="btn primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        Take a selfie
+        <input id="takeInput" class="sr" type="file" accept="image/*" capture="user">
+      </label>
+      <label class="btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m3 16 5-5 4 4 3-3 6 6"/><circle cx="15.5" cy="8.5" r="1.5"/></svg>
+        Choose a photo
+        <input id="chooseInput" class="sr" type="file" accept="image/*">
+      </label>
+    </div>
+    <p class="status" id="status" role="status" aria-live="polite" data-tone="busy"><i></i><span id="statusText">Loading the face and hair models…</span></p>
+    <p class="privacy">The photo stays on this device. Nothing is uploaded, and reloading the page clears it.</p>
+  </section>
+
+  <div class="grid">
+    <section class="card" aria-labelledby="h-found">
+      <div class="step"><span class="n">2</span><h2 id="h-found">What the models found</h2></div>
+      <div class="photo">
+        <canvas id="photo" hidden aria-label="Your selfie with the sampled areas marked"></canvas>
+        <p class="empty" id="photoEmpty">Your selfie appears here, marked with the areas the colors were read from.</p>
+      </div>
+      <ul class="legend" aria-label="Photo markings">
+        <li><span class="key sample"></span>Skin sample spots</li>
+        <li><span class="key hair"></span>Detected hair</li>
+        <li><span class="key line"></span>Where the hair ends · chin</li>
+      </ul>
+      <dl class="readings">
+        <dt>Face</dt><dd id="rFace"><span class="sub">Waiting for a selfie</span></dd>
+        <dt>Skin</dt><dd id="rSkin"><span class="sub">—</span></dd>
+        <dt>Hair color</dt><dd id="rHair"><span class="sub">—</span></dd>
+        <dt>Hair length</dt><dd id="rLength"><span class="sub">—</span></dd>
+        <dt>Time</dt><dd id="rTime"><span class="sub">—</span></dd>
+      </dl>
+    </section>
+
+    <section class="card" aria-labelledby="h-avatar">
+      <div class="step"><span class="n">3</span><h2 id="h-avatar">The avatar</h2></div>
+      <div class="pair">
+        <figure>
+          <div class="stage"><svg id="avExact" viewBox="90 18 220 290" role="img" aria-labelledby="capExact"></svg></div>
+          <figcaption id="capExact"><b>Exact colors</b><span id="subExact">Example until you add a selfie</span></figcaption>
+        </figure>
+        <figure>
+          <div class="stage"><svg id="avPick" viewBox="90 18 220 290" role="img" aria-labelledby="capPick"></svg></div>
+          <figcaption id="capPick"><b id="pickTitle">Palette match</b><span id="subPick">Nearest preset tones</span></figcaption>
+        </figure>
+      </div>
+
+      <div class="adjust">
+        <div class="adjust-head">
+          <h3>Adjust the right-hand avatar</h3>
+          <button type="button" class="linkbtn" id="reset">Back to palette match</button>
+        </div>
+        <fieldset>
+          <legend><span class="sub">Skin tone · Monk Skin Tone Scale</span></legend>
+          <div class="swatches" id="skinSwatches"></div>
+        </fieldset>
+        <fieldset>
+          <legend><span class="sub">Hair color</span></legend>
+          <div class="swatches" id="hairSwatches"></div>
+        </fieldset>
+        <fieldset>
+          <legend><span class="sub">Hair length</span></legend>
+          <div class="segs" id="lengthSegs"></div>
+        </fieldset>
+      </div>
+    </section>
+  </div>
+
+  <section class="card notes" aria-label="Notes">
+    <div>
+      <h2>What to check</h2>
+      <ul>
+        <li>Does either avatar read as you, in skin tone and hair?</li>
+        <li>Which looks better: the exact colors or the palette match?</li>
+        <li>Was the hair length right?</li>
+        <li>How long did the first load and the processing take on your phone?</li>
+        <li>Try a second photo in different light, such as daylight from a window. Do the colors stay close?</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Not read from the photo</h2>
+      <p>Hair texture (straight, wavy, curly), facial hair, glasses and eye color. These models don't detect them, so in the app they would be manual choices.</p>
+      <h2 style="margin-top:14px">First-use download</h2>
+      <p>In the app, about 16.5 MB, once: the model runtime (11.8 MB, shared with the garment cutout tool), the face model (3.8 MB) and the hair model (0.8 MB). This test page sends the two models as text, so it downloads about 18 MB.</p>
+    </div>
+    <p class="credits" style="grid-column:1/-1">Face and hair models: Google MediaPipe, Apache 2.0. Skin palette: <a href="https://en.wikipedia.org/wiki/Monk_Skin_Tone_Scale" target="_blank" rel="noopener">Monk Skin Tone Scale</a> by Ellis Monk, CC BY 4.0. Character: original artwork for this project.</p>
+  </section>
+</main>
+
+<script type="module">
+import { FaceLandmarker, ImageSegmenter } from './vendor/vision_bundle.mjs';
+
+const $ = (id) => document.getElementById(id);
+
+// ---------- Palettes ----------
+const SKIN_TONES = ['#f6ede4', '#f3e7db', '#f7ead0', '#eadaba', '#d7bd96', '#a07e56', '#825c43', '#604134', '#3a312a', '#292420']
+  .map((hex, i) => ({ id: 'mst' + (i + 1), name: 'Monk ' + (i + 1), hex }));
+const HAIR_COLORS = [
+  { id: 'black', name: 'Black', hex: '#1d1a18' }, { id: 'darkbrown', name: 'Dark brown', hex: '#3b2a20' },
+  { id: 'brown', name: 'Brown', hex: '#61402b' }, { id: 'lightbrown', name: 'Light brown', hex: '#8c6443' },
+  { id: 'blonde', name: 'Blonde', hex: '#c9a467' }, { id: 'platinum', name: 'Platinum', hex: '#e2d5b5' },
+  { id: 'auburn', name: 'Auburn', hex: '#8a3a20' }, { id: 'grey', name: 'Grey', hex: '#9b9a96' }
+];
+const LENGTHS = [
+  { id: 'bald', name: 'Bald' }, { id: 'buzz', name: 'Very short' }, { id: 'short', name: 'Short' },
+  { id: 'medium', name: 'Medium' }, { id: 'long', name: 'Long' }
+];
+
+// ---------- Colour maths (sRGB -> CIELAB for nearest-tone matching) ----------
+const hexToRgb = (h) => { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+const rgbToHex = (r, g, b) => '#' + [r, g, b].map((c) => Math.round(Math.max(0, Math.min(255, c))).toString(16).padStart(2, '0')).join('');
+const toLin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+const fromLin = (c) => 255 * (c <= 0.0031308 ? c * 12.92 : 1.055 * c ** (1 / 2.4) - 0.055);
+function toLab([r, g, b]) {
+  const R = toLin(r), G = toLin(g), B = toLin(b);
+  const f = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+  const x = f((0.4124 * R + 0.3576 * G + 0.1805 * B) / 0.95047), y = f(0.2126 * R + 0.7152 * G + 0.0722 * B), z = f((0.0193 * R + 0.1192 * G + 0.9505 * B) / 1.08883);
+  return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+}
+const deltaE = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+function nearest(hex, palette) {
+  const lab = toLab(hexToRgb(hex));
+  return palette.reduce((best, p) => { const d = deltaE(lab, toLab(hexToRgb(p.hex))); return d < best.d ? { p, d } : best; }, { p: palette[0], d: Infinity }).p;
+}
+const luma = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+// Average a set of pixels after dropping the darkest and brightest parts (shadows and shine).
+function trimmedMean(px, lo, hi) {
+  if (!px.length) return null;
+  px.sort((a, b) => luma(...a) - luma(...b));
+  const part = px.slice(Math.floor(px.length * lo), Math.max(Math.floor(px.length * lo) + 1, Math.floor(px.length * hi)));
+  const sum = part.reduce((s, p) => [s[0] + toLin(p[0]), s[1] + toLin(p[1]), s[2] + toLin(p[2])], [0, 0, 0]);
+  return rgbToHex(...sum.map((v) => fromLin(v / part.length)));
+}
+function shade(hex, amt) {
+  const f = (c) => Math.max(0, Math.min(255, Math.round(amt < 0 ? c * (1 + amt) : c + (255 - c) * amt)));
+  return rgbToHex(...hexToRgb(hex).map(f));
+}
+
+// ---------- 2D character (head-and-shoulders crop of the preview character) ----------
+const MIRROR = 'matrix(-1 0 0 1 400 0)';
+const P = {
+  tee: 'M178 242 C160 246 136 248 122 258 C118 278 120 290 124 304 C130 350 133 400 135 440 L265 440 C267 400 270 350 276 304 C280 290 282 278 278 258 C264 248 240 246 222 242 Q200 256 178 242 Z',
+  sleeve: 'M124 256 C108 260 98 272 94 290 L86 338 C100 346 116 348 132 344 L130 300 C128 284 126 270 124 256 Z',
+  neck: 'M182 196 L218 196 L221 241 Q200 254 179 241 Z',
+  face: 'M140 130 C140 80 168 58 200 58 C232 58 260 80 260 130 C260 168 246 200 220 212 C210 217 190 217 180 212 C154 200 140 168 140 130 Z',
+  buzz: 'M141 124 C137 76 166 48 200 48 C234 48 263 76 259 124 C256 106 251 96 244 90 C230 93 215 95 200 95 C185 95 170 93 156 90 C149 96 144 106 141 124 Z',
+  short: 'M136 132 C129 72 164 40 204 41 C248 43 273 74 265 132 C262 112 255 98 244 90 C236 99 222 104 206 103 C190 102 176 96 170 88 C156 96 142 110 136 132 Z',
+  mediumBack: 'M130 150 C120 74 160 34 202 34 C246 34 284 72 272 150 C270 180 272 206 266 226 C250 232 236 230 226 222 L174 222 C164 230 150 232 134 226 C128 206 130 180 130 150 Z',
+  longBack: 'M128 150 C118 74 160 32 202 32 C248 32 286 72 274 150 C272 200 280 260 282 318 C262 326 242 322 228 310 C224 284 222 262 222 240 L178 240 C178 262 176 284 172 310 C158 322 138 326 118 318 C120 260 128 200 128 150 Z',
+  sideFront: 'M132 160 C122 80 160 38 202 38 C248 38 282 80 270 160 C266 140 262 122 254 108 C244 100 236 96 230 92 C214 104 186 108 158 100 C150 112 142 130 140 160 C138 166 134 166 132 160 Z'
+};
+const TEE = '#5d6b82';
+function avatarSvg(id, { skin, hair, length }) {
+  const line = shade(skin, -0.3), hl = shade(hair, -0.25), tl = shade(TEE, -0.35);
+  const back = length === 'medium' ? P.mediumBack : length === 'long' ? P.longBack : null;
+  const front = { buzz: P.buzz, short: P.short, medium: P.sideFront, long: P.sideFront }[length];
+  const eye = (x) => `<ellipse cx="${x}" cy="138" rx="11" ry="12.5" fill="#fbfaf6"/><circle cx="${x + 1}" cy="139" r="7.2" fill="#3a2617"/><circle cx="${x + 1}" cy="139" r="3.6" fill="#0f0d0c"/><circle cx="${x + 4}" cy="135" r="2.3" fill="#fff"/>` +
+    `<path d="M${x - 12} 133 Q${x} 123 ${x + 12} 133" stroke="#2a211c" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+  const sleeve = `<path d="${P.sleeve}" fill="${TEE}" stroke="${tl}" stroke-width="2.2" stroke-linejoin="round"/>`;
+  return `
+    <defs>
+      <radialGradient id="${id}-face" cx=".38" cy=".32" r=".8">
+        <stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".12"/>
+      </radialGradient>
+    </defs>
+    <path d="${P.tee}" fill="${TEE}" stroke="${tl}" stroke-width="2.2" stroke-linejoin="round"/>
+    ${sleeve}<g transform="${MIRROR}">${sleeve}</g>
+    ${back ? `<path d="${back}" fill="${hair}" stroke="${hl}" stroke-width="2" stroke-linejoin="round"/>` : ''}
+    <path d="${P.neck}" fill="${skin}" stroke="${line}" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M182 204 Q200 222 218 204 L219 216 Q200 232 181 216 Z" fill="${line}" opacity=".35"/>
+    <path d="M176 241 Q200 259 224 241" stroke="${tl}" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="139" cy="138" rx="10" ry="16" fill="${skin}" stroke="${line}" stroke-width="2"/><ellipse cx="261" cy="138" rx="10" ry="16" fill="${skin}" stroke="${line}" stroke-width="2"/>
+    <path d="${P.face}" fill="${skin}"/><path d="${P.face}" fill="url(#${id}-face)"/><path d="${P.face}" fill="none" stroke="${line}" stroke-width="2"/>
+    ${front ? `<path d="${front}" fill="${hair}" ${length === 'buzz' ? 'fill-opacity=".9"' : ''} stroke="${hl}" stroke-width="2" stroke-linejoin="round"/>` : ''}
+    ${length === 'short' ? `<path d="M176 62 Q204 52 232 64" stroke="${shade(hair, 0.25)}" stroke-opacity=".55" stroke-width="4" fill="none" stroke-linecap="round"/>` : ''}
+    <path d="M161 118 Q176 109 191 115 M209 115 Q224 109 239 118" stroke="${length === 'bald' ? shade(skin, -0.55) : hair}" stroke-width="5" fill="none" stroke-linecap="round"/>
+    ${eye(176)}${eye(224)}
+    <path d="M200 146 Q193 165 203 169" stroke="${line}" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M183 184 Q200 197 217 184" stroke="#7d3a2c" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <ellipse cx="163" cy="168" rx="11" ry="6.5" fill="#e07a5f" opacity=".2"/><ellipse cx="237" cy="168" rx="11" ry="6.5" fill="#e07a5f" opacity=".2"/>`;
+}
+
+// ---------- State ----------
+const DEFAULT = { skin: SKIN_TONES[6].hex, hair: HAIR_COLORS[1].hex, length: 'short' };
+const state = { exact: { ...DEFAULT }, match: { ...DEFAULT }, pick: { ...DEFAULT }, hasPhoto: false, edited: false };
+const describe = (v) => {
+  const skin = SKIN_TONES.find((t) => t.hex === v.skin), hair = HAIR_COLORS.find((h) => h.hex === v.hair), len = LENGTHS.find((l) => l.id === v.length);
+  return `Avatar with ${skin ? skin.name + ' skin' : 'skin ' + v.skin}, ${hair ? hair.name.toLowerCase() : v.hair} hair, ${len.name.toLowerCase()} length.`;
+};
+
+function render() {
+  $('avExact').innerHTML = `<title>${describe(state.exact)}</title>` + avatarSvg('ex', state.exact);
+  $('avPick').innerHTML = `<title>${describe(state.pick)}</title>` + avatarSvg('pk', state.pick);
+  $('subExact').textContent = state.hasPhoto ? 'Straight from the photo' : 'Example until you add a selfie';
+  $('pickTitle').textContent = state.edited ? 'Adjusted' : 'Palette match';
+  $('subPick').textContent = state.edited ? 'Your corrections' : state.hasPhoto ? 'Nearest preset tones' : 'Example until you add a selfie';
+  $('reset').hidden = !state.edited;
+  document.querySelectorAll('#skinSwatches input').forEach((i) => { i.checked = i.value === state.pick.skin; });
+  document.querySelectorAll('#hairSwatches input').forEach((i) => { i.checked = i.value === state.pick.hair; });
+  document.querySelectorAll('#lengthSegs input').forEach((i) => { i.checked = i.value === state.pick.length; });
+}
+
+function buildControls() {
+  $('skinSwatches').innerHTML = SKIN_TONES.map((t) => `<label class="swatch" title="${t.name}"><input type="radio" name="skin" id="skin-${t.id}" value="${t.hex}" aria-label="${t.name}"><span style="background:${t.hex}"></span></label>`).join('');
+  $('hairSwatches').innerHTML = HAIR_COLORS.map((h) => `<label class="swatch" title="${h.name}"><input type="radio" name="hair" id="hair-${h.id}" value="${h.hex}" aria-label="${h.name}"><span style="background:${h.hex}"></span></label>`).join('');
+  $('lengthSegs').innerHTML = LENGTHS.map((l) => `<label class="seg"><input type="radio" name="length" id="len-${l.id}" value="${l.id}"><span>${l.name}</span></label>`).join('');
+  document.querySelector('.adjust').addEventListener('change', (e) => {
+    const key = e.target.name; if (!key) return;
+    state.pick = { ...state.pick, [key]: e.target.value };
+    state.edited = true; render();
+  });
+  $('reset').addEventListener('click', () => { state.pick = { ...state.match }; state.edited = false; render(); });
+}
+
+function setStatus(text, tone) { $('statusText').textContent = text; $('status').dataset.tone = tone; }
+
+// ---------- Models (hosted with the page; nothing is fetched from elsewhere) ----------
+const url = (p) => new URL(p, document.baseURI).href;
+const fileset = { wasmLoaderPath: url('vendor/wasm/vision_wasm_internal.js'), wasmBinaryPath: url('vendor/wasm/vision_wasm_internal.wasm') };
+// The artifact host only serves web file types, so the two model files ship as base64 text and are decoded here.
+async function modelBytes(name) {
+  const res = await fetch(url(`models/${name}.b64.txt`));
+  if (!res.ok) throw new Error(`model file missing (${res.status})`);
+  const bin = atob((await res.text()).trim());
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+let loadMs = 0;
+const models = (async () => {
+  const t = performance.now();
+  const face = await FaceLandmarker.createFromOptions(fileset, {
+    baseOptions: { modelAssetBuffer: await modelBytes('face_landmarker.task'), delegate: 'CPU' }, runningMode: 'IMAGE', numFaces: 3
+  });
+  const hair = await ImageSegmenter.createFromOptions(fileset, {
+    baseOptions: { modelAssetBuffer: await modelBytes('hair_segmenter.tflite'), delegate: 'CPU' }, runningMode: 'IMAGE', outputCategoryMask: false, outputConfidenceMasks: true
+  });
+  loadMs = performance.now() - t;
+  return { face, hair };
+})();
+models.then(() => setStatus(`Models ready in ${(loadMs / 1000).toFixed(1)} s. Take or choose a selfie.`, 'ok'))
+  .catch((err) => setStatus(`Couldn't load the face and hair models (${err.message || err}). The adjust controls still work.`, 'warn'));
+
+// ---------- Analysis ----------
+async function analyze(img) {
+  setStatus('Reading your selfie…', 'busy');
+  const { face, hair } = await models;
+  const scale = Math.min(1, 1024 / Math.max(img.naturalWidth, img.naturalHeight));
+  const w = Math.round(img.naturalWidth * scale), h = Math.round(img.naturalHeight * scale);
+  const work = document.createElement('canvas'); work.width = w; work.height = h;
+  const wctx = work.getContext('2d', { willReadFrequently: true });
+  wctx.drawImage(img, 0, 0, w, h);
+  const px = wctx.getImageData(0, 0, w, h).data;
+  const rgbAt = (x, y) => { const i = (y * w + x) * 4; return [px[i], px[i + 1], px[i + 2]]; };
+
+  const t0 = performance.now();
+  const faces = face.detect(work).faceLandmarks;
+  const t1 = performance.now();
+  const seg = hair.segment(work);
+  const masks = seg.confidenceMasks;
+  const m = masks[masks.length - 1];
+  const mw = m.width, mh = m.height, conf = Float32Array.from(m.getAsFloat32Array());
+  seg.close();
+  const t2 = performance.now();
+  const hairAt = (x, y) => conf[Math.min(mh - 1, Math.floor(y * mh / h)) * mw + Math.min(mw - 1, Math.floor(x * mw / w))];
+
+  drawPhoto(work, w, h, hairAt);
+  $('rTime').innerHTML = `<span class="mono">Face ${Math.round(t1 - t0)} ms · Hair ${Math.round(t2 - t1)} ms</span><span class="sub">Models loaded in ${(loadMs / 1000).toFixed(1)} s</span>`;
+
+  if (!faces.length) {
+    $('rFace').innerHTML = '<span>No face found.</span><span class="sub">Try a front-facing photo in even light, or set the avatar by hand.</span>';
+    ['rSkin', 'rHair', 'rLength'].forEach((k) => { $(k).innerHTML = '<span class="sub">—</span>'; });
+    setStatus('No face found. Set the avatar by hand below, or try another photo.', 'warn');
+    return;
+  }
+  // Use the largest face if there are several.
+  const box = (L) => { const xs = L.map((p) => p.x), ys = L.map((p) => p.y); return (Math.max(...xs) - Math.min(...xs)) * (Math.max(...ys) - Math.min(...ys)); };
+  const L = faces.reduce((a, b) => (box(b) > box(a) ? b : a));
+  const lm = (i) => ({ x: L[i].x * w, y: L[i].y * h });
+  const faceL = lm(234).x, faceR = lm(454).x, W = faceR - faceL;
+  const topY = lm(10).y, chinY = lm(152).y, H = chinY - topY;
+
+  // Skin: cheekbones and forehead, skipping any pixel the hair model claims (fringe).
+  const spots = [50, 280, 151, 108, 337].map(lm), r = Math.max(3, W * 0.05);
+  const skinPx = [];
+  spots.forEach((s) => {
+    for (let y = Math.round(s.y - r); y <= s.y + r; y++) for (let x = Math.round(s.x - r); x <= s.x + r; x++) {
+      if (x < 0 || y < 0 || x >= w || y >= h || (x - s.x) ** 2 + (y - s.y) ** 2 > r * r || hairAt(x, y) > 0.3) continue;
+      skinPx.push(rgbAt(x, y));
+    }
+  });
+  const skin = trimmedMean(skinPx, 0.2, 0.8) || DEFAULT.skin;
+
+  // Hair colour: confident hair pixels, ignoring highlights.
+  const hairPx = []; let hairCount = 0;
+  for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) {
+    const c = hairAt(x, y); if (c > 0.5) hairCount += 4; if (c > 0.8) hairPx.push(rgbAt(x, y));
+  }
+  const hairHex = trimmedMean(hairPx, 0.1, 0.75) || DEFAULT.hair;
+
+  // Hair length: lowest row of hair beside the face (outside the jaw, so a beard doesn't count),
+  // scanning down from the forehead and stopping at the first clear gap.
+  const bandIn = 0.03 * W, bandOut = 0.6 * W, minRun = Math.max(2, 0.03 * W), maxGap = 0.08 * H;
+  let hairEnd = topY, gap = 0;
+  for (let y = Math.max(0, Math.round(topY)); y < h; y++) {
+    let n = 0;
+    for (let x = Math.max(0, Math.round(faceL - bandOut)); x < faceL - bandIn; x++) if (hairAt(x, y) > 0.5) n++;
+    for (let x = Math.round(faceR + bandIn); x < Math.min(w, faceR + bandOut); x++) if (hairAt(x, y) > 0.5) n++;
+    if (n >= minRun) { hairEnd = y; gap = 0; } else if (++gap > maxGap) break;
+  }
+  let hairTop = topY;
+  for (let y = Math.round(topY); y >= 0; y--) {
+    let n = 0; for (let x = Math.round(lm(10).x - 0.15 * W); x < lm(10).x + 0.15 * W; x++) if (hairAt(x, y) > 0.5) n++;
+    if (n > 0.05 * W) hairTop = y;
+  }
+  const areaRatio = hairCount / (W * H), endRatio = (hairEnd - chinY) / H, topRatio = (topY - hairTop) / H;
+  const length = areaRatio < 0.05 ? 'bald' : topRatio < 0.1 && endRatio < -0.35 ? 'buzz' : endRatio < -0.2 ? 'short' : endRatio < 0.4 ? 'medium' : 'long';
+
+  // Overlays: sample spots, chin and hair-end lines.
+  const ctx = $('photo').getContext('2d');
+  ctx.lineWidth = Math.max(2, w / 300);
+  spots.forEach((s) => { ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, Math.PI * 2); ctx.strokeStyle = '#111'; ctx.lineWidth = Math.max(3, w / 200); ctx.stroke(); ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(2, w / 340); ctx.stroke(); });
+  const hline = (y, dash) => { ctx.save(); ctx.setLineDash(dash); ctx.strokeStyle = '#ffcc33'; ctx.lineWidth = Math.max(2, w / 260); ctx.beginPath(); ctx.moveTo(faceL - 0.6 * W, y); ctx.lineTo(faceR + 0.6 * W, y); ctx.stroke(); ctx.restore(); };
+  hline(hairEnd, []); hline(chinY, [w / 80, w / 120]);
+
+  const skinMatch = nearest(skin, SKIN_TONES), hairMatch = nearest(hairHex, HAIR_COLORS);
+  state.exact = { skin, hair: hairHex, length };
+  state.match = { skin: skinMatch.hex, hair: hairMatch.hex, length };
+  state.pick = { ...state.match }; state.hasPhoto = true; state.edited = false;
+
+  const lenName = LENGTHS.find((l) => l.id === length).name;
+  const where = endRatio < -0.2 ? `ends ${Math.abs(endRatio).toFixed(2)} face-heights above the chin` : `ends ${endRatio.toFixed(2)} face-heights below the chin`;
+  $('rFace').innerHTML = `<span>Found${faces.length > 1 ? ` ${faces.length}; used the largest` : ''}</span>`;
+  $('rSkin').innerHTML = `<span class="chip" style="background:${skin}"></span><span class="mono">${skin}</span><span class="sub">nearest</span><span class="chip" style="background:${skinMatch.hex}"></span><span>${skinMatch.name}</span>`;
+  $('rHair').innerHTML = `<span class="chip" style="background:${hairHex}"></span><span class="mono">${hairHex}</span><span class="sub">nearest</span><span class="chip" style="background:${hairMatch.hex}"></span><span>${hairMatch.name}</span>`;
+  $('rLength').innerHTML = `<span>${lenName}</span><span class="sub">Hair beside the face ${where}; ${(topRatio).toFixed(2)} face-heights of hair on top.</span>`;
+  setStatus(`Done in ${Math.round(t2 - t0)} ms. Compare the avatars, then adjust if needed.`, 'ok');
+  render();
+}
+
+function drawPhoto(work, w, h, hairAt) {
+  const c = $('photo'); c.width = w; c.height = h; c.hidden = false; $('photoEmpty').hidden = true;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(work, 0, 0);
+  // Tint detected hair so it's easy to judge the mask.
+  const tint = hexToRgb(getComputedStyle(document.documentElement).getPropertyValue('--hair-tint').trim() || '#14a3b8');
+  const img = ctx.getImageData(0, 0, w, h), d = img.data;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const a = hairAt(x, y); if (a < 0.5) continue;
+    const i = (y * w + x) * 4, k = 0.55 * a;
+    d[i] = d[i] * (1 - k) + tint[0] * k; d[i + 1] = d[i + 1] * (1 - k) + tint[1] * k; d[i + 2] = d[i + 2] * (1 - k) + tint[2] * k;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+// ---------- Input ----------
+function loadImage(src) {
+  return new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve(img); img.onerror = () => reject(new Error('unreadable')); img.src = src; });
+}
+async function handleFile(file) {
+  if (!file) return;
+  const src = URL.createObjectURL(file);
+  try { await analyze(await loadImage(src)); }
+  catch (err) { setStatus(err.message === 'unreadable' ? "This photo format can't be read here. Use a JPEG or PNG." : `Something went wrong reading the photo (${err.message || err}).`, 'warn'); }
+  finally { URL.revokeObjectURL(src); }
+}
+['takeInput', 'chooseInput'].forEach((id) => $(id).addEventListener('change', (e) => { handleFile(e.target.files[0]); e.target.value = ''; }));
+
+buildControls();
+render();
+
+// Local check only: ?img=<file> analyses a photo served next to the page.
+const devImg = new URLSearchParams(location.search).get('img');
+if (devImg) loadImage(devImg).then(analyze).catch((err) => setStatus(`Local test image failed (${err.message || err}).`, 'warn'));
+</script>
+
+</body></html>

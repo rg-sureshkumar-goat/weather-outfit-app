@@ -1,0 +1,631 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Garment Fit Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: fitting-room bench. 3D stage on the left, the three fitting steps on the right; stacks to one column on phones. */
+:root{
+  --bg:#f1f2ee; --surface:#ffffff; --ink:#1b2130; --muted:#5a6272; --line:#d8dbd3;
+  --chalk:#2c5a9a; --on-chalk:#ffffff; --tape:#d9a400; --stage:#e4e6e0;
+  --font-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#13161c; --surface:#1b1f27; --ink:#e7e9ee; --muted:#9ba3b2; --line:#2b313c;
+    --chalk:#86ade6; --on-chalk:#0f1420; --tape:#f0c232; --stage:#191d24; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#13161c; --surface:#1b1f27; --ink:#e7e9ee; --muted:#9ba3b2; --line:#2b313c;
+  --chalk:#86ade6; --on-chalk:#0f1420; --tape:#f0c232; --stage:#191d24; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--font-body);padding-inline:16px;padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:20px}
+.tag{font:500 12px var(--font-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.tag b{font-weight:600;color:var(--ink);background:var(--tape);color:#1b1600;padding:2px 8px;border-radius:4px}
+h1{font-family:var(--font-display);font-weight:700;font-size:clamp(28px,4.2vw,40px);line-height:1.08;margin:6px 0 0;text-wrap:balance;letter-spacing:-.01em}
+header p{max-width:65ch;color:var(--muted);margin:8px 0 0}
+.bench{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+.stage{position:relative;background:var(--stage);border-radius:14px;height:min(74vh,660px);min-height:400px;overflow:hidden}
+#viewport{position:absolute;inset:0;cursor:grab;outline:none}
+#viewport:active{cursor:grabbing}
+#viewport:focus-visible{box-shadow:inset 0 0 0 3px var(--chalk)}
+.hint{position:absolute;top:12px;left:14px;right:14px;font:400 12px var(--font-mono);color:var(--muted);pointer-events:none}
+.stage-bar{position:absolute;left:12px;right:12px;bottom:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{font:600 13px var(--font-body);border:0;background:transparent;color:var(--ink);padding:8px 14px;border-radius:999px;cursor:pointer;min-height:38px}
+.seg button[aria-pressed="true"]{background:var(--chalk);color:var(--on-chalk)}
+.arm{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 14px;min-height:44px}
+.arm label{font:600 13px var(--font-body);white-space:nowrap}
+.arm input{width:clamp(90px,22vw,170px)}
+output{font:400 13px var(--font-mono);font-variant-numeric:tabular-nums;color:var(--muted);min-width:3ch;text-align:right}
+.panel{display:grid;gap:14px;min-width:0}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:12px;min-width:0}
+.step h2{font:600 16px var(--font-body);margin:0;display:flex;gap:10px;align-items:baseline}
+.step h2 .n{font:600 12px var(--font-mono);color:var(--chalk);letter-spacing:.05em}
+.step p{margin:0;color:var(--muted);font-size:14px}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:600 14px var(--font-body);border-radius:10px;padding:10px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;min-height:44px}
+.btn.primary{background:var(--chalk);border-color:var(--chalk);color:var(--on-chalk)}
+.btn:focus-visible,.seg button:focus-visible,input[type=range]:focus-visible,input[type=checkbox]:focus-visible{outline:3px solid var(--chalk);outline-offset:2px}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.vh:focus-visible + label{outline:3px solid var(--chalk);outline-offset:2px}
+#status{font-size:13px;color:var(--ink);background:var(--bg);border-radius:8px;padding:8px 10px;margin:0}
+.range{display:grid;grid-template-columns:6.5rem minmax(0,1fr) 3.4rem;align-items:center;gap:10px;font-size:14px}
+input[type=range]{accent-color:var(--chalk);width:100%}
+.check{display:flex;gap:10px;align-items:center;font-size:14px}
+.check input{width:20px;height:20px;accent-color:var(--chalk)}
+#editor{width:100%;height:auto;border-radius:8px;touch-action:none;cursor:move;display:block;max-width:100%}
+.specs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.specs div{border-top:2px solid var(--tape);padding-top:6px}
+.specs dt{font:400 11px var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.specs dd{margin:0;font:600 18px var(--font-mono);font-variant-numeric:tabular-nums}
+.judge{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;border-top:1px solid var(--line);padding-top:18px}
+.judge h2{font:600 17px var(--font-display);margin:0 0 6px}
+.judge ul{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--ink);max-width:60ch}
+.judge li::marker{color:var(--chalk)}
+@media (max-width:860px){
+  .bench{grid-template-columns:1fr}
+  .stage{height:62vh;min-height:360px}
+  .judge{grid-template-columns:1fr}
+}
+@media (max-width:420px){ .specs{grid-template-columns:repeat(2,minmax(0,1fr))} .range{grid-template-columns:5.2rem minmax(0,1fr) 3rem} }
+@media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto} }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="tag"><b>Feasibility test</b><span>Weather outfit app · not the app itself</span></div>
+    <h1>Garment Fit Test</h1>
+    <p>Does a photo of a real shirt, projected onto a pre-rigged shirt template, keep its print and fit the avatar? Start with the sample shirt, then try a photo of your own laid flat.</p>
+  </header>
+
+  <main class="bench">
+    <section class="stage" aria-label="3D fitting view">
+      <div id="viewport" tabindex="0" role="img" aria-label="3D mannequin wearing the shirt. Drag to turn, pinch or scroll to zoom, or use the left and right arrow keys."></div>
+      <div class="hint">Drag to turn · pinch or scroll to zoom</div>
+      <div class="stage-bar">
+        <div class="seg" role="group" aria-label="Camera view">
+          <button type="button" data-yaw="0" aria-pressed="false">Front</button>
+          <button type="button" data-yaw="1.5708" aria-pressed="false">Side</button>
+          <button type="button" data-yaw="3.1416" aria-pressed="false">Back</button>
+        </div>
+        <div class="arm">
+          <label for="armRange">Raise arms</label>
+          <input id="armRange" type="range" min="0" max="80" value="0" step="1">
+          <output id="armOut" for="armRange">0°</output>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="step">
+        <h2><span class="n">STEP 1</span> Garment photo</h2>
+        <p>Lay the shirt flat on a plain surface and photograph it from straight above. On a phone, the picker offers your camera.</p>
+        <div class="row">
+          <input class="vh" id="frontInput" type="file" accept="image/*">
+          <label class="btn primary" for="frontInput">Upload front photo</label>
+          <input class="vh" id="backInput" type="file" accept="image/*">
+          <label class="btn" for="backInput">Upload back (optional)</label>
+          <button class="btn" id="sampleBtn" type="button">Use sample shirt</button>
+        </div>
+        <p id="status" role="status" aria-live="polite">Loading the sample shirt…</p>
+      </div>
+
+      <div class="step">
+        <h2><span class="n">STEP 2</span> Remove the background</h2>
+        <label class="check"><input id="bgToggle" type="checkbox" checked> Remove plain background around the shirt</label>
+        <div class="range">
+          <label for="tolRange">Tolerance</label>
+          <input id="tolRange" type="range" min="5" max="90" value="38">
+          <output id="tolOut" for="tolRange">38</output>
+        </div>
+        <p>Simple color matching from the photo's edges, good enough for this test. The app would use the BiRefNet model for this.</p>
+      </div>
+
+      <div class="step">
+        <h2><span class="n">STEP 3</span> Line up with the template</h2>
+        <p>Drag the photo so the shirt fills the dashed outline. The outline is the front of the 3D template.</p>
+        <canvas id="editor" aria-label="Alignment area. Drag to move the photo inside the dashed shirt outline."></canvas>
+        <div class="range">
+          <label for="sizeRange">Size</label>
+          <input id="sizeRange" type="range" min="40" max="220" value="100">
+          <output id="sizeOut" for="sizeRange">100%</output>
+        </div>
+        <div class="range">
+          <label for="rotRange">Rotate</label>
+          <input id="rotRange" type="range" min="-30" max="30" value="0">
+          <output id="rotOut" for="rotRange">0°</output>
+        </div>
+        <div class="row"><button class="btn" id="resetBtn" type="button">Reset alignment</button></div>
+        <dl class="specs" aria-label="Template measurements, laid flat">
+          <div><dt>Chest</dt><dd>41 cm</dd></div>
+          <div><dt>Hem</dt><dd>40 cm</dd></div>
+          <div><dt>Length</dt><dd>64 cm</dd></div>
+          <div><dt>Sleeve</dt><dd>16 cm</dd></div>
+        </dl>
+      </div>
+    </section>
+  </main>
+
+  <section class="judge">
+    <div>
+      <h2>What to judge</h2>
+      <ul>
+        <li>On the front, does the print look like the photo? Check that the ALOHA 26 label reads correctly and isn't mirrored.</li>
+        <li>Turn to Side. How much do the pattern and sleeves stretch where the photo wraps around?</li>
+        <li>Turn to Back. With the sample, FIT TEST 26 should read correctly from behind.</li>
+        <li>Raise the arms. Does the shirt stay on the body and move with it?</li>
+        <li>With your own photo, is lining it up quick enough to do for every garment you own?</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Not covered by this test</h2>
+      <ul>
+        <li>Final avatar art. The mannequin is a stand-in built from simple shapes.</li>
+        <li>Each garment's real cut. Every shirt uses one tee template, so an oversized hoodie and a slim tee would share a shape.</li>
+        <li>AI background removal, pants, dresses, jackets, and bending at the elbows.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = (s) => document.querySelector(s);
+  const statusEl = $('#status');
+  const setStatus = (t) => { statusEl.textContent = t; };
+
+  if (!window.THREE) { setStatus('The 3D library did not load. Check your connection and reload the page.'); return; }
+
+  // ---------- Template geometry (metres, bind pose; the mannequin faces +z) ----------
+  const DEG = Math.PI / 180;
+  const ARM = -50 * DEG;                 // arms angled 50° below horizontal (A-pose)
+  const SH = { x: 0.17, y: 1.40 };       // shoulder joint
+  const SLEEVE = { t0: -0.02, t1: 0.16, r0: 0.072, r1: 0.062 };
+  // Projection window shared by the 3D UVs and the 2D alignment canvas
+  const X0 = -0.44, X1 = 0.44, Y0 = 0.84, Y1 = 1.53;
+  const RW = 1024, RH = Math.round(RW * (Y1 - Y0) / (X1 - X0));
+
+  // [height, half-width, half-depth] cross-sections
+  const BODY = [[0.90,0.165,0.11],[1.05,0.14,0.10],[1.20,0.165,0.115],[1.32,0.18,0.12],[1.40,0.18,0.11],[1.45,0.15,0.09],[1.48,0.09,0.07],[1.50,0.06,0.055]];
+  const SHIRT = [[0.86,0.20,0.135],[0.95,0.195,0.132],[1.05,0.182,0.127],[1.20,0.197,0.137],[1.32,0.207,0.138],[1.40,0.203,0.124],[1.45,0.172,0.103],[1.48,0.112,0.082],[1.50,0.088,0.072]];
+
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+  function profileAt(p, y) {
+    if (y <= p[0][0]) return [p[0][1], p[0][2]];
+    for (let i = 0; i < p.length - 1; i++) {
+      const a = p[i], b = p[i + 1];
+      if (y <= b[0]) { const t = smooth(a[0], b[0], y); return [a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+    }
+    const l = p[p.length - 1]; return [l[1], l[2]];
+  }
+  const armDir = (side) => [side * Math.cos(ARM), Math.sin(ARM)];
+  const armPerp = (side) => { const d = armDir(side); return [-d[1], d[0]]; };
+  const toPx = (x, y) => [(x - X0) / (X1 - X0) * RW, (Y1 - y) / (Y1 - Y0) * RH];
+
+  // Planar projection: front vertices sample the left half of the atlas, back vertices the
+  // right half (mirrored so a back photo reads correctly when viewed from behind).
+  function uvFor(x, y, front) {
+    const u = (x - X0) / (X1 - X0), v = (y - Y0) / (Y1 - Y0);
+    return front ? [clamp(0.5 * u, 0.0005, 0.4995), v] : [clamp(0.5 + 0.5 * (1 - u), 0.5005, 0.9995), v];
+  }
+
+  // ---------- Outline of the template's front, in alignment-canvas pixels ----------
+  function torsoPoly() {
+    const pts = [], n = 40;
+    for (let i = 0; i <= n; i++) { const y = 0.86 + 0.64 * i / n; pts.push(toPx(profileAt(SHIRT, y)[0], y)); }
+    for (let i = n; i >= 0; i--) { const y = 0.86 + 0.64 * i / n; pts.push(toPx(-profileAt(SHIRT, y)[0], y)); }
+    return pts;
+  }
+  function sleevePoly(side) {
+    const d = armDir(side), p = armPerp(side);
+    const c = (t, r, s) => toPx(SH.x * side + d[0] * t + p[0] * r * s, SH.y + d[1] * t + p[1] * r * s);
+    return [c(SLEEVE.t0, SLEEVE.r0, 1), c(SLEEVE.t1, SLEEVE.r1, 1), c(SLEEVE.t1, SLEEVE.r1, -1), c(SLEEVE.t0, SLEEVE.r0, -1)];
+  }
+  function pathPoly(ctx, pts) { ctx.beginPath(); pts.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]))); ctx.closePath(); }
+  const makeCanvas = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+
+  // ---------- Sample garment (generated so it lines up with the template exactly) ----------
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function garmentMask() {
+    const m = makeCanvas(RW, RH), g = m.getContext('2d');
+    g.fillStyle = '#000';
+    [torsoPoly(), sleevePoly(1), sleevePoly(-1)].forEach((p) => { pathPoly(g, p); g.fill(); });
+    return m;
+  }
+  function hawaiianPattern(seed, flowers) {
+    const c = makeCanvas(RW, RH), g = c.getContext('2d'), rnd = mulberry32(seed);
+    g.fillStyle = '#1d2b4f'; g.fillRect(0, 0, RW, RH);
+    for (let k = 0; k < flowers * 1.6; k++) {
+      const x = rnd() * RW, y = rnd() * RH, a = rnd() * Math.PI * 2, L = 30 + rnd() * 40;
+      g.save(); g.translate(x, y); g.rotate(a);
+      g.fillStyle = rnd() < 0.5 ? '#2e8a5c' : '#4fae6e';
+      g.beginPath(); g.ellipse(0, 0, L, L * 0.32, 0, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = 'rgba(10,40,25,.5)'; g.lineWidth = 2; g.beginPath(); g.moveTo(-L, 0); g.lineTo(L, 0); g.stroke();
+      g.restore();
+    }
+    for (let k = 0; k < flowers; k++) {
+      const x = rnd() * RW, y = rnd() * RH, R = 18 + rnd() * 22, rot = rnd() * Math.PI;
+      const col = rnd() < 0.6 ? '#f2685a' : (rnd() < 0.5 ? '#f7d9a8' : '#f59ac0');
+      g.save(); g.translate(x, y); g.rotate(rot); g.fillStyle = col;
+      for (let p = 0; p < 5; p++) { g.rotate(Math.PI * 2 / 5); g.beginPath(); g.ellipse(R * 0.62, 0, R * 0.62, R * 0.42, 0, 0, Math.PI * 2); g.fill(); }
+      g.fillStyle = '#ffd34d'; g.beginPath(); g.arc(0, 0, R * 0.18, 0, Math.PI * 2); g.fill();
+      g.restore();
+    }
+    return c;
+  }
+  function makeSample(isBack) {
+    const out = makeCanvas(RW, RH), g = out.getContext('2d');
+    g.fillStyle = '#e6e4de'; g.fillRect(0, 0, RW, RH);
+    const img = g.getImageData(0, 0, RW, RH), d = img.data, rnd = mulberry32(7);
+    for (let i = 0; i < d.length; i += 4) { const n = (rnd() - 0.5) * 8; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+    g.putImageData(img, 0, 0);
+    const pat = hawaiianPattern(isBack ? 99 : 42, isBack ? 26 : 44), pg = pat.getContext('2d');
+    pg.textAlign = 'center'; pg.textBaseline = 'middle';
+    if (isBack) {
+      pg.fillStyle = '#fdf6e3';
+      pg.font = '600 64px "IBM Plex Mono", monospace'; let [cx, cy] = toPx(0, 1.25); pg.fillText('FIT TEST', cx, cy);
+      pg.font = '600 120px "IBM Plex Mono", monospace'; [cx, cy] = toPx(0, 1.08); pg.fillText('26', cx, cy);
+    } else {
+      // Button placket down the centre, and a chest label on the wearer's left (viewer's right)
+      const [px0, py0] = toPx(0, 1.47), [, py1] = toPx(0, 0.87);
+      pg.strokeStyle = 'rgba(0,0,0,.35)'; pg.lineWidth = 3; pg.beginPath(); pg.moveTo(px0, py0); pg.lineTo(px0, py1); pg.stroke();
+      pg.fillStyle = '#f3efe4';
+      for (let k = 0; k < 6; k++) { const yy = py0 + 30 + k * (py1 - py0 - 60) / 5; pg.beginPath(); pg.arc(px0 + 10, yy, 5, 0, Math.PI * 2); pg.fill(); }
+      const [lx, ly] = toPx(0.085, 1.32);
+      pg.fillStyle = '#fdf6e3'; pg.fillRect(lx - 62, ly - 20, 124, 40);
+      pg.fillStyle = '#1d2b4f'; pg.font = '600 22px "IBM Plex Mono", monospace'; pg.fillText('ALOHA 26', lx, ly);
+    }
+    pg.globalCompositeOperation = 'destination-in'; pg.drawImage(garmentMask(), 0, 0);
+    g.drawImage(pat, 0, 0);
+    return out;
+  }
+
+  // ---------- Photo processing ----------
+  // Flood-fills from the photo's border, clearing pixels close to the median border colour.
+  function removeBackground(src, tol) {
+    const w = src.width, h = src.height, c = makeCanvas(w, h), g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(src, 0, 0);
+    const img = g.getImageData(0, 0, w, h), d = img.data;
+    const rs = [], gs = [], bs = [];
+    const sample = (x, y) => { const i = (y * w + x) * 4; rs.push(d[i]); gs.push(d[i + 1]); bs.push(d[i + 2]); };
+    for (let x = 0; x < w; x += 2) { sample(x, 0); sample(x, h - 1); }
+    for (let y = 0; y < h; y += 2) { sample(0, y); sample(w - 1, y); }
+    const med = (a) => { a.sort((p, q) => p - q); return a[a.length >> 1]; };
+    const R = med(rs), G = med(gs), B = med(bs), lim = (tol * 2.2) ** 2;
+    const near = (i) => { const dr = d[i] - R, dg = d[i + 1] - G, db = d[i + 2] - B; return dr * dr + dg * dg + db * db <= lim; };
+    const seen = new Uint8Array(w * h), q = new Int32Array(w * h);
+    let head = 0, tail = 0;
+    const seed = (x, y) => { const k = y * w + x; if (!seen[k] && near(k * 4)) { seen[k] = 1; q[tail++] = k; } };
+    for (let x = 0; x < w; x++) { seed(x, 0); seed(x, h - 1); }
+    for (let y = 0; y < h; y++) { seed(0, y); seed(w - 1, y); }
+    while (head < tail) {
+      const k = q[head++]; d[k * 4 + 3] = 0;
+      const x = k % w, y = (k - x) / w;
+      if (x > 0) seed(x - 1, y); if (x < w - 1) seed(x + 1, y);
+      if (y > 0) seed(x, y - 1); if (y < h - 1) seed(x, y + 1);
+    }
+    g.putImageData(img, 0, 0);
+    return c;
+  }
+  // Most common colour of the kept pixels; fills template areas the photo doesn't cover.
+  function dominantColor(c) {
+    const { data } = c.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, c.width, c.height);
+    const counts = new Map();
+    for (let i = 0; i < data.length; i += 16) {
+      if (data[i + 3] < 128) continue;
+      const key = (data[i] >> 4) << 8 | (data[i + 1] >> 4) << 4 | (data[i + 2] >> 4);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    let best = 0, bk = 0x888;
+    counts.forEach((v, k) => { if (v > best) { best = v; bk = k; } });
+    return `rgb(${((bk >> 8) & 15) * 16 + 8},${((bk >> 4) & 15) * 16 + 8},${(bk & 15) * 16 + 8})`;
+  }
+  function loadFile(file) {
+    return new Promise((resolve, reject) => {
+      if (!file) return reject(new Error('No file was chosen.'));
+      if (file.type && !file.type.startsWith('image/')) return reject(new Error('That file is not an image. Choose a JPG or PNG photo.'));
+      const url = URL.createObjectURL(file), im = new Image();
+      im.onload = () => {
+        const s = Math.min(1, 1400 / Math.max(im.naturalWidth, im.naturalHeight));
+        const c = makeCanvas(Math.round(im.naturalWidth * s), Math.round(im.naturalHeight * s));
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url); resolve(c);
+      };
+      im.onerror = () => { URL.revokeObjectURL(url); reject(new Error('This browser could not read that photo. Try a JPG or PNG.')); };
+      im.src = url;
+    });
+  }
+
+  // ---------- State ----------
+  const state = { front: null, back: null, sample: true, removeBg: true, tol: 38, xf: { scale: 1, dx: 0, dy: 0, rot: 0 } };
+  function processPhoto(ph) { ph.cut = state.removeBg ? removeBackground(ph.raw, state.tol) : ph.raw; ph.color = dominantColor(ph.cut); }
+  function drawPhoto(ctx, src, ox) {
+    const base = Math.min(RW / src.width, RH / src.height), s = base * state.xf.scale;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(ox, 0, RW, RH); ctx.clip();
+    ctx.translate(ox + RW / 2 + state.xf.dx, RH / 2 + state.xf.dy);
+    ctx.rotate(state.xf.rot * DEG); ctx.scale(s, s);
+    ctx.drawImage(src, -src.width / 2, -src.height / 2);
+    ctx.restore();
+  }
+
+  // ---------- 3D scene ----------
+  const vp = $('#viewport');
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); }
+  catch (e) { setStatus('This browser could not start 3D graphics (WebGL). Try another browser or device.'); return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x000000, 0);
+  renderer.domElement.style.cssText = 'width:100%;height:100%;display:block;touch-action:none';
+  vp.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 20);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x7d828c, 1.6));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 2.2); keyLight.position.set(1.4, 2.6, 2.2); scene.add(keyLight);
+  const rimLight = new THREE.DirectionalLight(0xffffff, 0.9); rimLight.position.set(-1.6, 1.8, -2.2); scene.add(rimLight);
+
+  const atlas = makeCanvas(RW * 2, RH), actx = atlas.getContext('2d');
+  const texture = new THREE.CanvasTexture(atlas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+  // Collects grid patches into one BufferGeometry (optionally with skin attributes).
+  function Builder() { this.pos = []; this.uv = []; this.si = []; this.sw = []; this.idx = []; }
+  Builder.prototype.grid = function (rows, cols, fn) {
+    const base = this.pos.length / 3;
+    for (let i = 0; i <= rows; i++) for (let j = 0; j <= cols; j++) {
+      const v = fn(i, j);
+      this.pos.push(v.p[0], v.p[1], v.p[2]);
+      const uv = v.uv || [0, 0]; this.uv.push(uv[0], uv[1]);
+      const si = v.si || [0, 0, 0, 0], sw = v.sw || [1, 0, 0, 0];
+      this.si.push(si[0], si[1], si[2], si[3]); this.sw.push(sw[0], sw[1], sw[2], sw[3]);
+    }
+    for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) {
+      const a = base + i * (cols + 1) + j, b = a + 1, c = a + cols + 1, d = c + 1;
+      this.idx.push(a, c, b, b, c, d);
+    }
+  };
+  Builder.prototype.geometry = function (skin) {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(this.pos, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(this.uv, 2));
+    if (skin) {
+      g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(this.si, 4));
+      g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(this.sw, 4));
+    }
+    g.setIndex(this.idx); g.computeVertexNormals();
+    return g;
+  };
+
+  // Skeleton: indices used for skinning are hips 0, spine 1, chest 2, left upper arm 5, right upper arm 7
+  function bone(parent, x, y, z) { const b = new THREE.Bone(); b.position.set(x, y, z); if (parent) parent.add(b); return b; }
+  const hips = bone(null, 0, 0.95, 0), spine = bone(hips, 0, 0.15, 0), chest = bone(spine, 0, 0.18, 0);
+  const neck = bone(chest, 0, 0.20, 0), head = bone(neck, 0, 0.14, 0);
+  const dL = armDir(1), dR = armDir(-1);
+  const uaL = bone(chest, SH.x, SH.y - 1.28, 0), faL = bone(uaL, dL[0] * 0.28, dL[1] * 0.28, 0);
+  const uaR = bone(chest, -SH.x, SH.y - 1.28, 0), faR = bone(uaR, dR[0] * 0.28, dR[1] * 0.28, 0);
+  const thL = bone(hips, 0.09, -0.02, 0), shL = bone(thL, 0, -0.44, 0);
+  const thR = bone(hips, -0.09, -0.02, 0), shR = bone(thR, 0, -0.44, 0);
+  const bones = [hips, spine, chest, neck, head, uaL, faL, uaR, faR, thL, shL, thR, shR];
+
+  // Shirt template: torso and sleeves, each split into front and back halves so the UV
+  // projection doesn't smear across the side seams.
+  function torsoSkin(x, y) {
+    const wh = 1 - smooth(0.92, 1.10, y), wc = smooth(1.10, 1.30, y), ws = Math.max(0, 1 - wh - wc);
+    const wa = 0.6 * smooth(0.12, 0.19, Math.abs(x)) * smooth(1.28, 1.40, y), k = 1 - wa;
+    return { si: [0, 1, 2, x > 0 ? 5 : 7], sw: [wh * k, ws * k, wc * k, wa] };
+  }
+  function torsoHalf(b, front) {
+    const rows = 40, cols = 24;
+    b.grid(rows, cols, (i, j) => {
+      const y = 0.86 + 0.64 * i / rows, [rx, rz] = profileAt(SHIRT, y);
+      const phi = (front ? 0 : Math.PI) + Math.PI * j / cols;
+      const x = rx * Math.cos(phi), z = rz * Math.sin(phi);
+      return Object.assign({ p: [x, y, z], uv: uvFor(x, y, front) }, torsoSkin(x, y));
+    });
+  }
+  function sleeveHalf(b, side, front) {
+    const d = armDir(side), p = armPerp(side), rows = 12, cols = 16;
+    b.grid(rows, cols, (i, j) => {
+      const t = i / rows, ta = SLEEVE.t0 + (SLEEVE.t1 - SLEEVE.t0) * t, r = SLEEVE.r0 + (SLEEVE.r1 - SLEEVE.r0) * t;
+      const th = (front ? 0 : Math.PI) + Math.PI * j / cols;
+      const x = SH.x * side + d[0] * ta + p[0] * Math.cos(th) * r;
+      const y = SH.y + d[1] * ta + p[1] * Math.cos(th) * r;
+      const z = Math.sin(th) * r;
+      const wa = smooth(-0.03, 0.07, ta);
+      return { p: [x, y, z], uv: uvFor(x, y, front), si: [side > 0 ? 5 : 7, 2, 0, 0], sw: [wa, 1 - wa, 0, 0] };
+    });
+  }
+  const sb = new Builder();
+  torsoHalf(sb, true); torsoHalf(sb, false);
+  [1, -1].forEach((s) => { sleeveHalf(sb, s, true); sleeveHalf(sb, s, false); });
+  const shirt = new THREE.SkinnedMesh(sb.geometry(true), new THREE.MeshStandardMaterial({ map: texture, roughness: 0.88, metalness: 0, side: THREE.DoubleSide }));
+  shirt.frustumCulled = false;
+  shirt.add(hips);
+  shirt.updateMatrixWorld(true);
+  shirt.bind(new THREE.Skeleton(bones));
+  scene.add(shirt);
+
+  // Stand-in mannequin: rigid parts attached to the same bones as the shirt
+  const skinMat = new THREE.MeshStandardMaterial({ color: 0xc4c8cf, roughness: 0.6 });
+  const bodyB = new Builder();
+  bodyB.grid(40, 48, (i, j) => { const y = 0.90 + 0.60 * i / 40, [rx, rz] = profileAt(BODY, y), phi = Math.PI * 2 * j / 48; return { p: [rx * Math.cos(phi), y, rz * Math.sin(phi)] }; });
+  scene.add(new THREE.Mesh(bodyB.geometry(false), skinMat));
+  const pelvis = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), skinMat);
+  pelvis.scale.set(0.165, 0.1, 0.11); pelvis.position.set(0, -0.02, 0); hips.add(pelvis);
+  function limb(parent, dx, dy, len, r0, r1) {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, len, 20), skinMat);
+    const dir = new THREE.Vector3(dx, dy, 0).normalize();
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+    m.position.copy(dir).multiplyScalar(len / 2);
+    parent.add(m);
+    parent.add(new THREE.Mesh(new THREE.SphereGeometry(r0, 16, 12), skinMat));
+  }
+  function hand(parent, d) { const h = new THREE.Mesh(new THREE.SphereGeometry(0.045, 16, 12), skinMat); h.position.set(d[0] * 0.27, d[1] * 0.27, 0); parent.add(h); }
+  limb(uaL, dL[0], dL[1], 0.28, 0.048, 0.04); limb(faL, dL[0], dL[1], 0.25, 0.04, 0.032); hand(faL, dL);
+  limb(uaR, dR[0], dR[1], 0.28, 0.048, 0.04); limb(faR, dR[0], dR[1], 0.25, 0.04, 0.032); hand(faR, dR);
+  limb(thL, 0, -1, 0.44, 0.075, 0.055); limb(shL, 0, -1, 0.44, 0.052, 0.04);
+  limb(thR, 0, -1, 0.44, 0.075, 0.055); limb(shR, 0, -1, 0.44, 0.052, 0.04);
+  [shL, shR].forEach((s) => { const f = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.05, 0.2), skinMat); f.position.set(0, -0.46, 0.04); s.add(f); });
+  limb(neck, 0, 1, 0.12, 0.05, 0.046);
+  const skull = new THREE.Mesh(new THREE.SphereGeometry(0.095, 28, 20), skinMat);
+  skull.scale.set(0.92, 1.1, 0.98); skull.position.set(0, 0.05, 0); head.add(skull);
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(0.45, 48), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.07 }));
+  floor.rotation.x = -Math.PI / 2; floor.position.y = 0.001; scene.add(floor);
+
+  // ---------- Camera orbit (drag, pinch, wheel, arrow keys) ----------
+  const cam = { yaw: 0.35, pitch: 0.06, dist: 2.35, target: new THREE.Vector3(0, 1.12, 0), goal: null };
+  function placeCamera() {
+    const c = Math.cos(cam.pitch);
+    camera.position.set(cam.target.x + Math.sin(cam.yaw) * c * cam.dist, cam.target.y + Math.sin(cam.pitch) * cam.dist, cam.target.z + Math.cos(cam.yaw) * c * cam.dist);
+    camera.lookAt(cam.target);
+  }
+  const viewBtns = [...document.querySelectorAll('.seg button')];
+  const markView = (btn) => viewBtns.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+  const ptrs = new Map(); let pinch0 = 0;
+  const pdist = () => { const a = [...ptrs.values()]; return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1; };
+  const cv = renderer.domElement;
+  cv.addEventListener('pointerdown', (e) => { cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); cam.goal = null; markView(null); if (ptrs.size === 2) pinch0 = pdist(); });
+  cv.addEventListener('pointermove', (e) => {
+    const p = ptrs.get(e.pointerId); if (!p) return;
+    const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+    if (ptrs.size === 1) { cam.yaw -= dx * 0.009; cam.pitch = clamp(cam.pitch + dy * 0.005, -0.35, 0.7); }
+    else if (ptrs.size === 2) { const d = pdist(); if (pinch0) { cam.dist = clamp(cam.dist * pinch0 / d, 1.1, 4); cam.zoomed = true; } pinch0 = d; }
+  });
+  const release = (e) => { ptrs.delete(e.pointerId); pinch0 = ptrs.size === 2 ? pdist() : 0; };
+  cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release);
+  cv.addEventListener('wheel', (e) => { e.preventDefault(); cam.zoomed = true; cam.dist = clamp(cam.dist * (1 + e.deltaY * 0.0012), 1.1, 4); }, { passive: false });
+  vp.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') { cam.goal = null; cam.yaw += 0.2; markView(null); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { cam.goal = null; cam.yaw -= 0.2; markView(null); e.preventDefault(); }
+  });
+  viewBtns.forEach((btn) => btn.addEventListener('click', () => {
+    let g = parseFloat(btn.dataset.yaw);
+    while (g - cam.yaw > Math.PI) g -= Math.PI * 2;
+    while (g - cam.yaw < -Math.PI) g += Math.PI * 2;
+    cam.goal = g; markView(btn);
+  }));
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const armRange = $('#armRange'), armOut = $('#armOut');
+  armRange.addEventListener('input', () => { const a = +armRange.value * DEG; uaL.rotation.z = a; uaR.rotation.z = -a; armOut.textContent = armRange.value + '°'; });
+
+  function resize() {
+    const w = vp.clientWidth, h = vp.clientHeight; if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    // Until the viewer zooms, frame the whole shirt and arms: tall, narrow stages need more distance.
+    if (!cam.zoomed) cam.dist = w / h < 0.75 ? 3.1 : 2.35;
+  }
+  new ResizeObserver(resize).observe(vp); resize();
+
+  function frame() {
+    if (cam.goal !== null) {
+      cam.yaw += reduceMotion ? (cam.goal - cam.yaw) : (cam.goal - cam.yaw) * 0.14;
+      if (Math.abs(cam.goal - cam.yaw) < 0.002) { cam.yaw = cam.goal; cam.goal = null; }
+    }
+    placeCamera(); renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  // ---------- Alignment editor + texture atlas ----------
+  const ed = $('#editor'); ed.width = RW; ed.height = RH;
+  const ectx = ed.getContext('2d');
+  const checker = (() => { const c = makeCanvas(32, 32), g = c.getContext('2d'); g.fillStyle = '#d9dbd6'; g.fillRect(0, 0, 32, 32); g.fillStyle = '#c7cac3'; g.fillRect(0, 0, 16, 16); g.fillRect(16, 16, 16, 16); return ectx.createPattern(c, 'repeat'); })();
+  const chalk = () => getComputedStyle(document.documentElement).getPropertyValue('--chalk').trim() || '#2c5a9a';
+  function drawEditor() {
+    ectx.clearRect(0, 0, RW, RH); ectx.fillStyle = checker; ectx.fillRect(0, 0, RW, RH);
+    if (state.front) drawPhoto(ectx, state.front.cut, 0);
+    ectx.save(); ectx.setLineDash([14, 10]); ectx.lineWidth = 4; ectx.strokeStyle = chalk();
+    [torsoPoly(), sleevePoly(1), sleevePoly(-1)].forEach((p) => { pathPoly(ectx, p); ectx.stroke(); });
+    ectx.restore();
+  }
+  function composeAtlas() {
+    const f = state.front, b = state.back, fallback = '#8a8f99';
+    actx.clearRect(0, 0, RW * 2, RH);
+    actx.fillStyle = f ? f.color : fallback; actx.fillRect(0, 0, RW, RH);
+    if (f) drawPhoto(actx, f.cut, 0);
+    actx.fillStyle = b ? b.color : (f ? f.color : fallback); actx.fillRect(RW, 0, RW, RH);
+    if (b) drawPhoto(actx, b.cut, RW);
+    texture.needsUpdate = true;
+    drawEditor();
+  }
+  let pending = 0;
+  const schedule = (reprocess) => {
+    if (reprocess) pending |= 2; pending |= 1;
+    requestAnimationFrame(() => {
+      if (!pending) return;
+      if (pending & 2) [state.front, state.back].forEach((p) => p && processPhoto(p));
+      pending = 0; composeAtlas();
+    });
+  };
+  let drag = null;
+  ed.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY }; ed.setPointerCapture(e.pointerId); });
+  ed.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    const k = RW / ed.clientWidth;
+    state.xf.dx += (e.clientX - drag.x) * k; state.xf.dy += (e.clientY - drag.y) * k;
+    drag = { x: e.clientX, y: e.clientY }; schedule(false);
+  });
+  ['pointerup', 'pointercancel'].forEach((t) => ed.addEventListener(t, () => { drag = null; }));
+
+  const sizeRange = $('#sizeRange'), rotRange = $('#rotRange'), tolRange = $('#tolRange');
+  sizeRange.addEventListener('input', () => { state.xf.scale = sizeRange.value / 100; $('#sizeOut').textContent = sizeRange.value + '%'; schedule(false); });
+  rotRange.addEventListener('input', () => { state.xf.rot = +rotRange.value; $('#rotOut').textContent = rotRange.value + '°'; schedule(false); });
+  tolRange.addEventListener('input', () => { state.tol = +tolRange.value; $('#tolOut').textContent = tolRange.value; schedule(true); });
+  $('#bgToggle').addEventListener('change', (e) => { state.removeBg = e.target.checked; tolRange.disabled = !state.removeBg; schedule(true); });
+  function resetAlign() {
+    state.xf = { scale: 1, dx: 0, dy: 0, rot: 0 };
+    sizeRange.value = 100; rotRange.value = 0; $('#sizeOut').textContent = '100%'; $('#rotOut').textContent = '0°';
+  }
+  $('#resetBtn').addEventListener('click', () => { resetAlign(); schedule(false); });
+
+  function loadSample() {
+    state.front = { raw: makeSample(false) }; state.back = { raw: makeSample(true) }; state.sample = true;
+    resetAlign(); schedule(true);
+    setStatus('Showing the sample shirt, front and back. Upload a photo to try one of your own.');
+  }
+  $('#sampleBtn').addEventListener('click', loadSample);
+
+  $('#frontInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0]; e.target.value = ''; if (!file) return;
+    setStatus('Reading photo…');
+    try {
+      const raw = await loadFile(file);
+      state.front = { raw };
+      if (state.sample) { state.back = null; state.sample = false; }
+      resetAlign(); schedule(true);
+      setStatus(`Front photo loaded (${raw.width} × ${raw.height} px). In step 3, drag it so the shirt fills the dashed outline.`);
+    } catch (err) { setStatus(err.message); }
+  });
+  $('#backInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0]; e.target.value = ''; if (!file) return;
+    setStatus('Reading photo…');
+    try {
+      const raw = await loadFile(file);
+      state.back = { raw }; state.sample = false; schedule(true);
+      setStatus('Back photo loaded. It uses the same alignment as the front, so shoot both from the same height.');
+    } catch (err) { setStatus(err.message); }
+  });
+
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => drawEditor());
+
+  // Wait briefly for the label font so the sample's text renders in it, then start.
+  const fontWait = document.fonts && document.fonts.load
+    ? Promise.race([document.fonts.load('600 22px "IBM Plex Mono"'), new Promise((r) => setTimeout(r, 1500))])
+    : Promise.resolve();
+  fontWait.catch(() => {}).then(loadSample);
+})();
+</script>
+
+</body></html>
