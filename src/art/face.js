@@ -120,6 +120,25 @@ export const FACE_DEFAULTS = {
 
 export const faceOptions = (set, features = {}) => ({ ...FACE_DEFAULTS[set] ?? FACE_DEFAULTS.B, ...features });
 
+// Every face option's choices, in the order the review screen lists them (R43).
+export const FEATURE_CHOICES = {
+  shape: Object.keys(FACE_SHAPES),
+  eyeShape: Object.keys(EYE_SHAPES),
+  eyeColor: Object.keys(EYE_COLORS),
+  brows: Object.keys(BROWS),
+  nose: NOSES,
+  mouth: Object.keys(MOUTHS),
+  ears: Object.keys(EARS),
+  lashes: LASHES,
+  freckles: Object.keys(FRECKLES),
+  mark: Object.keys(BEAUTY_MARKS),
+  lines: FACE_LINES,
+  lips: Object.keys(LIP_COLORS),
+  eyeshadow: Object.keys(EYESHADOWS),
+  eyeliner: EYELINERS,
+  blush: Object.keys(BLUSHES),
+};
+
 // A seeded random source, so freckles never move between renders.
 function seeded(seed) {
   let a = seed;
@@ -203,13 +222,8 @@ export function headSkin(h, skin, set, features = {}) {
 export const BEARDS = ['none', 'lightStubble', 'heavyStubble', 'shortBoxed', 'full', 'long', 'garibaldi', 'ducktail', 'goatee', 'anchor', 'circle', 'chinStrap', 'muttonChops', 'soulPatch'];
 export const MOUSTACHES = ['none', 'classic', 'chevron', 'handlebar', 'pencil', 'horseshoe', 'walrus', 'fuManchu'];
 
-// Before C6d the saved values had one choice: none, stubble or beard.
-const ONE_CHOICE = {
-  none: { beard: 'none', moustache: 'none' },
-  stubble: { beard: 'lightStubble', moustache: 'none' },
-  beard: { beard: 'full', moustache: 'classic' },
-};
-export const facialHairChoice = (value) => (typeof value === 'string' ? ONE_CHOICE[value] : value) ?? ONE_CHOICE.none;
+// The look's { beard, moustache }; either may be missing.
+const facialHairChoice = (value) => ({ beard: value?.beard ?? 'none', moustache: value?.moustache ?? 'none' });
 
 // Left-side points, from the top down to the middle, made into the whole
 // outline by adding their mirror image.
@@ -640,7 +654,7 @@ export function face(h, { skin, hairColor, set, features = {} }) {
 // The beard under the mouth and the moustache over its top edge. renderAvatar
 // draws these after the clothes and scarf, so long beards hang over them.
 // { skin, hairColor, set: 'A'|'B', facialHair, features }
-export function faceFront(h, { skin, hairColor, set, facialHair = 'none', features = {} }) {
+export function faceFront(h, { skin, hairColor, set, facialHair, features = {} }) {
   const opts = faceOptions(set, features);
   const sc = h.rx / 53;
   const { beard: beardName, moustache: moustacheName } = facialHairChoice(facialHair);

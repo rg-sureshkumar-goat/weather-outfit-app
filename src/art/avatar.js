@@ -45,7 +45,7 @@ function drawItem(item, body, extras) {
 //         'average'), face: 'A'|'B', features (face.js options; any may
 //         be missing), skin, hair: { style, color },
 //         facialHair: { beard, moustache } (face.js BEARDS, MOUSTACHES;
-//         the older 'none'|'stubble'|'beard' still works), glasses }
+//         either may be missing), glasses }
 // outfit: { top, bottom, shoes, outer, rain, dress, neckwear, scarf, hat,
 //           eyewear } items (any may be missing)
 export function renderAvatar(look, outfit = {}, { title = '' } = {}) {

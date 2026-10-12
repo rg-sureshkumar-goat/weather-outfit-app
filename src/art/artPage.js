@@ -12,7 +12,7 @@ import { renderAvatar, AVATAR_VIEWBOX } from './avatar.js';
 import { HAIRSTYLES } from './hair.js';
 import { BODY_TYPES } from './bodies.js';
 import * as FACE from './face.js';
-import { HAIRSTYLE_NAMES } from '../content/avatarOptions.js';
+import { HAIRSTYLE_NAMES, BODY_TYPE_NAMES } from '../content/avatarOptions.js';
 import { MONK_TONES, HAIR_COLORS } from './palette.js';
 import { STARTER_SETS } from '../content/starters.js';
 
@@ -128,7 +128,7 @@ const FACE_SECTION = FACE_ROWS.map(faceRow).join('');
 // One row per face set, the 8 shapes in the same columns, so each style can be
 // compared shape by shape.
 const SHAPES = Object.keys(FACE.FACE_SHAPES);
-const fittedHead = (set, shape, style, i, r, facialHair = 'none') => {
+const fittedHead = (set, shape, style, i, r, facialHair) => {
   const look = { body: set, face: set, skin: MONK_TONES[(i * 3 + r + (set === 'B' ? 5 : 0)) % 10], hair: { style, color: HAIR_CYCLE[(i + r) % 8] }, features: { shape }, facialHair };
   return `<figure class="head">${renderAvatar(look, {}).replace(`viewBox="${AVATAR_VIEWBOX}"`, FACE_VIEW)}<figcaption>${set === 'A' ? 'F' : 'M'} · ${shape}</figcaption></figure>`;
 };
@@ -167,7 +167,6 @@ const FIT_OVER_CLOTHES = [['long', 'none'], ['garibaldi', 'classic'], ['ducktail
 
 // ---- C6a: body types (R43) ------------------------------------------------------
 
-const TYPE_NAMES = { slim: 'Slim', average: 'Average', athletic: 'Athletic', hourglass: 'Hourglass', pear: 'Pear', broad: 'Broad', stocky: 'Stocky', plusSize: 'Plus-size' };
 const BODY_OUTFITS = [
   ['Tee and shorts', { top: o('tee', '#b5b7b9'), bottom: o('shorts', '#26344f'), shoes: o('sneakers', '#f4f2ee') }],
   ['Crop top and pants', { top: o('cropTop', '#d98c9a'), bottom: o('pants', '#4f6f96'), shoes: o('sandals', '#7a5233') }],
@@ -179,7 +178,7 @@ const BODY_ROWS = ['A', 'B'].map((set) => BODY_OUTFITS.map(([label, outfit], r) 
   <h3>${set === 'A' ? 'Female' : 'Male'} · ${label}</h3>
   <section class="grid six">${BODY_TYPES[set].map((type, i) => {
     const look = { body: set, bodyType: type, face: set, skin: MONK_TONES[(i * 2 + r + (set === 'B' ? 1 : 0)) % 10], hair: { style: set === 'A' ? 'longStraight' : 'shortCrop', color: HAIR_CYCLE[(i + r) % 8] } };
-    return `<figure>${renderAvatar(look, outfit)}<figcaption><b>${TYPE_NAMES[type]}</b></figcaption></figure>`;
+    return `<figure>${renderAvatar(look, outfit)}<figcaption><b>${BODY_TYPE_NAMES[type]}</b></figcaption></figure>`;
   }).join('')}</section>`).join('')).join('');
 
 // ---- Art round 2 (C5): hairstyles, facial hair, glasses ----------------------
@@ -211,13 +210,17 @@ const STYLE_COLOR_ROWS = Object.keys(HAIRSTYLES).map((style, i) => `
     return `<figure class="head">${headOnly(lookFor(g, (k * 3 + i) % 10, style, color))}<figcaption>${name}</figcaption></figure>`;
   }).join('')}</section>`).join('');
 
-// Stubble and beard (Male only, R40) and glasses (both).
+// Facial hair (Male only, R40) and glasses (both), as approved in round 2:
+// stubble is now Light stubble, and the beard is Full with a Classic moustache.
+const NONE = { beard: 'none', moustache: 'none' };
+const STUBBLE = { beard: 'lightStubble', moustache: 'none' };
+const BEARD = { beard: 'full', moustache: 'classic' };
 const FACIAL = [
-  ['man', 1, 'shortCrop', 'black', 'none', false], ['man', 1, 'shortCrop', 'black', 'stubble', false], ['man', 1, 'shortCrop', 'black', 'beard', false],
-  ['man', 6, 'buzz', 'darkBrown', 'stubble', true], ['man', 8, 'afro', 'black', 'beard', false], ['man', 3, 'mediumStraight', 'auburn', 'beard', true],
-  ['man', 9, 'bald', 'grey', 'beard', true], ['man', 4, 'braids', 'brown', 'stubble', false],
-  ['woman', 2, 'longStraight', 'blonde', 'none', true], ['woman', 7, 'bun', 'black', 'none', true], ['woman', 5, 'shortCurls', 'darkBrown', 'none', true], ['woman', 0, 'mediumCurly', 'platinum', 'none', true],
-].map(([g, tone, style, color, facialHair, glasses]) => `<figure class="head">${headOnly(lookFor(g, tone, style, HAIR_COLORS[color], { facialHair, glasses }))}<figcaption>${g === 'woman' ? 'Female' : 'Male'} · ${facialHair}${glasses ? ' · glasses' : ''}</figcaption></figure>`).join('');
+  ['man', 1, 'shortCrop', 'black', NONE, false], ['man', 1, 'shortCrop', 'black', STUBBLE, false], ['man', 1, 'shortCrop', 'black', BEARD, false],
+  ['man', 6, 'buzz', 'darkBrown', STUBBLE, true], ['man', 8, 'afro', 'black', BEARD, false], ['man', 3, 'mediumStraight', 'auburn', BEARD, true],
+  ['man', 9, 'bald', 'grey', BEARD, true], ['man', 4, 'braids', 'brown', STUBBLE, false],
+  ['woman', 2, 'longStraight', 'blonde', NONE, true], ['woman', 7, 'bun', 'black', NONE, true], ['woman', 5, 'shortCurls', 'darkBrown', NONE, true], ['woman', 0, 'mediumCurly', 'platinum', NONE, true],
+].map(([g, tone, style, color, facialHair, glasses]) => `<figure class="head">${headOnly(lookFor(g, tone, style, HAIR_COLORS[color], { facialHair, glasses }))}<figcaption>${g === 'woman' ? 'Female' : 'Male'} · ${facialHair.beard} · ${facialHair.moustache}${glasses ? ' · glasses' : ''}</figcaption></figure>`).join('');
 
 document.querySelector('#art').innerHTML = `
   <header>

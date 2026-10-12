@@ -163,12 +163,12 @@ describe('hair and facial hair (R24, R40)', () => {
     }
   });
 
-  it('stubble and beard are drawn in the hair color; none adds nothing', () => {
+  it('stubble, beards and moustaches are drawn in the hair color; none adds nothing', () => {
     const color = '#61402b';
     for (const body of ['B']) {
-      const base = renderAvatar(look(body, { hair: { style: 'bald', color }, facialHair: 'none' }), {});
-      const stubble = renderAvatar(look(body, { hair: { style: 'bald', color }, facialHair: 'stubble' }), {});
-      const beard = renderAvatar(look(body, { hair: { style: 'bald', color }, facialHair: 'beard' }), {});
+      const base = renderAvatar(look(body, { hair: { style: 'bald', color }, facialHair: { beard: 'none', moustache: 'none' } }), {});
+      const stubble = renderAvatar(look(body, { hair: { style: 'bald', color }, facialHair: { beard: 'lightStubble', moustache: 'none' } }), {});
+      const beard = renderAvatar(look(body, { hair: { style: 'bald', color }, facialHair: { beard: 'full', moustache: 'classic' } }), {});
       expect(base).not.toContain(`fill="${color}"`);
       expect(stubble).toContain('qd-stubble');
       expect(stubble).toContain(`fill="${color}"`);
@@ -286,7 +286,7 @@ describe('face options (R43)', () => {
       for (const [feature, options] of Object.entries(choices)) {
         const seen = new Set();
         for (const option of options) {
-          const svg = renderAvatar(look(set, { features: { [feature]: option }, facialHair: set === 'B' ? 'beard' : 'none' }), {});
+          const svg = renderAvatar(look(set, { features: { [feature]: option }, facialHair: set === 'B' ? { beard: 'full', moustache: 'classic' } : undefined }), {});
           expect(svg, `${set} ${feature} ${option}`).not.toContain('NaN');
           const ids = [...svg.matchAll(/ id="([^"]+)"/g)].map((m) => m[1]);
           expect(new Set(ids).size).toBe(ids.length);
@@ -299,7 +299,7 @@ describe('face options (R43)', () => {
   });
 
   it("the beard follows the face shape's jaw", () => {
-    const beard = (shape) => renderAvatar(look('B', { features: { shape }, facialHair: 'beard' }), {}).match(/<g><defs><clipPath id="qd-beard-clip-\d+"><path d="([^"]+)"/)[1];
+    const beard = (shape) => renderAvatar(look('B', { features: { shape }, facialHair: { beard: 'full', moustache: 'classic' } }), {}).match(/<g><defs><clipPath id="qd-beard-clip-\d+"><path d="([^"]+)"/)[1];
     expect(beard('round')).not.toBe(beard('heart'));
   });
 });
@@ -328,9 +328,9 @@ describe('hair fitted to the face shape (R43)', () => {
     for (const set of ['A', 'B']) {
       for (const style of Object.keys(HAIRSTYLES)) {
         for (const shape of SHAPES) {
-          for (const facialHair of set === 'B' ? ['none', 'stubble', 'beard'] : ['none']) {
+          for (const facialHair of set === 'B' ? [undefined, { beard: 'lightStubble' }, { beard: 'full', moustache: 'classic' }] : [undefined]) {
             const svg = renderAvatar(look(set, { hair: { style, color: HAIR_COLORS.black }, features: { shape }, facialHair }), {});
-            expect(svg, `${set} ${style} ${shape} ${facialHair}`).not.toContain('NaN');
+            expect(svg, `${set} ${style} ${shape} ${facialHair?.beard}`).not.toContain('NaN');
             const ids = [...svg.matchAll(/ id="([^"]+)"/g)].map((m) => m[1]);
             expect(new Set(ids).size).toBe(ids.length);
           }
@@ -424,11 +424,8 @@ describe('beards and moustaches (R43)', () => {
     expect(beards[0]).not.toMatch(/qd-(beard|stubble|moustache)/);
   });
 
-  it('the one choice saved before C6d still draws: Stubble is Light stubble, Beard is Full with Classic', () => {
-    const same = (a, b) => expect(norm(renderAvatar(man(a), {}))).toBe(norm(renderAvatar(man(b), {})));
-    same('none', { beard: 'none', moustache: 'none' });
-    same('stubble', { beard: 'lightStubble', moustache: 'none' });
-    same('beard', { beard: 'full', moustache: 'classic' });
+  it('with no facial hair given, nothing is drawn', () => {
+    expect(norm(renderAvatar(man(undefined), {}))).toBe(norm(renderAvatar(man({ beard: 'none', moustache: 'none' }), {})));
   });
 
   it('moustaches follow the mouth: a wide mouth gets a wider moustache', () => {

@@ -390,6 +390,15 @@ After implementation or testing, record requirement changes and the evidence tha
   - **Agent defaults:** the Facial hair control is hidden for Female. Switching from Male to Female sets facial hair to None, and switching back starts from None.
   - **Unchanged:** hairstyles, glasses and closet item types stay open to both.
   - **Changed:** R24, R40 and R43. The P8 and L8 notes say Facial hair is Male only.
+- **2026-10-11 — The avatar review's 7 tabs (R24, R40, R43; C6d).**
+  - **The Developer chose:** the preview zooms to the head and shoulders on every tab but Body, over keeping one framing for every tab or showing the body and a face close-up side by side. The zoom eases over a quarter second and is instant with reduced motion.
+  - **After testing on the phone:** the Developer wanted the whole body while choosing a body type, so the Body tab shows the whole body at every width (it was head to waist on the phone). Offered a taller preview on the Body tab, the Developer kept the current size, so the body type chips stay visible above Back and Looks good.
+  - **Agent defaults, stated to the Developer:**
+    - Switching Female or Male keeps a body type both offer (Slim, Average, Athletic, Plus-size) and turns the others into Average.
+    - Face choices the User changed are kept; ones still on the old face's defaults move to the new face's. The beard and moustache start from None.
+    - The preview's screen-reader description adds the body type, the beard and moustache, and any face choices that differ from the defaults.
+  - **Saved values** now hold the body type, all 15 face choices, the beard and the moustache. Avatars saved earlier load as Average with the face's defaults, with Stubble as Light stubble and Beard as Full with Classic, and are saved in the new form the next time "Looks good" is pressed.
+  - **Changed:** no requirement text. The P8 and L8 notes describe the zoom, and P8's drawing shows the whole body on the Body tab.
 - **2026-10-11 — Hair on every face shape, and beards and moustaches (R24, R40, R43; C6c).**
   - **Hair:** each of the 11 hairstyles follows the face shape's width at every height. The crown stays put, the temples and cheekbones follow the face, and long hair falls straight below the cheekbones. Oval draws exactly as approved in C5.
   - **The Developer's direction:** more facial hair styles for men, including moustaches, goatees, long beards and mutton chops.
