@@ -2,6 +2,8 @@
 // final set in C10; each is decorative (aria-hidden) and always sits next
 // to a text label (R33).
 
+import { TYPE_ICON_PATHS } from '../art/typeIcons.js';
+
 const svg = (body, size = 22) =>
   `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${body}</svg>`;
 
@@ -50,3 +52,7 @@ export const ICONS = Object.fromEntries(Object.entries(PATHS).map(([k, body]) =>
 // weatherCodes.js; with no code for the day they show no icon at all.
 export const bigIcon = (name, size = 48) => svg(PATHS[name], size);
 export const smallIcon = (name, size = 18) => svg(PATHS[name], size);
+
+// Garment-type icons for the "What is it?" tiles (P4c, L4), drawn in
+// art/typeIcons.js.
+export const GARMENT_ICONS = Object.fromEntries(Object.entries(TYPE_ICON_PATHS).map(([k, body]) => [k, svg(body, 28)]));

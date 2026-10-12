@@ -56,21 +56,21 @@ const man = buildSet('man', {
   warm: [
     [['Navy tee', 'tee', 'navy'], ['Light jeans', 'pants', 'light denim'], ['White sneakers', 'sneakers', 'white']],
     [['Sage short-sleeve button-up', 'buttonUpShort', 'sage'], ['Khaki shorts', 'shorts', 'khaki'], ['White sneakers', 'sneakers', 'white']],
-    [['White long-sleeve shirt', 'longSleeve', 'white'], ['Dark jeans', 'pants', 'dark denim'], ['Grey sneakers', 'sneakers', 'grey']],
+    [['White long-sleeve shirt', 'longSleeveShirt', 'white'], ['Dark jeans', 'pants', 'dark denim'], ['Grey sneakers', 'sneakers', 'grey']],
   ],
   chilly: [
-    [['White long-sleeve shirt', 'longSleeve', 'white'], ['Dark jeans', 'pants', 'dark denim'], ['White sneakers', 'sneakers', 'white'], ['Denim jacket', 'lightJacket', 'denim']],
-    [['Grey hoodie', 'sweater', 'grey'], ['Khaki pants', 'pants', 'khaki'], ['Grey sneakers', 'sneakers', 'grey'], ['Navy light jacket', 'lightJacket', 'navy']],
+    [['White long-sleeve shirt', 'longSleeveShirt', 'white'], ['Dark jeans', 'pants', 'dark denim'], ['White sneakers', 'sneakers', 'white'], ['Denim jacket', 'lightJacket', 'denim']],
+    [['Grey hoodie', 'hoodie', 'grey'], ['Khaki pants', 'pants', 'khaki'], ['Grey sneakers', 'sneakers', 'grey'], ['Navy light jacket', 'lightJacket', 'navy']],
     [['Navy sweater', 'sweater', 'navy'], ['Light jeans', 'pants', 'light denim'], ['White sneakers', 'sneakers', 'white'], ['Tan light jacket', 'lightJacket', 'tan']],
   ],
   cold: [
     [['Grey sweater', 'sweater', 'grey'], ['Dark jeans', 'pants', 'dark denim'], ['Brown boots', 'boots', 'brown'], ['Navy coat', 'warmCoat', 'navy']],
-    [['White long-sleeve shirt', 'longSleeve', 'white'], ['Black pants', 'pants', 'black'], ['Grey sneakers', 'sneakers', 'grey'], ['Charcoal coat', 'warmCoat', 'charcoal']],
-    [['Maroon hoodie', 'sweater', 'maroon'], ['Dark jeans', 'pants', 'dark denim'], ['Brown boots', 'boots', 'brown'], ['Olive coat', 'warmCoat', 'olive']],
+    [['White long-sleeve shirt', 'longSleeveShirt', 'white'], ['Black pants', 'pants', 'black'], ['Grey sneakers', 'sneakers', 'grey'], ['Charcoal coat', 'warmCoat', 'charcoal']],
+    [['Maroon hoodie', 'hoodie', 'maroon'], ['Dark jeans', 'pants', 'dark denim'], ['Brown boots', 'boots', 'brown'], ['Olive coat', 'warmCoat', 'olive']],
   ],
   freezing: [
     [['Navy sweater', 'sweater', 'navy'], ['Dark jeans', 'pants', 'dark denim'], ['Brown boots', 'boots', 'brown'], ['Black coat', 'warmCoat', 'black']],
-    [['Grey hoodie', 'sweater', 'grey'], ['Black pants', 'pants', 'black'], ['Black boots', 'boots', 'black'], ['Red coat', 'warmCoat', 'red']],
+    [['Grey hoodie', 'hoodie', 'grey'], ['Black pants', 'pants', 'black'], ['Black boots', 'boots', 'black'], ['Red coat', 'warmCoat', 'red']],
     [['Cream sweater', 'sweater', 'cream'], ['Khaki pants', 'pants', 'khaki'], ['Brown boots', 'boots', 'brown'], ['Navy coat', 'warmCoat', 'navy']],
   ],
 });
@@ -84,21 +84,21 @@ const woman = buildSet('woman', {
   warm: [
     [['Sage tee', 'tee', 'sage'], ['Light jeans', 'pants', 'light denim'], ['White sneakers', 'sneakers', 'white']],
     [['White short-sleeve button-up', 'buttonUpShort', 'white'], ['Navy skirt', 'skirt', 'navy'], ['White sneakers', 'sneakers', 'white']],
-    [['Rose long-sleeve shirt', 'longSleeve', 'rose'], ['Light jeans', 'pants', 'light denim'], ['White sneakers', 'sneakers', 'white']],
+    [['Rose long-sleeve shirt', 'longSleeveShirt', 'rose'], ['Light jeans', 'pants', 'light denim'], ['White sneakers', 'sneakers', 'white']],
   ],
   chilly: [
     [['Cream sweater', 'sweater', 'cream'], ['Light jeans', 'pants', 'light denim'], ['White sneakers', 'sneakers', 'white'], ['Denim jacket', 'lightJacket', 'denim']],
-    [['White long-sleeve shirt', 'longSleeve', 'white'], ['Black pants', 'pants', 'black'], ['Grey sneakers', 'sneakers', 'grey'], ['Tan light jacket', 'lightJacket', 'tan']],
-    [['Lavender hoodie', 'sweater', 'lavender'], ['Dark jeans', 'pants', 'dark denim'], ['White sneakers', 'sneakers', 'white'], ['Olive light jacket', 'lightJacket', 'olive']],
+    [['White long-sleeve shirt', 'longSleeveShirt', 'white'], ['Black pants', 'pants', 'black'], ['Grey sneakers', 'sneakers', 'grey'], ['Tan light jacket', 'lightJacket', 'tan']],
+    [['Lavender hoodie', 'hoodie', 'lavender'], ['Dark jeans', 'pants', 'dark denim'], ['White sneakers', 'sneakers', 'white'], ['Olive light jacket', 'lightJacket', 'olive']],
   ],
   cold: [
     [['Cream sweater', 'sweater', 'cream'], ['Dark jeans', 'pants', 'dark denim'], ['Brown boots', 'boots', 'brown'], ['Camel coat', 'warmCoat', 'camel']],
-    [['Rose hoodie', 'sweater', 'rose'], ['Black pants', 'pants', 'black'], ['Black boots', 'boots', 'black'], ['Charcoal coat', 'warmCoat', 'charcoal']],
-    [['Navy long-sleeve shirt', 'longSleeve', 'navy'], ['Light jeans', 'pants', 'light denim'], ['Brown boots', 'boots', 'brown'], ['Burgundy coat', 'warmCoat', 'burgundy']],
+    [['Rose hoodie', 'hoodie', 'rose'], ['Black pants', 'pants', 'black'], ['Black boots', 'boots', 'black'], ['Charcoal coat', 'warmCoat', 'charcoal']],
+    [['Navy long-sleeve shirt', 'longSleeveShirt', 'navy'], ['Light jeans', 'pants', 'light denim'], ['Brown boots', 'boots', 'brown'], ['Burgundy coat', 'warmCoat', 'burgundy']],
   ],
   freezing: [
     [['Grey sweater', 'sweater', 'grey'], ['Black pants', 'pants', 'black'], ['Black boots', 'boots', 'black'], ['Camel coat', 'warmCoat', 'camel']],
-    [['Cream hoodie', 'sweater', 'cream'], ['Dark jeans', 'pants', 'dark denim'], ['Brown boots', 'boots', 'brown'], ['Burgundy coat', 'warmCoat', 'burgundy']],
+    [['Cream hoodie', 'hoodie', 'cream'], ['Dark jeans', 'pants', 'dark denim'], ['Brown boots', 'boots', 'brown'], ['Burgundy coat', 'warmCoat', 'burgundy']],
     [['Navy sweater', 'sweater', 'navy'], ['Khaki pants', 'pants', 'khaki'], ['Brown boots', 'boots', 'brown'], ['Forest-green coat', 'warmCoat', 'forest-green']],
   ],
 });

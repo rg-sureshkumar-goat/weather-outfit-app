@@ -1,15 +1,13 @@
 // Professional and formal wear (spec.md R41, drawn in C2 for the occasion
 // phases): dress shirt, tie and bow tie, blazer, tuxedo jacket, suit
-// trousers, and two dresses. Built on the shared fitting shapes, so each
-// fits both bodies.
+// trousers, and two dresses; art round 3 (C7) adds the suit vest and the
+// party dress. Built on the shared fitting shapes, so each fits every body.
 
 import { piece } from './draw.js';
 import { posed, torsoSide } from './bodies.js';
 import { legProfile, profileSlice } from './figure.js';
 import { limb, along, curveThrough, pt, lerp } from './shapes.js';
-import { P, curve, torsoPoints, torsoPath, shoulderFromNeck, setInSleeve, endBand, torsoShadow, bustLines, hipBlock, legStart } from './fit.js';
-
-const dot = (p, r = 2.6) => `M ${p.x - r} ${p.y} a ${r} ${r} 0 1 0 ${r * 2} 0 a ${r} ${r} 0 1 0 ${-r * 2} 0`;
+import { P, curve, dot, collarWing, torsoPoints, torsoPath, shoulderFromNeck, setInSleeve, endBand, torsoShadow, bustLines, hipBlock, legStart } from './fit.js';
 
 function longSleeves(body, base, print, name, { extra = 14, cuffButtons = 0 } = {}) {
   return ['left', 'right'].map((side) => {
@@ -39,13 +37,7 @@ function dressShirt(body, { base, print }) {
   const { cx } = torsoPoints(body, opts);
   const n = body.neck;
   // Point collar: two folded wings meeting under the chin.
-  const wing = (s) => {
-    const a = posed(body, s, cx + s * 2, n.bottom + 6);
-    const b = posed(body, s, cx + s * (n.half + 4), n.top + 30);
-    const c = posed(body, s, cx + s * (n.half + 16), n.bottom + 2);
-    const tip = posed(body, s, cx + s * 14, n.bottom + 26);
-    return `M ${pt(a)} L ${pt(b)} Q ${pt(lerp(b, c, 0.5))} ${pt(c)} L ${pt(tip)} Z`;
-  };
+  const wing = (s) => collarWing(body, s);
   const placketTop = posed(body, 0, cx, n.bottom + 8);
   const placketBottom = posed(body, 0, cx, hemY - 4);
   const buttons = [0, 1, 2, 3, 4].map((i) => dot(lerp(placketTop, placketBottom, 0.14 + i * 0.19), 2.2)).join(' ');
@@ -211,7 +203,7 @@ function trousers(body, { base, print }, { stripe = false } = {}) {
 
 // A fitted bodice from just above the bust to the waist with thin straps,
 // then a skirt from the waist to `hemY`, flaring by `flare` px.
-function dress(body, { base, print }, { name, hemY, flare, neck }) {
+function dress(body, { base, print }, { name, hemY, flare, neck, sparkle = false }) {
   const cx = body.head.cx;
   const ease = 4 * body.fit;
   const topY = body.chest.y - (neck === 'v' ? 20 : 30);
@@ -250,12 +242,71 @@ function dress(body, { base, print }, { name, hemY, flare, neck }) {
       { d: `M ${pt(waist[0])} Q ${pt(posed(body, 0, cx, body.waist.y + 4))} ${pt(waist[1])}`, tone: 'deep', width: 2 },
       ...folds,
       ...bustLines(body),
+      ...(sparkle ? sparkles(body, hemY) : []),
     ],
   }) + piece({ name: `${name}-strap`, parts: [strap(-1), strap(1)], base, outline: 1.6 });
   return { torso, sleeves: '', sleeveless: true, hemY, onePiece: true };
 }
 
+// Small four-point glints scattered over a party dress, catching the light.
+function sparkles(body, hemY) {
+  const cx = body.head.cx;
+  const spots = [[-30, 0.08], [22, 0.16], [-8, 0.3], [34, 0.42], [-38, 0.55], [10, 0.62], [-18, 0.78], [30, 0.86], [-2, 0.95]];
+  const top = body.chest.y;
+  return spots.map(([dx, t], i) => {
+    const y = top + (hemY - top - 10) * t;
+    const p = posed(body, 0, cx + dx * (0.7 + 0.6 * t), y);
+    const r = i % 2 ? 4 : 5.5;
+    return { d: `M ${p.x} ${p.y - r} L ${p.x + r * 0.3} ${p.y - r * 0.3} L ${p.x + r} ${p.y} L ${p.x + r * 0.3} ${p.y + r * 0.3} L ${p.x} ${p.y + r} L ${p.x - r * 0.3} ${p.y + r * 0.3} L ${p.x - r} ${p.y} L ${p.x - r * 0.3} ${p.y - r * 0.3} Z`, tone: 'light', width: 1.2, opacity: 0.9 };
+  });
+}
+
 const formalDress = (body, colors) => dress(body, colors, { name: 'formal-dress', hemY: body.legs.left[1].y - 12, flare: 22, neck: 'sweetheart' });
+// A short, flared party dress with a sweetheart neckline and glints.
+const partyDress = (body, colors) => dress(body, colors, { name: 'party-dress', hemY: body.legs.left[1].y - 62, flare: 36, neck: 'sweetheart', sparkle: true });
+
+// ---- Suit vest -----------------------------------------------------------------------------
+
+// A suit vest (waistcoat): fitted and buttoned, with a deep V that shows the
+// shirt and tie, narrow shoulders and armholes so the shirt's sleeves show,
+// a pointed front hem and welt pockets. Worn over the shirt and tie, under
+// a blazer (its own layer in avatar.js). Long enough to cover the dress
+// shirt's hem, so no shirt shows between the vest and the suit pants.
+function suitVest(body, { base, print }) {
+  const hemY = body.hip.y + 18;
+  const opts = { hemY, ease: 9 * body.fit, neckWidth: 4 };
+  const { cx, l, r } = torsoPoints(body, opts);
+  const n = body.neck;
+  const vBottom = posed(body, 0, cx, body.chest.y + 34);
+  const front = (s, t) => {
+    const neck = posed(body, s, cx + s * (n.half + 4), n.bottom - 2);
+    const shoulder = posed(body, s, cx + s * body.shoulder.half * 0.6, body.shoulder.y + 6);
+    const armhole = posed(body, s, t.armpit.x - s * 16, t.armpit.y - 30);
+    const point = posed(body, s, cx + s * 6, hemY + 18);
+    return `M ${pt(neck)} L ${pt(shoulder)} Q ${pt(armhole)} ${pt(P(t.armpit.x - s * 2, t.armpit.y + 6))}`
+      + curveThrough([P(t.armpit.x - s * 2, t.armpit.y + 6), t.ribs, t.waist, t.hem])
+      + ` L ${pt(point)} L ${pt(P(vBottom.x + s * 2, vBottom.y))} Z`;
+  };
+  const buttons = [0, 1, 2, 3].map((i) => dot(lerp(P(vBottom.x, vBottom.y + 10), posed(body, 0, cx, hemY + 2), i / 3), 2.6)).join(' ');
+  const welt = (s) => `M ${pt(posed(body, s, cx + s * 22, body.waist.y + 12))} L ${pt(posed(body, s, cx + s * 52, body.waist.y + 8))}`;
+  return {
+    svg: piece({
+      name: 'vest',
+      parts: [front(-1, l), front(1, r)],
+      base,
+      print,
+      shade: [{ d: torsoShadow(body, opts), tone: 'shadow', opacity: 0.8 }],
+      lines: [
+        { d: `M ${vBottom.x} ${vBottom.y} L ${pt(posed(body, 0, cx, hemY + 12))}`, tone: 'deep', width: 1.8 },
+        { d: buttons, tone: 'deep', width: 1.6 },
+        { d: welt(-1), tone: 'deep', width: 2.2 },
+        { d: welt(1), tone: 'deep', width: 2.2 },
+        ...bustLines(body),
+      ],
+    }),
+    hemY,
+  };
+}
 const banquetDress = (body, colors) => dress(body, colors, { name: 'gown', hemY: body.legs.right[2].y + 46, flare: 60, neck: 'v' });
 
 export const FORMAL = {
@@ -265,6 +316,8 @@ export const FORMAL = {
   trousers: { slot: 'bottom', draw: (b, c) => trousers(b, c) },
   tuxedoTrousers: { slot: 'bottom', draw: (b, c) => trousers(b, c, { stripe: true }) },
   formalDress: { slot: 'dress', draw: formalDress },
+  partyDress: { slot: 'dress', draw: partyDress },
+  suitVest: { slot: 'vest', draw: suitVest },
   banquetDress: { slot: 'dress', draw: banquetDress },
   tie: { slot: 'neckwear', draw: (b, c) => ({ svg: tie(b, c) }) },
   bowTie: { slot: 'neckwear', draw: (b, c) => ({ svg: bowTie(b, c) }) },

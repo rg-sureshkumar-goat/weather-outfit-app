@@ -91,6 +91,21 @@ export function setInSleeve(body, side, to, { extra }) {
   return { d, pts, widths };
 }
 
+// A small filled circle, for buttons.
+export const dot = (p, r = 2.6) => `M ${p.x - r} ${p.y} a ${r} ${r} 0 1 0 ${r * 2} 0 a ${r} ${r} 0 1 0 ${-r * 2} 0`;
+
+// One wing (`s` -1 left, 1 right) of a point collar, folded down from the
+// neck to a tip under the chin.
+export function collarWing(body, s) {
+  const cx = body.head.cx;
+  const n = body.neck;
+  const a = posed(body, s, cx + s * 2, n.bottom + 6);
+  const b = posed(body, s, cx + s * (n.half + 4), n.top + 30);
+  const c = posed(body, s, cx + s * (n.half + 16), n.bottom + 2);
+  const tip = posed(body, s, cx + s * 14, n.bottom + 26);
+  return `M ${pt(a)} L ${pt(b)} Q ${pt(lerp(b, c, 0.5))} ${pt(c)} L ${pt(tip)} Z`;
+}
+
 // A short band across a tube at its end, for hems and cuffs.
 export function endBand(points, widths, inset) {
   const { left, right } = edges(points, widths);

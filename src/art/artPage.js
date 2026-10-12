@@ -15,6 +15,9 @@ import * as FACE from './face.js';
 import { HAIRSTYLE_NAMES, BODY_TYPE_NAMES } from '../content/avatarOptions.js';
 import { MONK_TONES, HAIR_COLORS } from './palette.js';
 import { STARTER_SETS } from '../content/starters.js';
+import { GARMENT_TYPES, TYPE_GROUPS } from '../content/garments.js';
+import { TYPE_ICON_PATHS } from './typeIcons.js';
+import { rackHeader } from './rack.js';
 
 const LOOKS = {
   man: { body: 'B', face: 'B', hair: 'shortCrop' },
@@ -222,11 +225,90 @@ const FACIAL = [
   ['woman', 2, 'longStraight', 'blonde', NONE, true], ['woman', 7, 'bun', 'black', NONE, true], ['woman', 5, 'shortCurls', 'darkBrown', NONE, true], ['woman', 0, 'mediumCurly', 'platinum', NONE, true],
 ].map(([g, tone, style, color, facialHair, glasses]) => `<figure class="head">${headOnly(lookFor(g, tone, style, HAIR_COLORS[color], { facialHair, glasses }))}<figcaption>${g === 'woman' ? 'Female' : 'Male'} · ${facialHair.beard} · ${facialHair.moustache}${glasses ? ' · glasses' : ''}</figcaption></figure>`).join('');
 
+// ---- C7 art: art round 3 (R17, R19) --------------------------------------------
+
+// The new garments on all 12 bodies, each worn with suitable clothes.
+const closetItem = (type, base, print = null) => ({ type, colors: { base, print }, source: 'closet' });
+const NEW_GARMENTS = [
+  ['Long-sleeve tee', { top: closetItem('longSleeve', '#d98c9a'), bottom: closetItem('pants', '#3b4a63'), shoes: closetItem('sneakers', '#f4f2ee') }],
+  ['Long-sleeve button shirt, with a print color', { top: closetItem('longSleeveShirt', '#f4f2ee', '#b8392f'), bottom: closetItem('pants', '#3b4a63'), shoes: closetItem('sneakers', '#f4f2ee') }],
+  ['Long-sleeve polo', { top: closetItem('longSleevePolo', '#2f3b52'), bottom: closetItem('pants', '#c8b48a'), shoes: closetItem('sneakers', '#f4f2ee') }],
+  ['Blouse', { top: closetItem('blouse', '#e8a0a8'), bottom: closetItem('pants', '#2b2d31'), shoes: closetItem('heels', '#2b2d31') }],
+  ['Turtleneck', { top: closetItem('turtleneck', '#2f5a3f'), bottom: closetItem('pants', '#5d7a99'), shoes: closetItem('boots', '#5a3e2b') }],
+  ['Short-sleeve button-up', { top: closetItem('buttonUpShort', '#a9c6e3'), bottom: closetItem('shorts', '#c8b48a'), shoes: closetItem('sneakers', '#f4f2ee') }],
+  ['Skirt', { top: closetItem('tee', '#f4f2ee'), bottom: closetItem('skirt', '#5d7a99'), shoes: closetItem('sneakers', '#f4f2ee') }],
+  ['Warm coat', { top: closetItem('sweater', '#9aa0a6'), outer: closetItem('warmCoat', '#c19a6b'), bottom: closetItem('pants', '#2b2d31'), shoes: closetItem('boots', '#5a3e2b') }],
+  ['Hooded rain jacket, over the warm coat', { top: closetItem('sweater', '#9aa0a6'), outer: closetItem('warmCoat', '#2f3b52'), rain: closetItem('rainJacket', '#f2c230'), bottom: closetItem('pants', '#2b2d31'), shoes: closetItem('boots', '#2b2d31') }],
+  ['Party dress (occasions)', { dress: closetItem('partyDress', '#7d3c6e'), shoes: closetItem('heels', '#2b2d31') }],
+  ['Suit vest over a dress shirt and tie, with suit pants (occasions)', { top: closetItem('dressShirt', '#f4f2ee'), neckwear: closetItem('tie', '#3a4f7a'), vest: closetItem('suitVest', '#4a4d52'), bottom: closetItem('trousers', '#4a4d52'), shoes: closetItem('dressShoes', '#2b2d31') }],
+  ['Suit vest under a blazer (occasions)', { top: closetItem('dressShirt', '#f4f2ee'), neckwear: closetItem('tie', '#7a2e3a'), vest: closetItem('suitVest', '#2f3b52'), outer: closetItem('blazer', '#2f3b52'), bottom: closetItem('trousers', '#2f3b52'), shoes: closetItem('dressShoes', '#2b2d31') }],
+];
+const NEW_GARMENT_ROWS = NEW_GARMENTS.map(([title, outfit], r) => `
+  <h3>${title}</h3>
+  <section class="grid twelve">${['A', 'B'].flatMap((set) => BODY_TYPES[set].map((type, i) => {
+    const look = { body: set, face: set, bodyType: type, skin: MONK_TONES[(i * 3 + r + (set === 'B' ? 5 : 0)) % 10], hair: { style: set === 'A' ? 'longStraight' : 'shortCrop', color: HAIR_CYCLE[(i + r) % 8] } };
+    return `<figure>${renderAvatar(look, outfit)}<figcaption>${set === 'A' ? 'F' : 'M'} · ${BODY_TYPE_NAMES[type]}</figcaption></figure>`;
+  })).join('')}</section>`).join('');
+
+// All 30 starter outfits, 15 per gender, labelled by band.
+const STARTER_ROWS = ['woman', 'man'].map((gender) => {
+  const set = STARTER_SETS[gender];
+  const l = LOOKS[gender];
+  return `
+  <h3>${gender === 'woman' ? 'Female' : 'Male'} set</h3>
+  <section class="grid">${set.outfits.map((o, i) => {
+    const look = { body: l.body, face: l.face, skin: MONK_TONES[(i * 2 + (gender === 'man' ? 1 : 0)) % 10], hair: { style: l.hair, color: HAIR_CYCLE[i % 8] } };
+    const outfit = { top: o.top, bottom: o.bottom, shoes: o.shoes, outer: o.outer };
+    return `<figure>${renderAvatar(look, outfit)}<figcaption><b>${o.band} ${o.id.split('-').pop()}</b>${label(outfit)}</figcaption></figure>`;
+  }).join('')}<figure>${renderAvatar({ body: l.body, face: l.face, skin: MONK_TONES[4], hair: { style: l.hair, color: HAIR_COLORS.black } }, { top: set.outfits[0].top, bottom: set.outfits[0].bottom, shoes: set.outfits[0].shoes, rain: set.rainJacket })}<figcaption><b>Rain jacket</b>${set.rainJacket.name}</figcaption></figure></section>`;
+}).join('');
+
+// The 34 garment-type icons in the type picker's six groups, and the
+// Closet's rack header.
+const TYPE_ICONS = TYPE_GROUPS.map(([group, title]) => `
+  <h3>${title}</h3>
+  <section class="icons">${Object.entries(GARMENT_TYPES).filter(([, t]) => t.group === group).map(([type, t]) =>
+    `<figure class="type-icon"><svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="#1f2a37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${TYPE_ICON_PATHS[type]}</svg><figcaption>${t.label}</figcaption></figure>`).join('')}</section>`).join('');
+
+// The six accessory types on the avatar; a closet pair of glasses colors
+// the frames when the Glasses setting is on.
+const ACCESSORY_LOOKS = [
+  ['Glasses (red frames), setting on', { glasses: true }, { glasses: closetItem('glasses', '#b8392f') }],
+  ['Sunglasses', {}, { eyewear: closetItem('sunglasses', '#2b2d31') }],
+  ['Cap', {}, { hat: closetItem('cap', '#26344f') }],
+  ['Sun hat', {}, { hat: closetItem('sunHat', '#e8d9b5') }],
+  ['Beanie', {}, { hat: closetItem('beanie', '#b8392f') }],
+  ['Scarf, over a coat', {}, { outer: closetItem('warmCoat', '#2f3b52'), scarf: closetItem('scarf', '#b8392f', '#f4f2ee') }],
+].map(([title, extra, items], i) => {
+  const set = i % 2 ? 'B' : 'A';
+  const look = { body: set, face: set, skin: MONK_TONES[(i * 3 + 2) % 10], hair: { style: set === 'A' ? 'longStraight' : 'shortCrop', color: HAIR_CYCLE[i % 8] }, ...extra };
+  return `<figure class="head">${renderAvatar(look, { top: closetItem('tee', '#f4f2ee'), ...items }).replace(`viewBox="${AVATAR_VIEWBOX}"`, 'viewBox="80 0 240 330"')}<figcaption>${title}</figcaption></figure>`;
+}).join('');
+const rackItem = (type, base) => ({ type, colors: { base } });
+const RACKS = [
+  ['Newest three: tee, skirt, warm coat', [rackItem('tee', '#2f3b52'), rackItem('skirt', '#c8b48a'), rackItem('warmCoat', '#c19a6b')]],
+  ['Shoes stand on the floor', [rackItem('sneakers', '#f4f2ee'), rackItem('hoodie', '#7a2e3a'), rackItem('pants', '#5d7a99')]],
+  ['Spaghetti-strap top, rain jacket, boots', [rackItem('spaghettiTop', '#d98c9a'), rackItem('rainJacket', '#f2c230'), rackItem('boots', '#5a3e2b')]],
+  ['One item', [rackItem('longSleeve', '#3d6b3e')]],
+  ['Empty closet', []],
+].map(([title, items]) => `<figure class="rack">${rackHeader(items)}<figcaption>${title}</figcaption></figure>`).join('');
+
 document.querySelector('#art').innerHTML = `
   <header>
     <h1>Quick Dresser · art review</h1>
     <p>Original artwork created for this project. Monk Skin Tone Scale by Ellis Monk (CC BY 4.0). Local review page only.</p>
   </header>
+  <h2>C7 art · The new garments on all 12 bodies (R17, R43)</h2>
+  ${NEW_GARMENT_ROWS}
+  <h2>C7 art · All 30 starter outfits, plus each set's rain jacket</h2>
+  ${STARTER_ROWS}
+  <h2>C7 art · The six accessory types</h2>
+  <section class="heads">${ACCESSORY_LOOKS}</section>
+  <h2>C7 art · The 34 garment-type icons, in the type picker's six groups (P4c, L4)</h2>
+  ${TYPE_ICONS}
+  <h2>C7 art · The Closet's rack header (P3, L3)</h2>
+  <section class="racks">${RACKS}</section>
+  <h2 class="round">C6c (approved)</h2>
   <h2>C6c · All 11 hairstyles on all 8 face shapes (R43)</h2>
   ${FIT_ROWS}
   <h2>C6c · The 14 beards on all 8 face shapes (Male only)</h2>
@@ -279,5 +361,12 @@ style.textContent = `
   .heads { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
   .head figcaption { text-align: center; }
   .heads.eight { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+  .grid.twelve { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+  .type-icon { display: grid; justify-items: center; gap: 6px; padding: 16px 6px 10px; background: #fff; }
+  .type-icon svg { width: 56px; height: 56px; }
+  .type-icon figcaption { text-align: center; font-weight: 700; }
+  .racks { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+  .rack { padding: 8px; background: #fffdf9; }
 `;
 document.head.append(style);

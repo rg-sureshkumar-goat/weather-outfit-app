@@ -1,0 +1,41 @@
+// One line drawing per garment type (R17), on a 24-unit grid: the "What is
+// it?" tiles (P4c, L4) draw them as icons, and the Closet's rack fills them
+// with an item's colors. The first twelve follow the wireframes' icons; keys
+// match content/garments.js GARMENT_TYPES.
+
+export const TYPE_ICON_PATHS = {
+  tee: '<path d="M8 4L3 7l2 4 3-1.5V20h8V9.5l3 1.5 2-4-5-3c-.6 1.5-2 2.4-4 2.4S8.6 5.5 8 4z"/>',
+  buttonUpShort: '<path d="M8 4L3 7l2 4 3-1.5V20h8V9.5l3 1.5 2-4-5-3-4 4z"/><path d="M12 8v12M10.5 11h0M10.5 14h0M10.5 17h0"/>',
+  longSleeve: '<path d="M8 4L4 6.5 2.5 19H6l2-8.5V20h8v-9.5l2 8.5h3.5L20 6.5 16 4c-.6 1.5-2 2.4-4 2.4S8.6 5.5 8 4z"/>',
+  longSleeveShirt: '<path d="M8 4L4 6.5 2.5 19H6l2-8.5V20h8v-9.5l2 8.5h3.5L20 6.5 16 4l-4 4z"/><path d="M12 8v12M10.5 11h0M10.5 14h0M10.5 17h0"/>',
+  longSleevePolo: '<path d="M8 4L4 6.5 2.5 19H6l2-8.5V20h8v-9.5l2 8.5h3.5L20 6.5 16 4c-.6 1.5-2 2.4-4 2.4S8.6 5.5 8 4z"/><path d="M8 4l2 4 2-1.6 2 1.6 2-4M12 6.4V11M12 9.2h0"/>',
+  blouse: '<path d="M7.5 4L4 6.5 2.5 19H6l2-8.5V20h8v-9.5l2 8.5h3.5L20 6.5 16.5 4c-.8 2-2.4 3-4.5 3S8.3 6 7.5 4z"/><path d="M12 8.5l-2.2-1.4v2.8zM12 8.5l2.2-1.4v2.8zM12 8.5l-1 3M12 8.5l1 3"/>',
+  turtleneck: '<path d="M9 2h6v3.5H9z"/><path d="M9 5.5L4 7 2.5 19H6l2-8.5V20h8v-9.5l2 8.5h3.5L20 7l-5-1.5"/><path d="M8 17.5h8"/>',
+  dressShirt: '<path d="M8 4L4 6.5 2.5 19H6l2-8.5V20h8v-9.5l2 8.5h3.5L20 6.5 16 4l-4 4z"/><path d="M12 8l-1.2 1.6 1.2 7 1.2-7z"/>',
+  blazer: '<path d="M9 3h6l5 3.5V20h-4v-9M9 3L4 6.5V20h4v-9M8 11v9h8v-9"/><path d="M9 3l3 9 3-9M9 3l-1.5 4 2 1.5M15 3l1.5 4-2 1.5M12 15h0"/>',
+  suitVest: '<path d="M8 3L5 7v11l7 3 7-3V7l-3-4-4 9z"/><path d="M12 12v9M10.8 14.5h0M10.8 17.5h0"/>',
+  trousers: '<path d="M6 3h12l1 18h-5l-2-12-2 12H5z"/><path d="M6 6h12M8.5 9v10M15.5 9v10"/>',
+  formalDress: '<path d="M9 3v4M15 3v4M8 7.5c1.2-1 2.6-1 4 .5 1.4-1.5 2.8-1.5 4-.5L15.5 12 19 21H5l3.5-9z"/><path d="M8.5 12h7"/>',
+  partyDress: '<path d="M9 3v4M15 3v4M8 7.5c1.2-1 2.6-1 4 .5 1.4-1.5 2.8-1.5 4-.5L15.5 11.5 20 17H4l4.5-5.5z"/><path d="M8.5 11.5h7M19 19v3M17.5 20.5h3M6 20.5h0M10 14h0M14 15h0"/>',
+  sweater: '<path d="M8 4L4 6.5 2.5 19H6l2-8.5V20h8v-9.5l2 8.5h3.5L20 6.5 16 4c-.6 1.5-2 2.4-4 2.4S8.6 5.5 8 4z"/><path d="M8 17.5h8M3 16.5h3.3M17.7 16.5H21M10.5 9.5l1.5 1.5 1.5-1.5M10.5 12.5l1.5 1.5 1.5-1.5"/>',
+  hoodie: '<path d="M8 5c0-2 1.8-3 4-3s4 1 4 3M8 5L4 7 2.5 19H6l2-8V20h8v-9l2 8h3.5L20 7l-4-2c-.5 2-2 3-4 3s-3.5-1-4-3z"/><path d="M10 14h4"/>',
+  cropTop: '<path d="M8 5L3 8l2 4 3-1.5V15h8v-4.5l3 1.5 2-4-5-3c-.6 1.5-2 2.4-4 2.4S8.6 6.5 8 5z"/><path d="M9 19h6"/>',
+  spaghettiTop: '<path d="M9 3l-.5 6M15 3l.5 6M8.5 9c1 1.2 2.2 1.8 3.5 1.8s2.5-.6 3.5-1.8L17 21H7z"/>',
+  lightJacket: '<path d="M9 3h6l5 3.5V20h-4v-9M9 3L4 6.5V20h4v-9M9 3l3 5 3-5M8 11v9h8v-9M12 8v12"/>',
+  warmCoat: '<path d="M9 2h6l5 3.5V22h-4v-11M9 2L4 5.5V22h4v-11M9 2l3 5 3-5M8 11v11h8V11M12 7v15"/><path d="M14 13.5h0M14 16.5h0"/>',
+  rainJacket: '<path d="M8 6c0-2.4 1.8-4 4-4s4 1.6 4 4M8 6L4 8v12h4v-8M16 6l4 2v12h-4v-8M8 6h8M8 12v8h8v-8M12 6v14"/>',
+  pants: '<path d="M6 3h12l1 18h-5l-2-12-2 12H5z"/>',
+  shorts: '<path d="M5 5h14l1 11-6 1-2-6-2 6-6-1z"/>',
+  skirt: '<path d="M8 5h8l4 14H4z"/><path d="M8 8h8"/>',
+  sneakers: '<path d="M3 18v-6l5-1.5 3 2.5 4 1 6 1.5V18z"/><path d="M3 18h18M9 13l1-1M11 14l1-1"/>',
+  boots: '<path d="M7 3h6v10l6 2.5V20H7z"/><path d="M7 17h12"/>',
+  sandals: '<path d="M2.5 18h19v2h-19z"/><path d="M4.5 18c0-3 1.5-5.5 4-6M8.5 12l2 6M13 18c.5-2.5 2.5-4.5 5-4.5l1.5 4.5"/>',
+  clogs: '<path d="M3 19v-2c0-3.5 2.5-6 6.5-6h2c4 0 7 2 8.5 5.5V19z"/><path d="M3 19h17M9 14h0M12 13.5h0M15 14.5h0"/>',
+  heels: '<path d="M3 9c2.5 3.5 5 6 8.5 6.5H16c2 0 4 1 5 2.5v1h-5.5l-2-1.5H9.5l-1 1.5H6.5l.5-3.5z"/><path d="M7 15.5L6 21"/>',
+  glasses: '<circle cx="7" cy="13" r="3.5"/><circle cx="17" cy="13" r="3.5"/><path d="M10.5 13h3M3.5 12.5L2 9.5M20.5 12.5L22 9.5"/>',
+  sunglasses: '<path d="M2.5 10h8v2.5a3.2 3.2 0 0 1-3.2 3.2H5.7a3.2 3.2 0 0 1-3.2-3.2zM13.5 10h8v2.5a3.2 3.2 0 0 1-3.2 3.2h-1.6a3.2 3.2 0 0 1-3.2-3.2zM10.5 11h3"/><path d="M4.5 12.5l2.5-1.5M15.5 12.5l2.5-1.5"/>',
+  cap: '<path d="M4 16a7.5 7.5 0 0 1 15 0z"/><path d="M19 16h3.5M11.5 8.5V7"/>',
+  sunHat: '<path d="M8 13.5c0-3.8 1.8-6.5 4-6.5s4 2.7 4 6.5"/><path d="M2 14.5c3 1.5 6.5 2.2 10 2.2s7-.7 10-2.2c-3-1.2-6.5-1.5-10-1.5s-7 .3-10 1.5z"/><path d="M8.2 12.5h7.6"/>',
+  beanie: '<path d="M5 15.5c0-5 3-8.5 7-8.5s7 3.5 7 8.5z"/><path d="M4.5 15.5h15v3.5h-15zM12 7V5.8"/><circle cx="12" cy="4.2" r="1.6"/>',
+  scarf: '<path d="M5.5 5c2.5 2 10.5 2 13 0l1 4c-2.8 2-12.2 2-15 0z"/><path d="M13.5 8.8l1 11.2h4l-1.5-11.5"/><path d="M14.5 17h3.6M14.8 19.5h3.8"/>',
+};

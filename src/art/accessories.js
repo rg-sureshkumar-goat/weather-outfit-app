@@ -116,10 +116,22 @@ function eyewear(body, frame, tinted) {
 export const glasses = (body, color = '#2c2a2e') => eyewear(body, color, false);
 const sunglasses = (body, { base }) => ({ svg: eyewear(body, base, true) });
 
+// Where each hat's band sits on the head, in head units: hair above `y`
+// within `half` of the center is under the hat, so avatar.js hides it
+// (a bun's knot, an afro's top).
+export const HAT_BANDS = {
+  cap: { y: -0.34, half: 1.08 },
+  sunHat: { y: -0.4, half: 0.98 },
+  beanie: { y: -0.16, half: 1.1 },
+};
+
 export const ACCESSORIES = {
-  cap: { slot: 'hat', draw: (b, c) => ({ svg: cap(b, c) }) },
-  sunHat: { slot: 'hat', draw: (b, c) => ({ svg: sunHat(b, c) }) },
-  beanie: { slot: 'hat', draw: (b, c) => ({ svg: beanie(b, c) }) },
+  cap: { slot: 'hat', draw: (b, c) => ({ svg: cap(b, c), band: HAT_BANDS.cap }) },
+  sunHat: { slot: 'hat', draw: (b, c) => ({ svg: sunHat(b, c), band: HAT_BANDS.sunHat }) },
+  beanie: { slot: 'hat', draw: (b, c) => ({ svg: beanie(b, c), band: HAT_BANDS.beanie }) },
   scarf: { slot: 'scarf', draw: (b, c) => ({ svg: scarf(b, c) }) },
   sunglasses: { slot: 'eyewear', draw: sunglasses },
+  // A closet pair of glasses only colors the frames; the avatar's Glasses
+  // setting decides whether they're worn (avatar.js).
+  glasses: { slot: 'glasses', draw: (b, c) => ({ svg: glasses(b, c.base) }) },
 };

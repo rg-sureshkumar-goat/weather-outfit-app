@@ -58,6 +58,83 @@ describe('renderAvatar', () => {
     ]) expect(all, key).toContain(key);
   });
 
+  it('every closet type has its own drawing in its slot (R17, art round 3)', async () => {
+    const { GARMENT_TYPES } = await import('../src/content/garments.js');
+    const drawings = { ...TEMPLATES, ...FORMAL, ...ACCESSORIES };
+    expect(Object.keys(GARMENT_TYPES)).toHaveLength(34);
+    for (const [type, { slot }] of Object.entries(GARMENT_TYPES)) {
+      expect(drawings[type], type).toBeTruthy();
+      expect(drawings[type].slot, type).toBe(slot);
+    }
+  });
+
+  it('every closet type has an icon for the type picker, and the rack draws every type', async () => {
+    const { GARMENT_TYPES } = await import('../src/content/garments.js');
+    const { TYPE_ICON_PATHS } = await import('../src/art/typeIcons.js');
+    const { rackHeader } = await import('../src/art/rack.js');
+    expect(Object.keys(TYPE_ICON_PATHS).sort()).toEqual(Object.keys(GARMENT_TYPES).sort());
+    for (const type of Object.keys(GARMENT_TYPES)) {
+      const svg = rackHeader([{ type, colors: { base: '#5d7a99' } }]);
+      expect(svg, type).toContain(TYPE_ICON_PATHS[type]);
+      expect(svg, type).not.toMatch(/NaN|undefined/);
+    }
+    // An empty closet still draws the rack, with three empty hangers.
+    expect(rackHeader([]).match(/l-30 16h60z/g)).toHaveLength(3);
+  });
+
+  it('occasion types and accessories are never in an everyday band; every other type is', async () => {
+    const { ELIGIBLE, GARMENT_TYPES } = await import('../src/content/garments.js');
+    const everyday = new Set(Object.values(ELIGIBLE).flatMap((b) => [...b.top, ...b.bottom, ...b.shoes, b.outer]));
+    expect(Object.entries(GARMENT_TYPES).filter(([, t]) => t.use === 'occasion').map(([k]) => k)).toEqual(['dressShirt', 'trousers', 'formalDress', 'partyDress', 'blazer', 'suitVest']);
+    for (const [type, t] of Object.entries(GARMENT_TYPES)) {
+      // The rain jacket is added by the rain-and-wind rule, not a band.
+      if (t.use || type === 'rainJacket') expect(everyday.has(type), type).toBe(false);
+      else expect(everyday.has(type), type).toBe(true);
+    }
+  });
+
+  it('the type picker and the Closet group every type into the six groups, in order', async () => {
+    const { TYPE_GROUPS, GARMENT_TYPES } = await import('../src/content/garments.js');
+    expect(TYPE_GROUPS.map(([id]) => id)).toEqual(['tops', 'bottoms', 'dresses', 'overgarments', 'shoes', 'accessories']);
+    const order = Object.values(GARMENT_TYPES).map((t) => TYPE_GROUPS.findIndex(([id]) => id === t.group));
+    expect(order.every((g) => g >= 0)).toBe(true);
+    // Listed group by group, never interleaved.
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+    const count = (g) => Object.values(GARMENT_TYPES).filter((t) => t.group === g).length;
+    expect(['tops', 'bottoms', 'dresses', 'overgarments', 'shoes', 'accessories'].map(count)).toEqual([10, 4, 2, 7, 5, 6]);
+  });
+
+  it('a closet pair of glasses colors the frames only when the Glasses setting is on', () => {
+    const frame = '#0c0c07';
+    const on = renderAvatar(look('B', { glasses: true }), { glasses: item('glasses', frame) });
+    const off = renderAvatar(look('B', { glasses: false }), { glasses: item('glasses', frame) });
+    expect(on).toContain(frame);
+    expect(off).not.toContain(frame);
+    // Sunglasses still replace them.
+    expect(renderAvatar(look('B', { glasses: true }), { glasses: item('glasses', frame), eyewear: item('sunglasses', '#222222') })).not.toContain(frame);
+  });
+
+  it('the suit vest sits over the shirt and tie and under the blazer', () => {
+    const marks = { top: '#0b0b01', neckwear: '#0b0b02', vest: '#0b0b03', outer: '#0b0b04' };
+    const svg = renderAvatar(look('B'), { top: item('dressShirt', marks.top), neckwear: item('tie', marks.neckwear), vest: item('suitVest', marks.vest), outer: item('blazer', marks.outer), bottom: item('trousers', '#333333') });
+    const at = (c) => svg.indexOf(`fill="${c}"`);
+    expect(at(marks.vest)).toBeGreaterThan(at(marks.neckwear));
+    expect(at(marks.neckwear)).toBeGreaterThan(at(marks.top));
+    expect(at(marks.outer)).toBeGreaterThan(at(marks.vest));
+  });
+
+  it('the long-sleeve tee covers the arms, and the rain jacket is long enough to cover the warm coat', async () => {
+    const { bodyFor, BODY_TYPES } = await import('../src/art/bodies.js');
+    const colors = { base: '#7a5233', print: null };
+    for (const set of ['A', 'B']) {
+      for (const type of BODY_TYPES[set]) {
+        const body = bodyFor(set, type);
+        expect(TEMPLATES.longSleeve.draw(body, colors).longSleeves).toBe(true);
+        expect(TEMPLATES.rainJacket.draw(body, colors).hemY).toBeGreaterThan(TEMPLATES.warmCoat.draw(body, colors).hemY);
+      }
+    }
+  });
+
   it.each(['A', 'B'])('Body %s: every template draws in its slot with no broken numbers', (body) => {
     const registries = { ...TEMPLATES, ...FORMAL, ...ACCESSORIES };
     for (const [type, { slot }] of Object.entries(registries)) {
@@ -81,6 +158,20 @@ describe('renderAvatar', () => {
     expect(svg.lastIndexOf(`fill="${marks.cap}"`)).toBeGreaterThan(svg.lastIndexOf(`fill="${marks.hair}"`));
     expect(svg).toContain('#1d1f26'); // tinted lenses
     expect(svg.match(/fill="#ffffff" opacity="0.12"/g)).toBeNull(); // no clear glasses lenses
+  });
+
+  it('under a hat, the hair above its band is hidden; without a hat the hair is whole', async () => {
+    const { HAT_BANDS } = await import('../src/art/accessories.js');
+    const { HAIRSTYLES } = await import('../src/art/hair.js');
+    for (const hat of Object.keys(HAT_BANDS)) {
+      for (const style of Object.keys(HAIRSTYLES)) {
+        const svg = renderAvatar(look('A', { hair: { style, color: '#3b2a20' } }), { hat: item(hat, '#26344f') });
+        expect(svg, `${hat} ${style}`).not.toMatch(/NaN|undefined/);
+        // Bald draws no back hair, so only the front is wrapped.
+        expect((svg.match(/clip-path="url\(#qd-under-hat-\d+\)"/g) ?? []).length, `${hat} ${style}`).toBeGreaterThanOrEqual(1);
+      }
+    }
+    expect(renderAvatar(look('A', { hair: { style: 'bun', color: '#3b2a20' } }), {})).not.toContain('under-hat');
   });
 
   it.each(['A', 'B'])('Body %s: crop top and every shoe type draw with no broken numbers', (body) => {

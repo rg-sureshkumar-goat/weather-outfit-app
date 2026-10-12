@@ -46,7 +46,7 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 
 # Project
 
-**Quick Dresser.** A static single-page app: Vite and plain JavaScript modules, no UI framework. Source of truth: `spec.md` (R1–R43) and `plan.md` (checkpoints C0–C12, plus C6a–C6d and C7a–C7d). Needs Node 22.12 or newer (developed on Node 24).
+**Quick Dresser.** A static single-page app: Vite and plain JavaScript modules, no UI framework. Source of truth: `spec.md` (R1–R43) and `plan.md` (checkpoints C0–C12, plus C6a–C6d, C7 art and C7a–C7d). Needs Node 22.12 or newer (developed on Node 24).
 
 **Run locally**
 - `npm install`, once.
@@ -87,7 +87,9 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 - **`accessories.js`:** hats, scarf and eyewear.
 - **`hair.js`:** hairstyles, fitted to the face shape's width (`widthScale` in `face.js`).
 - **`palette.js`:** skin tones, hair colors and starter colors.
+- **`typeIcons.js`:** one line drawing per garment type, used as the type picker's icons and, filled with an item's colors, on the rack.
+- **`rack.js`:** the Closet's rack header (P3, L3).
 
-Every garment is one drawing fitted from body measurements, so it fits both bodies.
+Every garment is one drawing fitted from body measurements, so it fits all 12 body types. Each of the 28 closet types (`content/garments.js`) has its own drawing in `garments.js` or `formal.js`.
 
 **Keep private:** `test-garments/`, `test-selfie/`, `reference/Art/` and `*.HEIC` stay ignored. Check `git status` before every commit.
