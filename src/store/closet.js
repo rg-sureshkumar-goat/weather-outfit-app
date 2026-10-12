@@ -4,14 +4,20 @@
 //
 //   { id, type,                  // a key of content/garments.js GARMENT_TYPES
 //     name,                      // shown in the Closet and on Today
-//     colors: { base, print },   // #rrggbb; print may be null
-//     photo,                     // the JPEG Blob (the whole photo until C8)
+//     colors: { base, print,     // #rrggbb; print may be null
+//               more },          // the other colors recognized (R17), up to
+//                                // 6 colors in all
+//     photo,                     // the cut-out (a PNG with a clear
+//                                // background), or the whole photo (JPEG)
+//                                // when there was no usable cut-out
+//     cutout,                    // true when photo is a cut-out (R16)
 //     added }                    // ISO date and time
 //
 // Saving is one write: if storage is full, nothing is half-saved and a
 // ClosetFullError says so (R18).
 
 import { GARMENT_TYPES } from '../content/garments.js';
+import { MAX_COLORS } from '../vision/colors.js';
 
 export const DB_NAME = 'quickDresser';
 const STORE = 'items';
@@ -101,9 +107,16 @@ export function checkValues({ type, name, colors }) {
   if (!GARMENT_TYPES[type]) throw new Error(`Unknown garment type: ${type}`);
   if (!HEX.test(colors?.base ?? '')) throw new Error('A base color is needed.');
   if (colors.print != null && !HEX.test(colors.print)) throw new Error('The print color is not a color.');
+  const more = colors.more ?? [];
+  if (!Array.isArray(more) || more.some((c) => !HEX.test(c))) throw new Error('The other colors are not colors.');
+  if (1 + (colors.print ? 1 : 0) + more.length > MAX_COLORS) throw new Error(`An item has at most ${MAX_COLORS} colors.`);
   const clean = String(name ?? '').trim().slice(0, NAME_MAX);
   if (!clean) throw new Error('A name is needed.');
-  return { type, name: clean, colors: { base: colors.base.toLowerCase(), print: colors.print ? colors.print.toLowerCase() : null } };
+  return {
+    type,
+    name: clean,
+    colors: { base: colors.base.toLowerCase(), print: colors.print ? colors.print.toLowerCase() : null, more: more.map((c) => c.toLowerCase()) },
+  };
 }
 
 const valid = (item) => item && GARMENT_TYPES[item.type] && HEX.test(item.colors?.base ?? '') && item.id;
@@ -123,10 +136,10 @@ export function createCloset(backend = deviceBackend()) {
       const items = (await backend.getAll()).filter(valid);
       return items.sort((a, b) => String(b.added).localeCompare(String(a.added)));
     },
-    async add({ photo, ...values }) {
-      return write({ id: newId(), ...checkValues(values), photo: photo ?? null, added: new Date().toISOString() });
+    async add({ photo, cutout, ...values }) {
+      return write({ id: newId(), ...checkValues(values), photo: photo ?? null, cutout: Boolean(cutout && photo), added: new Date().toISOString() });
     },
-    // Edit (R20): type, name and colors; the photo and date stay.
+    // Edit (R20): type, name and colors; the photo, cut-out and date stay.
     async update(id, values) {
       const current = await backend.get(id);
       if (!current) throw new Error('That item is no longer in the closet.');

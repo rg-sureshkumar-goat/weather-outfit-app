@@ -14,7 +14,8 @@
 //                          per location per visit, refresh skips the cache
 //   ctx.onChangeLocation, ctx.onInfo, ctx.onTab(name)
 //   ctx.closet             the User's items as the outfit rules see them
-//   ctx.photoFor(id)       an item's photo URL; ctx.onOpenItem(id) opens it
+//   ctx.photoFor(id)       an item's photo, { url, cutout }, or null;
+//                          ctx.onOpenItem(id) opens the item
 //   ctx.testWeather        the fixture name in dev (?fixture=), if any
 
 import { buildState, shuffle } from '../recommend/state.js';
@@ -52,10 +53,11 @@ const nowBlock = (state) => `<div class="now-temp">${nowIcon(state, 64)}<div>${n
 
 const badge = (state) => `<span class="badge${state.isToday ? '' : ' badge-forecast'}">${state.label}</span>`;
 
-// The User's items show their photo; starter items a swatch of their color.
+// The User's items show their cut-out or photo; starter items a swatch of
+// their color.
 function swatch(item, photoFor) {
   const photo = item.source === 'closet' ? photoFor?.(item.id) : null;
-  if (photo) return `<img class="swatch swatch-photo" src="${photo}" alt="">`;
+  if (photo) return `<img class="swatch swatch-photo${photo.cutout ? ' is-cutout' : ''}" src="${photo.url}" alt="">`;
   const { base } = itemColors(item);
   return `<span class="swatch" style="background:${base}" aria-hidden="true"></span>`;
 }

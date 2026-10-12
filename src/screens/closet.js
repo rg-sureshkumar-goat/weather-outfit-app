@@ -40,7 +40,7 @@ export function showCloset(root, ctx) {
 
   const tile = (item) => `
     <li><button type="button" class="closet-tile${item.id === selectedId ? ' is-selected' : ''}" data-item="${esc(item.id)}" aria-label="${esc(item.name)}, ${esc(typeLabel(item))}">
-      <img src="${ctx.photoUrl(item)}" alt="" loading="lazy">
+      <img${item.cutout ? ' class="is-cutout"' : ''} src="${ctx.photoUrl(item)}" alt="" loading="lazy">
       <span class="tile-name">${esc(item.name)}</span>
     </button></li>`;
 
@@ -64,11 +64,11 @@ export function showCloset(root, ctx) {
     const c = item.colors;
     return `
       <button type="button" class="btn-back detail-back" data-close>${ICONS.back}<span>Closet</span></button>
-      <img class="detail-photo" src="${ctx.photoUrl(item)}" alt="Your photo of ${esc(item.name)}">
+      <img class="detail-photo" src="${ctx.photoUrl(item)}" alt="${item.cutout ? 'Your' : 'Your photo of'} ${esc(item.name)}">
       <h2 class="detail-name" tabindex="-1">${esc(item.name)}</h2>
       <dl class="detail-facts">
         <div><dt>Type</dt><dd>${esc(typeLabel(item))}</dd></div>
-        <div><dt>Colors</dt><dd>${swatch(c.base, 'Base color')}${c.print ? swatch(c.print, 'Print color') : '<span class="muted">No print</span>'}</dd></div>
+        <div><dt>Colors</dt><dd>${swatch(c.base, 'Base color')}${c.print ? swatch(c.print, 'Print color') : ''}${(c.more ?? []).map((m, i) => swatch(m, `Other color ${i + 1}`)).join('')}${c.print || c.more?.length ? '' : '<span class="muted">No print</span>'}</dd></div>
         <div><dt>Suits</dt><dd class="suits">${suitsHtml(item.type)}</dd></div>
         <div><dt>Added</dt><dd>${added(item.added)}</dd></div>
       </dl>

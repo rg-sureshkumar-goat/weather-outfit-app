@@ -180,10 +180,10 @@ function go(name, opts = {}) {
     onInfo: () => go('info'),
     onChangeLocation: changeLocation,
     closet: closetItems.map(outfitItem),
-    // "Wearing" shows the User's photos and opens the item (P5).
+    // "Wearing" shows the User's cut-outs or photos and opens the item (P5).
     photoFor: (id) => {
       const item = closetItems.find((i) => i.id === id);
-      return item ? photoUrl(item) : null;
+      return item ? { url: photoUrl(item), cutout: Boolean(item.cutout) } : null;
     },
     onOpenItem: (id) => go('closet', { selectedId: id }),
   });

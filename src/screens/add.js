@@ -2,17 +2,23 @@
 //
 // A photo from the camera in the page, Photos, or a dropped file (laptop),
 // then what it is (the 34 types as icon tiles under the six group headings),
-// then colors, a name and what it suits, with the avatar wearing it. Until
-// the cut-out (C8) the whole photo stands in for it, and colors are sampled
-// from its middle. On the phone the steps come one at a time (photo, then
-// 2 of 3, then 3 of 3; the cut-out step joins in C8); on the laptop they sit
-// side by side (L4). Editing reopens the confirm step (R20).
+// then colors, a name and what it suits, with the avatar wearing it. On the
+// phone the steps come one at a time (photo, then 2 of 3, then 3 of 3); on
+// the laptop they sit side by side (L4). Editing reopens the confirm step
+// (R20).
+//
+// The cut-out (R16) needs no step of its own: the model starts loading when
+// Add item opens, with a progress bar (R37), and the app cuts the item out
+// while the User picks its type. Its colors then replace the first guess
+// from the photo's middle, unless the User is already editing colors or the
+// name. Save waits for the cut-out. With no usable outline, the whole photo
+// is kept and a note suggests a retake.
 //
 // showAdd(root, ctx) -> dispose()   (stops the camera)
 //   ctx.location, ctx.avatar        the top bar and the preview
 //   ctx.existing, ctx.photoUrl      an item to edit, and its photo's URL
 //   ctx.onTab, ctx.onChangeLocation, ctx.onInfo
-//   ctx.onSave({ type, name, colors, photo }) -> Promise<item>
+//   ctx.onSave({ type, name, colors, photo, cutout }) -> Promise<item>
 //                                   may throw store/closet.js ClosetFullError
 //   ctx.onDone(item), ctx.onCancel()
 
@@ -21,7 +27,9 @@ import { GARMENT_TYPES, TYPE_GROUPS } from '../content/garments.js';
 import { suggestName } from '../content/colorNames.js';
 import { lookOf } from '../store/avatar.js';
 import { ClosetFullError, NAME_MAX } from '../store/closet.js';
-import { preparePhoto, frameFromVideo } from '../vision/photo.js';
+import { preparePhoto, cutOut, frameFromVideo } from '../vision/photo.js';
+import { loadSegmenter, segmenterLoaded } from '../vision/segmenter.js';
+import { MAX_COLORS } from '../vision/colors.js';
 import { ICONS, GARMENT_ICONS } from './icons.js';
 import { esc, tabs, topBar, bindChrome } from './chrome.js';
 import { suitsHtml } from './closet.js';
@@ -47,6 +55,12 @@ function previewView(type) {
   return '40 20 320 560';
 }
 
+// What the cut-out note says when the whole photo is kept (R16).
+const CUT_MESSAGES = {
+  failed: "Couldn't find the item in this photo, so the whole photo is kept. For a better match, retake it laid flat or on a hanger, against a plain background, in good light.",
+  unavailable: "The cut-out couldn't load, so the whole photo is kept. Check your connection, then retake to try again.",
+};
+
 const CAMERA_MESSAGES = {
   NotAllowedError: "Camera access is off for this site. Choose a photo instead, or allow the camera in your browser's settings.",
   default: "No camera is available here. Choose a photo instead.",
@@ -59,16 +73,24 @@ export function showAdd(root, ctx) {
     photo: ctx.existing?.photo ?? null,
     photoUrl: editing ? ctx.photoUrl(ctx.existing) : null,
     type: ctx.existing?.type ?? null,
-    colors: ctx.existing ? { ...ctx.existing.colors } : null,
+    colors: ctx.existing ? { more: [], ...ctx.existing.colors } : null,
+    colorsEdited: editing,
     name: ctx.existing?.name ?? '',
     nameEdited: editing,
+    // The cut-out: idle, working, done, failed (no usable outline) or
+    // unavailable (the model didn't load). Editing keeps the saved image.
+    cut: editing ? 'kept' : 'idle',
+    cutout: ctx.existing?.cutout ?? false,
+    modelShare: null, // 0–1 while the model downloads
     cameraOn: false,
     message: null, // about the camera or the photo
     saveError: null,
     busy: false,
   };
   let stream = null;
-  let ownUrl = null; // object URLs this screen made, revoked on dispose
+  let ownUrl = null; // the object URL this screen made, revoked on dispose
+  let photoToken = 0; // which photo a finishing cut-out belongs to
+  let disposed = false;
 
   const stopCamera = () => {
     stream?.getTracks().forEach((t) => t.stop());
@@ -85,30 +107,56 @@ export function showAdd(root, ctx) {
 
   const message = () => (s.message ? `<p class="add-message" role="alert">${esc(s.message)}</p>` : '');
 
+  const photoImg = (cls, alt) => `<img class="${cls}${s.cutout ? ' is-cutout' : ''}" src="${s.photoUrl}" alt="${alt}" data-photo-img>`;
+
+  // The cut-out's progress, or why the whole photo is kept (R16, R37).
+  // `where` is the step showing it: on the type step and beside the
+  // laptop's photo, a finished cut-out leaves a one-line confirmation in its
+  // place, so the tiles below don't jump; the confirm step's caption already
+  // says "Cut out".
+  function cutNote(where) {
+    const open = (cls = '', live = true) => `<div class="cut-note${cls}" data-cut-note="${where}"${live ? ' role="status"' : ''}>`;
+    const downloading = s.modelShare != null && s.modelShare < 1;
+    const bar = downloading ? `<progress max="1" value="${s.modelShare}" aria-label="Cut-out download"></progress>` : '';
+    if (s.cut === 'working') {
+      return `${open()}<p>${downloading ? 'Getting the cut-out ready, then cutting out your item…' : 'Cutting out your item…'}</p>${bar}</div>`;
+    }
+    if (s.cut === 'failed' || s.cut === 'unavailable') {
+      return `${open(' is-warning')}<p>${CUT_MESSAGES[s.cut]}</p>
+        <button type="button" class="btn btn-outline btn-small" data-retake>${ICONS.camera}<span>Retake</span></button></div>`;
+    }
+    if (s.cut === 'done' && where !== 'confirm') return `${open(' is-done')}<p>${ICONS.check}<span>Cut out on this device</span></p></div>`;
+    if (!s.photo && downloading) return `${open('', false)}<p>Getting the cut-out ready</p>${bar}</div>`;
+    return '';
+  }
+
   // P4a, and the laptop's photo panel (L4).
   function photoPanel() {
     if (s.cameraOn) {
       return `<div class="camera">
           <video data-video playsinline muted aria-label="Camera view"></video>
-          <p class="camera-hint">Lay the item flat in good light</p>
+          <p class="camera-hint">Lay it flat or hang it up, in good light</p>
         </div>
         <div class="camera-actions">
           ${photoInput('Photos', 'btn btn-outline btn-small')}
           <button type="button" class="shutter" data-shutter aria-label="Take the photo"><span></span></button>
           <button type="button" class="btn-link" data-camera-off>Close camera</button>
-        </div>`;
+        </div>
+        ${cutNote('photo')}`;
     }
     if (s.photoUrl) {
-      return `<div class="photo-frame"><img src="${s.photoUrl}" alt="Your photo"></div>
+      return `<div class="photo-frame">${photoImg('', s.cutout ? 'Your item, cut out' : 'Your photo')}</div>
+        ${cutNote('photo')}
         ${message()}
         ${editing ? '' : `<div class="photo-actions">${photoInput('Choose another photo')}<button type="button" class="btn btn-outline" data-camera>${ICONS.camera}<span>Use camera</span></button></div>`}`;
     }
     return `<div class="drop-zone" data-drop>
         <span class="drop-icon" aria-hidden="true">${ICONS.upload}</span>
         <p><b>${wide.matches ? 'Choose or drop a photo of one item' : 'Choose a photo of one item'}</b></p>
-        <p class="muted">Lay it flat in good light. The photo stays on this device.</p>
+        <p class="muted">Lay it flat or hang it up, in good light. The app cuts it out on this device.</p>
         <div class="photo-actions">${photoInput('Choose a photo', 'btn')}<button type="button" class="btn btn-outline" data-camera>${ICONS.camera}<span>Use camera</span></button></div>
       </div>
+      ${cutNote('photo')}
       ${message()}`;
   }
 
@@ -122,24 +170,47 @@ export function showAdd(root, ctx) {
       </div>
     </fieldset>`).join('');
 
+  // How many colors the item has: the base, a print and the others (R17).
+  const colorCount = () => 1 + (s.colors.print ? 1 : 0) + s.colors.more.length;
+
   const colorPicker = (which, label) => {
     const hex = s.colors[which];
+    // A print can't be added while the item already has 6 colors.
+    const full = !hex && colorCount() >= MAX_COLORS;
+    const links = full
+      ? '<span class="muted">Remove a color to add one</span>'
+      : `${hex ? '<span class="link-like">Change</span>' : '<span class="link-like">Add</span>'}${which === 'print' && hex ? ' · <button type="button" class="btn-link" data-no-print>None</button>' : ''}`;
     return `<div class="color-pick">
         <label class="color-swatch${hex ? '' : ' is-none'}" style="${hex ? `background:${hex}` : ''}">
-          <input type="color" value="${hex ?? '#ffffff'}" data-color="${which}" aria-label="${label} color">
+          <input type="color" value="${hex ?? '#ffffff'}" data-color="${which}" aria-label="${label} color"${full ? ' disabled' : ''}>
         </label>
-        <div><b>${label}</b><span class="color-links">${hex ? '<span class="link-like">Change</span>' : '<span class="link-like">Add</span>'}${which === 'print' && hex ? ' · <button type="button" class="btn-link" data-no-print>None</button>' : ''}</span></div>
+        <div><b>${label}</b><span class="color-links">${links}</span></div>
       </div>`;
   };
+
+  // The item's other colors (R17): each can be changed or removed, and more
+  // added, up to 6 colors in all. The avatar draws the base and print.
+  const moreColors = () => `
+    <div class="more-colors" role="group" aria-labelledby="more-colors-title">
+      ${s.colors.more.map((hex, i) => `
+        <div class="more-color">
+          <label class="color-swatch" style="background:${hex}"><input type="color" value="${hex}" data-more="${i}" aria-label="Other color ${i + 1}"></label>
+          <button type="button" class="more-remove" data-remove-more="${i}" aria-label="Remove other color ${i + 1}">${ICONS.close}</button>
+        </div>`).join('')}
+      ${colorCount() < MAX_COLORS ? `<label class="color-swatch is-add"><input type="color" value="#ffffff" data-add-more aria-label="Add another color"><span aria-hidden="true">+</span></label>` : ''}
+    </div>`;
 
   // P4d: preview, colors, name and what it suits.
   const confirmBody = () => `
     <div class="confirm-grid">
-      ${wide.matches ? '' : `<figure class="confirm-photo"><img src="${s.photoUrl}" alt=""><figcaption>Your photo</figcaption></figure>`}
+      ${wide.matches ? '' : `<figure class="confirm-photo">${photoImg('', '')}<figcaption data-photo-caption>${s.cutout ? 'Cut out' : 'Your photo'}</figcaption></figure>`}
       <figure class="confirm-avatar" data-preview><figcaption>On your avatar</figcaption></figure>
     </div>
+    ${wide.matches ? '' : cutNote('confirm')}
     <h3 class="field-title">Colors</h3>
     <div class="color-row">${colorPicker('base', 'Base')}${colorPicker('print', 'Print')}</div>
+    <h3 class="field-title" id="more-colors-title">Other colors</h3>
+    ${moreColors()}
     <label class="field"><span class="field-title">Name</span>
       <input type="text" class="text-input" data-name maxlength="${NAME_MAX}" value="${esc(s.name)}" autocomplete="off">
     </label>
@@ -148,9 +219,16 @@ export function showAdd(root, ctx) {
 
   const saveButton = () => `
     <p class="save-error" role="alert" data-save-error>${s.saveError ? esc(s.saveError) : ''}</p>
-    <button type="button" class="btn" data-save ${ready() ? '' : 'disabled'}>${s.busy ? 'Saving…' : editing ? 'Save changes' : 'Save to closet'}</button>`;
+    <button type="button" class="btn" data-save ${ready() ? '' : 'disabled'}>${saveLabel()}</button>`;
 
-  const ready = () => Boolean(s.photo && s.type && s.name.trim() && !s.busy);
+  const saveLabel = () => {
+    if (s.busy) return 'Saving…';
+    if (s.cut === 'working' && s.type) return 'Cutting out…';
+    return editing ? 'Save changes' : 'Save to closet';
+  };
+
+  // Save waits for the cut-out, so the closet keeps the cut-out image.
+  const ready = () => Boolean(s.photo && s.type && s.name.trim() && !s.busy && s.cut !== 'working');
 
   // The phone's step header (P4c, P4d): back, title and step count.
   const stepBar = (n) => `
@@ -172,7 +250,8 @@ export function showAdd(root, ctx) {
       return `<div class="add-page">
           ${stepBar(2)}
           <main class="add-main">
-            <div class="type-head">${s.photoUrl ? `<img class="type-thumb" src="${s.photoUrl}" alt="">` : ''}<div><h2>What is it?</h2><p class="muted">This sets the avatar's garment and the weather it suits.</p></div></div>
+            <div class="type-head">${s.photoUrl ? photoImg('type-thumb', '') : ''}<div><h2>What is it?</h2><p class="muted">This sets the avatar's garment and the weather it suits.</p></div></div>
+            ${cutNote('type')}
             <form class="type-form" data-types>${typeTiles()}</form>
           </main>
           <div class="add-actions"><button type="button" class="btn" data-next ${s.type ? '' : 'disabled'}>Next</button></div>
@@ -211,13 +290,59 @@ export function showAdd(root, ctx) {
 
   // ---- Rendering ----------------------------------------------------------------
 
-  function render({ focus = true } = {}) {
+  function render({ focus = true, keepScroll = false } = {}) {
     root.innerHTML = wide.matches ? laptopMarkup() : phoneMarkup();
     bind();
     updatePreview();
     if (s.cameraOn) attachCamera();
     if (focus) root.querySelector('h1')?.focus({ preventScroll: true });
-    window.scrollTo(0, 0);
+    if (!keepScroll) window.scrollTo(0, 0);
+  }
+
+  // A selector that finds the focused control again after a re-render.
+  function focusKey(el) {
+    if (!el || !root.contains(el)) return null;
+    if (el.name === 'type') return `input[name="type"][value="${el.value}"]`;
+    const data = [...el.attributes].find((a) => a.name.startsWith('data-'));
+    return data ? `[${data.name}]` : null;
+  }
+
+  // Shows a finished cut-out or download without moving the User's place.
+  // While they're typing a name or choosing a color, only the photo, the
+  // note and Save change, so the field they're in stays as it is.
+  function refresh() {
+    const active = document.activeElement;
+    if (active?.matches?.('[data-color], [data-more], [data-add-more], [data-name]') && root.contains(active)) {
+      root.querySelectorAll('[data-photo-img]').forEach((img) => {
+        img.src = s.photoUrl;
+        img.classList.toggle('is-cutout', s.cutout);
+      });
+      const caption = root.querySelector('[data-photo-caption]');
+      if (caption) caption.textContent = s.cutout ? 'Cut out' : 'Your photo';
+      root.querySelectorAll('[data-cut-note]').forEach((n) => { n.outerHTML = cutNote(n.dataset.cutNote); });
+      bindRetake();
+      updateSave();
+      const btn = root.querySelector('[data-save]');
+      if (btn) btn.textContent = saveLabel();
+      return;
+    }
+    const key = focusKey(active);
+    render({ focus: false, keepScroll: true });
+    if (key) root.querySelector(key)?.focus({ preventScroll: true });
+  }
+
+  // Download progress moves only the bars; once the download ends or fails
+  // the note is redrawn without them.
+  function showProgress(share) {
+    s.modelShare = share;
+    if (disposed) return;
+    const bars = root.querySelectorAll('[data-cut-note] progress');
+    if (share != null && share < 1 && bars.length) {
+      bars.forEach((b) => { b.value = share; });
+      return;
+    }
+    root.querySelectorAll('[data-cut-note]').forEach((n) => { n.outerHTML = cutNote(n.dataset.cutNote); });
+    bindRetake();
   }
 
   function updatePreview() {
@@ -233,11 +358,27 @@ export function showAdd(root, ctx) {
   function updateSave() {
     const btn = root.querySelector('[data-save]');
     if (btn) btn.disabled = !ready();
+    if (btn && !s.busy) btn.textContent = saveLabel();
     const err = root.querySelector('[data-save-error]');
     if (err) err.textContent = s.saveError ?? '';
   }
 
   // ---- Photo ----------------------------------------------------------------------
+
+  function setPhoto(photo, cutout) {
+    if (ownUrl) URL.revokeObjectURL(ownUrl);
+    ownUrl = photo ? URL.createObjectURL(photo) : null;
+    Object.assign(s, { photo, photoUrl: ownUrl, cutout });
+  }
+
+  // Back to the photo step, for a retake.
+  function retake() {
+    photoToken += 1;
+    setPhoto(null, false);
+    Object.assign(s, { cut: 'idle', colors: null, colorsEdited: false, message: null, step: 'photo' });
+    if (!wide.matches) s.cameraOn = true;
+    render();
+  }
 
   async function usePhoto(file) {
     if (!file || !file.type.startsWith('image/')) {
@@ -246,18 +387,52 @@ export function showAdd(root, ctx) {
       return;
     }
     s.message = null;
+    const token = ++photoToken;
     try {
-      const { photo, colors } = await preparePhoto(file);
-      if (ownUrl) URL.revokeObjectURL(ownUrl);
-      ownUrl = URL.createObjectURL(photo);
-      Object.assign(s, { photo, photoUrl: ownUrl, colors });
+      const { photo, colors, canvas } = await preparePhoto(file);
+      if (token !== photoToken || disposed) return;
+      setPhoto(photo, false);
+      Object.assign(s, { colors, colorsEdited: false, cut: 'working' });
       if (!s.nameEdited && s.type) s.name = suggestName(s.type, colors.base);
       stopCamera();
       if (!wide.matches) s.step = 'type';
+      render();
+      runCutout(canvas, token);
     } catch (e) {
       s.message = e.message;
+      render();
     }
-    render();
+  }
+
+  // Cuts the item out (R16) while the User picks its type.
+  async function runCutout(canvas, token) {
+    let segmenter;
+    try {
+      segmenter = await loadSegmenter(showProgress);
+    } catch {
+      if (token === photoToken && !disposed) {
+        s.cut = 'unavailable';
+        refresh();
+      }
+      return;
+    }
+    let result = null;
+    try {
+      if (token === photoToken && !disposed) result = await cutOut(canvas, segmenter);
+    } catch {
+      result = null;
+    }
+    if (token !== photoToken || disposed) return;
+    s.cut = result ? 'done' : 'failed';
+    if (result) {
+      setPhoto(result.photo, true);
+      const editingFields = document.activeElement?.matches?.('[data-color], [data-more], [data-add-more], [data-name]');
+      if (!s.colorsEdited && !editingFields) {
+        s.colors = result.colors;
+        if (!s.nameEdited && s.type) s.name = suggestName(s.type, s.colors.base);
+      }
+    }
+    refresh();
   }
 
   async function attachCamera() {
@@ -279,8 +454,11 @@ export function showAdd(root, ctx) {
 
   // ---- Events -------------------------------------------------------------------------
 
+  const bindRetake = () => root.querySelectorAll('[data-retake]').forEach((b) => b.addEventListener('click', retake));
+
   function bind() {
     bindChrome(root, ctx);
+    bindRetake();
     root.querySelectorAll('[data-file]').forEach((input) => input.addEventListener('change', () => usePhoto(input.files[0])));
     root.querySelectorAll('[data-camera]').forEach((b) => b.addEventListener('click', () => {
       s.cameraOn = true;
@@ -338,6 +516,7 @@ export function showAdd(root, ctx) {
 
     root.querySelectorAll('[data-color]').forEach((input) => input.addEventListener('input', () => {
       s.colors = { ...s.colors, [input.dataset.color]: input.value };
+      s.colorsEdited = true;
       if (!s.nameEdited && input.dataset.color === 'base') {
         s.name = suggestName(s.type, s.colors.base);
         const nameInput = root.querySelector('[data-name]');
@@ -348,11 +527,40 @@ export function showAdd(root, ctx) {
       sw.classList.remove('is-none');
       updatePreview();
     }));
-    // Colors settle after the picker closes: draw the "None" and link text.
-    root.querySelectorAll('[data-color]').forEach((input) => input.addEventListener('change', () => render({ focus: false })));
+    // Colors settle after the picker closes: draw the "None" and link text,
+    // keeping the User's place.
+    root.querySelectorAll('[data-color]').forEach((input) => input.addEventListener('change', () => {
+      render({ focus: false, keepScroll: true });
+      root.querySelector(`[data-color="${input.dataset.color}"]`)?.focus({ preventScroll: true });
+    }));
     root.querySelector('[data-no-print]')?.addEventListener('click', () => {
       s.colors = { ...s.colors, print: null };
+      s.colorsEdited = true;
       render({ focus: false });
+    });
+    // Other colors: change, remove or add (R17).
+    root.querySelectorAll('[data-more]').forEach((input) => {
+      input.addEventListener('input', () => {
+        const more = [...s.colors.more];
+        more[Number(input.dataset.more)] = input.value;
+        s.colors = { ...s.colors, more };
+        s.colorsEdited = true;
+        input.closest('.color-swatch').style.background = input.value;
+      });
+    });
+    root.querySelectorAll('[data-remove-more]').forEach((btn) => btn.addEventListener('click', () => {
+      const i = Number(btn.dataset.removeMore);
+      s.colors = { ...s.colors, more: s.colors.more.filter((_, j) => j !== i) };
+      s.colorsEdited = true;
+      render({ focus: false, keepScroll: true });
+      // Focus stays in the row: the next color's Remove, or the add swatch.
+      (root.querySelector(`[data-remove-more="${Math.min(i, s.colors.more.length - 1)}"]`) ?? root.querySelector('[data-add-more]'))?.focus({ preventScroll: true });
+    }));
+    root.querySelector('[data-add-more]')?.addEventListener('change', (e) => {
+      s.colors = { ...s.colors, more: [...s.colors.more, e.target.value] };
+      s.colorsEdited = true;
+      render({ focus: false, keepScroll: true });
+      root.querySelector(`[data-more="${s.colors.more.length - 1}"]`)?.focus({ preventScroll: true });
     });
     root.querySelector('[data-name]')?.addEventListener('input', (e) => {
       s.name = e.target.value;
@@ -366,7 +574,7 @@ export function showAdd(root, ctx) {
       s.saveError = null;
       updateSave();
       try {
-        const item = await ctx.onSave({ type: s.type, name: s.name, colors: s.colors, photo: s.photo });
+        const item = await ctx.onSave({ type: s.type, name: s.name, colors: s.colors, photo: s.photo, cutout: s.cutout });
         dispose();
         ctx.onDone(item);
       } catch (e) {
@@ -389,6 +597,7 @@ export function showAdd(root, ctx) {
   wide.addEventListener('change', onWidth);
 
   function dispose() {
+    disposed = true;
     stopCamera();
     wide.removeEventListener('change', onWidth);
     if (ownUrl) URL.revokeObjectURL(ownUrl);
@@ -398,6 +607,10 @@ export function showAdd(root, ctx) {
   // The phone opens on the camera, as drawn (P4a); the browser asks for
   // permission the first time.
   if (!wide.matches && !editing) s.cameraOn = true;
+  // The cut-out model loads only here, never on Today (R37). A failed load
+  // is tried again with the photo, and then explained in the cut-out note.
+  if (!editing && !segmenterLoaded()) s.modelShare = 0;
   render();
+  if (!editing) loadSegmenter(showProgress).catch(() => showProgress(null));
   return dispose;
 }

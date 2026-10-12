@@ -1179,6 +1179,50 @@ input {
   opacity: 0;
 }
 
+/* The cut-out's download and progress, or why the whole photo is kept
+   (R16, R37). */
+.cut-note {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.cut-note progress {
+  width: 100%;
+  height: 8px;
+  accent-color: var(--ink);
+}
+
+.cut-note.is-warning {
+  border-color: var(--coral);
+  font-weight: 600;
+}
+
+.cut-note .btn {
+  justify-self: start;
+  width: auto;
+}
+
+.cut-note.is-done p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* A cut-out shows whole on the plain fill, rather than cropped to fill its
+   frame. */
+.closet-tile img.is-cutout,
+.type-thumb.is-cutout,
+.swatch-photo.is-cutout {
+  padding: 6%;
+  object-fit: contain;
+}
+
 .add-message {
   padding: 12px 14px;
   border: 1.5px solid var(--line);
@@ -1387,6 +1431,54 @@ input {
   min-height: 32px;
   padding: 0;
   font-size: 14px;
+}
+
+/* The item's other colors (R17): swatches with a Remove button on the
+   corner, then an add swatch. */
+.more-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.more-color {
+  position: relative;
+  display: flex;
+}
+
+.more-remove {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1.5px solid var(--line);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.more-remove .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.more-remove:focus-visible {
+  box-shadow: var(--focus);
+}
+
+.color-swatch.is-add {
+  display: grid;
+  place-items: center;
+  border-style: dashed;
+  background: #fff;
+  color: var(--ink-2);
+  font-size: 26px;
+  font-weight: 600;
 }
 
 .add-main .field input {

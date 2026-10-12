@@ -46,7 +46,7 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 
 # Project
 
-**Quick Dresser.** A static single-page app: Vite and plain JavaScript modules, no UI framework. Source of truth: `spec.md` (R1–R43) and `plan.md` (checkpoints C0–C12, plus C6a–C6d, C7 art and C7a–C7d). Needs Node 22.12 or newer (developed on Node 24).
+**Quick Dresser.** A static single-page app: Vite and plain JavaScript modules, no UI framework. Source of truth: `spec.md` (R1–R43) and `plan.md` (checkpoints C0–C12, plus C6a–C6d, C7 art, C7a–C7d and C8a–C8b). Needs Node 22.12 or newer (developed on Node 24).
 
 **Run locally**
 - `npm install`, once.
@@ -95,7 +95,14 @@ Every garment is one drawing fitted from body measurements, so it fits all 12 bo
 **Closet (C7)**
 - Items live in the browser's IndexedDB (`store/closet.js`, database `quickDresser`), on this device only. "Delete all my data" deletes the database as well as the `quickDresser.` keys.
 - To see the closet empty again in dev, use Info → "Delete all my data", or delete the `quickDresser` database in the browser's dev tools.
-- Browser checks use generated test photos (drawn on a canvas in the page), never the private photos in `test-garments/`.
+- Browser checks use generated test photos (drawn on a canvas in the page), never the private photos in `test-garments/`. Exception: on 2026-10-12 the Developer allowed the flannel shirt photo for cut-out testing, used from a converted copy in the Agent's scratch folder, outside the project, so the dev server never serves it.
 - The in-app browser pane blocks the camera, so the camera path is checked on the iPhone, on the live site.
+
+**Cut-out (C8a)**
+- MagicTouch (`public/models/magic_touch.tflite`, committed) and the MediaPipe runtime load only when Add item opens (`src/vision/segmenter.js`), with a progress bar. Today never imports MediaPipe: the library is its own chunk in the build.
+- `src/vision/cutout.js` decides which outline is the item (pure functions, tested in `tests/cutout.test.js`). `src/vision/photo.js` runs the model and draws the cut-out PNG.
+- With MediaPipe 1.0.1, use `InteractiveSegmenterLegacy`, which runs the 6.2 MB model; the newer `InteractiveSegmenter` expects a different one. Handing the model over as bytes (`modelAssetBuffer`) fails, so the downloaded file goes in as a blob URL.
+- `SIZES` in `segmenter.js` drives the progress bar and must match the files; a test fails if a MediaPipe update changes them.
+- Wait for an image's `load` event, not `img.decode()`, which never settles while the page is hidden.
 
 **Keep private:** `test-garments/`, `test-selfie/`, `reference/Art/` and `*.HEIC` stay ignored. Check `git status` before every commit.

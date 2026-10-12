@@ -13,6 +13,7 @@ import { STARTER_SETS } from '../src/content/starters.js';
 import { seededRng as seededRandom } from './helpers.js';
 
 const tee = { type: 'tee', name: 'Navy tee', colors: { base: '#26344F', print: null }, photo: 'photo-bytes' };
+const EMPTY_MORE = { more: [] };
 
 describe('the closet on this device (R18)', () => {
   it('saves an item with its photo, lists newest first, and keeps it after a reload', async () => {
@@ -21,7 +22,7 @@ describe('the closet on this device (R18)', () => {
     const first = await closet.add(tee);
     await new Promise((r) => setTimeout(r, 5));
     const second = await closet.add({ ...tee, type: 'pants', name: 'Dark jeans' });
-    expect(first).toMatchObject({ type: 'tee', name: 'Navy tee', colors: { base: '#26344f', print: null }, photo: 'photo-bytes' });
+    expect(first).toMatchObject({ type: 'tee', name: 'Navy tee', colors: { base: '#26344f', print: null, more: [] }, photo: 'photo-bytes' });
     expect(first.id).toMatch(/^item-/);
     expect(first.added).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     // A reload: a new closet over the same storage.
@@ -42,6 +43,11 @@ describe('the closet on this device (R18)', () => {
     const closet = createCloset(memoryBackend());
     await expect(closet.add({ ...tee, type: 'kilt' })).rejects.toThrow();
     await expect(closet.add({ ...tee, colors: { base: 'navy' } })).rejects.toThrow();
+    // Other colors must be colors, and an item has at most 6 colors in all.
+    await expect(closet.add({ ...tee, colors: { base: '#26344f', print: null, more: ['red'] } })).rejects.toThrow();
+    const five = ['#111111', '#222222', '#333333', '#444444', '#555555'];
+    expect((await closet.add({ ...tee, colors: { base: '#26344f', print: null, more: five } })).colors.more).toHaveLength(5);
+    await expect(closet.add({ ...tee, colors: { base: '#26344f', print: '#b8392f', more: five } })).rejects.toThrow();
     await expect(closet.add({ ...tee, name: '   ' })).rejects.toThrow();
     expect((await closet.add({ ...tee, name: 'x'.repeat(90) })).name).toHaveLength(NAME_MAX);
   });
@@ -63,7 +69,7 @@ describe('the closet on this device (R18)', () => {
 
   it('outfits see the item without its photo, marked as the User\'s', async () => {
     const item = await createCloset(memoryBackend()).add(tee);
-    expect(outfitItem(item)).toEqual({ id: item.id, type: 'tee', name: 'Navy tee', colors: { base: '#26344f', print: null }, source: 'closet' });
+    expect(outfitItem(item)).toEqual({ id: item.id, type: 'tee', name: 'Navy tee', colors: { base: '#26344f', print: null, more: [] }, source: 'closet' });
   });
 });
 
@@ -71,24 +77,46 @@ describe('the closet on this device (R18)', () => {
 const pixels = (runs) => new Uint8ClampedArray(runs.flatMap(([hex, n]) => Array.from({ length: n }, () => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).concat(255)).flat()));
 
 describe('colors and name from the photo (R17)', () => {
-  it('the base is the most common color; a print needs a clearly different color covering enough of the photo', () => {
-    expect(sampleColors(pixels([['#26344f', 100]]))).toEqual({ base: '#26344f', print: null });
-    expect(sampleColors(pixels([['#26344f', 70], ['#b8392f', 30]]))).toEqual({ base: '#26344f', print: '#b8392f' });
-    // A small spot is not a print, and near shades of the base merge into it.
-    expect(sampleColors(pixels([['#26344f', 95], ['#b8392f', 5]])).print).toBeNull();
-    expect(sampleColors(pixels([['#26344f', 60], ['#2a3a58', 40]])).print).toBeNull();
+  it('the base is the most common color; the avatar\'s print a clearly different color covering enough of the item', () => {
+    expect(sampleColors(pixels([['#26344f', 100]]))).toEqual({ base: '#26344f', print: null, ...EMPTY_MORE });
+    expect(sampleColors(pixels([['#26344f', 70], ['#b8392f', 30]]))).toEqual({ base: '#26344f', print: '#b8392f', ...EMPTY_MORE });
+    // A small red logo is one of the item's colors, but not an all-over print.
+    expect(sampleColors(pixels([['#26344f', 95], ['#b8392f', 5]]))).toEqual({ base: '#26344f', print: null, more: ['#b8392f'] });
+    // Near shades of the base are the base.
+    expect(sampleColors(pixels([['#26344f', 60], ['#2a3a58', 40]])).more).toEqual([]);
     // The background seen at the photo's edges is left out: the floor between
-    // pant legs is not a print.
-    expect(sampleColors(pixels([['#3b4a63', 70], ['#e9e6e1', 30]]), { background: '#e9e6e1' })).toEqual({ base: '#3b4a63', print: null });
+    // pant legs is not a color of the pants.
+    expect(sampleColors(pixels([['#3b4a63', 70], ['#e9e6e1', 30]]), { background: '#e9e6e1' })).toEqual({ base: '#3b4a63', print: null, ...EMPTY_MORE });
     // A white item on a pale floor keeps its white: leaving the floor out
     // would leave too little of the sample.
-    expect(sampleColors(pixels([['#f4f2ee', 62], ['#3a6fb0', 38]]), { background: '#e9e6e1' })).toEqual({ base: '#f4f2ee', print: '#3a6fb0' });
+    expect(sampleColors(pixels([['#f4f2ee', 62], ['#3a6fb0', 38]]), { background: '#e9e6e1' })).toEqual({ base: '#f4f2ee', print: '#3a6fb0', ...EMPTY_MORE });
     // Unless the item seems to fill the photo: then the edge color is the item.
     expect(sampleColors(pixels([['#26344f', 90], ['#b8392f', 10]]), { background: '#26344f' }).base).toBe('#26344f');
     // See-through pixels are ignored.
     const clear = pixels([['#26344f', 10]]);
     for (let i = 3; i < clear.length; i += 4) clear[i] = 0;
-    expect(sampleColors(clear)).toEqual({ base: '#999999', print: null });
+    expect(sampleColors(clear)).toEqual({ base: '#999999', print: null, ...EMPTY_MORE });
+  });
+
+  it('recognizes up to 6 colors: a thin stripe in another hue stays; shadows and tiny specks don\'t count', () => {
+    // Red and white stripes with a thin blue line (4% of the item).
+    expect(sampleColors(pixels([['#c0392b', 50], ['#f5f5f0', 46], ['#2e5fa8', 4]]))).toEqual({ base: '#c0392b', print: '#f5f5f0', more: ['#2e5fa8'] });
+    // The Developer's flannel, as sampled from its cut-out: gray-blue where
+    // navy and white threads blend, navy, white, and a blue stripe close to
+    // the navy but a different hue.
+    expect(sampleColors(pixels([['#68727b', 40], ['#253241', 40], ['#d8d9d6', 12], ['#2d4d63', 8]]))).toEqual({ base: '#68727b', print: '#253241', more: ['#d8d9d6', '#2d4d63'] });
+    // A navy tee in uneven light, and a white tee with shadows: one color each.
+    expect(sampleColors(pixels([['#30446b', 50], ['#1e2c46', 30], ['#3a5280', 20]])).more).toEqual([]);
+    expect(sampleColors(pixels([['#f2f1ed', 60], ['#d0cfcb', 25], ['#b4b3b0', 15]]))).toMatchObject({ print: null, more: [] });
+    // Black, white and gray stripes are three colors, not shades of one.
+    expect(sampleColors(pixels([['#111111', 40], ['#f2f2f2', 35], ['#808080', 25]]))).toEqual({ base: '#111111', print: '#f2f2f2', more: ['#808080'] });
+    // Specks under 3% of the item, like small buttons, don't count.
+    expect(sampleColors(pixels([['#26344f', 98], ['#f0f0f0', 2]])).more).toEqual([]);
+    // A busy print keeps its 6 most common colors.
+    const eight = ['#d6456b', '#3f8f5a', '#f2b632', '#4a6fb5', '#8e44ad', '#e67e22', '#16a085', '#7f8c8d'];
+    const busy = sampleColors(pixels(eight.map((c, i) => [c, 20 - i])));
+    expect(1 + (busy.print ? 1 : 0) + busy.more.length).toBe(6);
+    expect(busy.base).toBe('#d6456b');
   });
 
   it('suggests a name from the nearest everyday color and the type', () => {
