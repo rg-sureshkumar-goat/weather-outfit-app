@@ -13,6 +13,8 @@
 //                          a ForecastError; the shell caches one forecast
 //                          per location per visit, refresh skips the cache
 //   ctx.onChangeLocation, ctx.onInfo, ctx.onTab(name)
+//   ctx.closet             the User's items as the outfit rules see them
+//   ctx.photoFor(id)       an item's photo URL; ctx.onOpenItem(id) opens it
 //   ctx.testWeather        the fixture name in dev (?fixture=), if any
 
 import { buildState, shuffle } from '../recommend/state.js';
@@ -50,7 +52,10 @@ const nowBlock = (state) => `<div class="now-temp">${nowIcon(state, 64)}<div>${n
 
 const badge = (state) => `<span class="badge${state.isToday ? '' : ' badge-forecast'}">${state.label}</span>`;
 
-function swatch(item) {
+// The User's items show their photo; starter items a swatch of their color.
+function swatch(item, photoFor) {
+  const photo = item.source === 'closet' ? photoFor?.(item.id) : null;
+  if (photo) return `<img class="swatch swatch-photo" src="${photo}" alt="">`;
   const { base } = itemColors(item);
   return `<span class="swatch" style="background:${base}" aria-hidden="true"></span>`;
 }
@@ -59,16 +64,21 @@ const typeLabel = (item) => GARMENT_TYPES[item.type]?.label ?? item.type;
 
 // Phone tiles beside the avatar, top to shoes. Four or five items get
 // smaller tiles so they and Shuffle fit the avatar's height (P1a).
-function wearingMini(state) {
+function wearingMini(state, photoFor) {
   const short = (item) => GARMENT_TYPES[item.type]?.short ?? typeLabel(item);
   const many = state.wearing.length > 3 ? ' many' : '';
-  return `<ul class="wear-mini${many}" aria-hidden="true">${state.wearing.map((w) => `<li>${swatch(w.item)}<span>${esc(short(w.item))}</span></li>`).join('')}</ul>`;
+  return `<ul class="wear-mini${many}" aria-hidden="true">${state.wearing.map((w) => `<li>${swatch(w.item, photoFor)}<span>${esc(short(w.item))}</span></li>`).join('')}</ul>`;
 }
 
-function wearingList(state) {
+// The User's items open their detail in the Closet (P5); starter items
+// have none (R21).
+function wearingList(state, photoFor) {
+  const row = (w) => `${swatch(w.item, photoFor)}<div><p class="item-name">${esc(w.item.name)}</p><p class="item-from">${w.label}</p></div>`;
   return `<section class="wearing" aria-labelledby="wearing-title">
     <h2 class="section-title" id="wearing-title">Wearing</h2>
-    <ul>${state.wearing.map((w) => `<li>${swatch(w.item)}<div><p class="item-name">${esc(w.item.name)}</p><p class="item-from">${w.label}</p></div></li>`).join('')}</ul>
+    <ul>${state.wearing.map((w) => (w.item.source === 'closet'
+    ? `<li><button type="button" class="wear-open" data-open-item="${esc(w.item.id)}">${row(w)}${ICONS.chevron}</button></li>`
+    : `<li>${row(w)}</li>`)).join('')}</ul>
   </section>`;
 }
 
@@ -241,7 +251,7 @@ export function showToday(root, ctx) {
       <section class="stage" aria-label="Today's outfit">
         <div class="avatar sky-${sky}">${avatarSvg}</div>
         <div class="stage-side">
-          ${wearingMini(state)}
+          ${wearingMini(state, ctx.photoFor)}
           <button type="button" class="shuffle" data-shuffle aria-label="Shuffle: show another outfit for this day">${ICONS.shuffle}<span class="shuffle-word">Shuffle</span></button>
         </div>
       </section>
@@ -256,7 +266,7 @@ export function showToday(root, ctx) {
         </section>
         ${reminderCards(state)}
         ${glance(state)}
-        ${wearingList(state)}
+        ${wearingList(state, ctx.photoFor)}
       </div>
       <div class="phone-credit">${credit(fetchedAt)}</div>
     </main>`, { state, week, banner: refreshError });
@@ -270,6 +280,7 @@ export function showToday(root, ctx) {
   function bind() {
     bindChrome(root, ctx);
     root.querySelectorAll('[data-retry]').forEach((b) => b.addEventListener('click', () => load(true)));
+    root.querySelectorAll('[data-open-item]').forEach((b) => b.addEventListener('click', () => ctx.onOpenItem(b.dataset.openItem)));
     root.querySelectorAll('.strip [data-date], .week-list [data-date]').forEach((b) => b.addEventListener('click', () => select(b.dataset.date)));
     // Arrow keys move through the week list on the laptop (L1).
     const days = [...root.querySelectorAll('.week-list [data-date]:not([disabled])')];

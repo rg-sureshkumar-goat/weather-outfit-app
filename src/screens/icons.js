@@ -24,6 +24,9 @@ const PATHS = {
   retry: '<path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v4h-4"/>',
   lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   image: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 8"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/>',
+  upload: '<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
   sliders: '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
   // Weather: one icon per family of Open-Meteo codes (R10,
   // src/content/weatherCodes.js)

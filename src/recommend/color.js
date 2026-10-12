@@ -5,8 +5,9 @@
 
 export const NEUTRAL_CHROMA = 30;
 
-// sRGB hex (#rrggbb) to CIE Lab, D65 white point.
-function hexToLab(hex) {
+// sRGB hex (#rrggbb) to CIE Lab, D65 white point. Also used to sample and
+// name the colors of a closet photo (vision/colors.js, content/colorNames.js).
+export function hexToLab(hex) {
   const n = parseInt(hex.replace('#', ''), 16);
   const channel = (shift) => {
     const c = ((n >> shift) & 255) / 255;
@@ -30,4 +31,13 @@ export function chroma(hex) {
 export function isNeutral(item) {
   if (item.source === 'starter') return item.neutral;
   return item.colors?.base ? chroma(item.colors.base) < NEUTRAL_CHROMA : false;
+}
+
+// How different two colors look: the distance between them in CIE Lab
+// (Delta E 1976). About 2 is barely noticeable; over 20 is clearly
+// different.
+export function colorDistance(hexA, hexB) {
+  const a = hexToLab(hexA);
+  const b = hexToLab(hexB);
+  return Math.hypot(a.l - b.l, a.a - b.a, a.b - b.b);
 }

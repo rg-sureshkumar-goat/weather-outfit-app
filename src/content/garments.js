@@ -96,3 +96,18 @@ export const NEUTRAL_COLORS = new Set([
   'white', 'cream', 'grey', 'heather-grey', 'charcoal', 'black', 'navy',
   'tan', 'khaki', 'camel', 'olive', 'denim', 'light denim', 'dark denim', 'brown',
 ]);
+
+// What a type suits, for the confirm step and item detail (R17): the bands
+// that list it, or what decides when it's worn.
+//   { kind: 'bands', bands: ['Hot', 'Warm'] } · { kind: 'rain' } ·
+//   { kind: 'occasion' } · { kind: 'accessory' }
+export function suitsFor(type) {
+  const use = GARMENT_TYPES[type]?.use;
+  if (use === 'occasion' || use === 'accessory') return { kind: use, bands: [] };
+  if (type === 'rainJacket') return { kind: 'rain', bands: [] };
+  const bands = BANDS.filter(({ id }) => {
+    const e = ELIGIBLE[id];
+    return [...e.top, ...e.bottom, ...e.shoes].includes(type) || e.outer === type;
+  }).map((b) => b.label);
+  return { kind: 'bands', bands };
+}

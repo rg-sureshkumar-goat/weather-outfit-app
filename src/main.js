@@ -2,8 +2,9 @@
 // (plan.md, usage limits), and wires the location dialog.
 //
 // First run follows R22: avatar setup (female or male, selfie step, review),
-// then location, then Today. Until C7, Closet and Add item show "coming
-// soon" pages.
+// then location, then Today. The closet (C7) lives in IndexedDB on this
+// device; the shell loads it once and again after every change, and hands
+// Today the items as the outfit rules see them.
 import '@fontsource-variable/nunito';
 import './styles.css';
 import { deviceStorage } from './store/storage.js';
@@ -15,7 +16,9 @@ import { showToday } from './screens/today.js';
 import { showSetup } from './screens/setup.js';
 import { showInfo } from './screens/info.js';
 import { loadAvatar } from './store/avatar.js';
-import { ICONS } from './screens/icons.js';
+import { createCloset, outfitItem } from './store/closet.js';
+import { showCloset } from './screens/closet.js';
+import { showAdd } from './screens/add.js';
 
 const app = document.querySelector('#app');
 const storage = deviceStorage();
@@ -39,14 +42,31 @@ async function getForecast(place, { refresh = false } = {}) {
   return entry;
 }
 
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+// ---- The closet (R18) -------------------------------------------------------------
 
-function comingSoon(title, text) {
-  app.innerHTML = `<div class="soon-page">
-    <button type="button" class="btn btn-small" data-back>${ICONS.person}<span>Back to Today</span></button>
-    <section class="card"><h1>${esc(title)}</h1><p>${esc(text)}</p></section>
-  </div>`;
-  app.querySelector('[data-back]').addEventListener('click', () => go('today'));
+const closet = createCloset();
+let closetItems = [];
+// One object URL per item photo, freed when the item goes.
+const photoUrls = new Map();
+
+function photoUrl(item) {
+  const cached = photoUrls.get(item.id);
+  if (cached?.photo === item.photo) return cached.url;
+  if (cached) URL.revokeObjectURL(cached.url);
+  const url = item.photo ? URL.createObjectURL(item.photo) : '';
+  photoUrls.set(item.id, { photo: item.photo, url });
+  return url;
+}
+
+async function refreshCloset() {
+  closetItems = await closet.list();
+  const ids = new Set(closetItems.map((i) => i.id));
+  for (const [id, { url }] of photoUrls) {
+    if (!ids.has(id)) {
+      URL.revokeObjectURL(url);
+      photoUrls.delete(id);
+    }
+  }
 }
 
 // The location dialog over the current screen (P2 as a dialog, L2). Picking
@@ -70,7 +90,13 @@ function changeLocation() {
 }
 
 let screen = 'today';
-function go(name) {
+// A screen that holds something open (the camera) returns a function that
+// lets it go before the next screen shows.
+let teardown = null;
+
+function go(name, opts = {}) {
+  teardown?.();
+  teardown = null;
   screen = name;
   const avatar = loadAvatar(storage);
   if (!avatar) {
@@ -83,8 +109,49 @@ function go(name) {
     showLocation(app, { storage, onChosen: () => go('today') });
     return;
   }
-  if (name === 'closet') return comingSoon('Closet', 'Your closet arrives in a later update. Starter items fill every outfit until then.');
-  if (name === 'add') return comingSoon('Add item', 'Adding your own clothes by photo arrives in a later update.');
+  const chrome = { location: place, onTab: (tab) => go(tab), onChangeLocation: changeLocation, onInfo: () => go('info') };
+  if (name === 'closet') {
+    return showCloset(app, {
+      ...chrome,
+      items: closetItems,
+      photoUrl,
+      selectedId: opts.selectedId,
+      onAdd: () => go('add'),
+      onEdit: (item) => go('edit-item', { item }),
+      onEditAvatar: () => go('edit-avatar'),
+      // Deleting re-picks only the slots that used it, on its next showing
+      // (R14, R20).
+      onDelete: async (item) => {
+        await closet.remove(item.id);
+        await refreshCloset();
+        go('closet');
+      },
+    });
+  }
+  if (name === 'add' || name === 'edit-item') {
+    const existing = name === 'edit-item' ? opts.item : null;
+    teardown = showAdd(app, {
+      ...chrome,
+      avatar,
+      existing,
+      photoUrl,
+      onSave: (values) => (existing ? closet.update(existing.id, values) : closet.add(values)),
+      onDone: async (item) => {
+        await refreshCloset();
+        go('closet', { selectedId: item.id });
+      },
+      onCancel: () => go('closet', { selectedId: existing?.id }),
+    });
+    return;
+  }
+  if (name === 'edit-avatar') {
+    return showSetup(app, {
+      storage,
+      edit: avatar,
+      onDone: () => go('closet'),
+      onCancel: () => go('closet'),
+    });
+  }
   if (name === 'info') {
     return showInfo(app, {
       storage,
@@ -94,7 +161,9 @@ function go(name) {
       onBack: () => go('today'),
       // Everything saved is gone (R35): forget this visit's forecasts too,
       // and start first setup again.
-      onDeleted: () => {
+      onDeleted: async () => {
+        await closet.clear();
+        await refreshCloset();
         cache.clear();
         go('today');
       },
@@ -110,6 +179,13 @@ function go(name) {
     onTab: (tab) => go(tab),
     onInfo: () => go('info'),
     onChangeLocation: changeLocation,
+    closet: closetItems.map(outfitItem),
+    // "Wearing" shows the User's photos and opens the item (P5).
+    photoFor: (id) => {
+      const item = closetItems.find((i) => i.id === id);
+      return item ? photoUrl(item) : null;
+    },
+    onOpenItem: (id) => go('closet', { selectedId: id }),
   });
 }
 
@@ -120,5 +196,5 @@ document.addEventListener('visibilitychange', () => {
   else if (screen === 'today' && hiddenAt && Date.now() - hiddenAt > 30 * 60 * 1000) app.refreshToday?.();
 });
 
-go('today');
-
+// The closet loads before the first screen, so Today starts with it.
+refreshCloset().catch(() => {}).finally(() => go('today'));

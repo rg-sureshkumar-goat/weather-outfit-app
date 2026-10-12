@@ -92,4 +92,10 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 
 Every garment is one drawing fitted from body measurements, so it fits all 12 body types. Each of the 28 closet types (`content/garments.js`) has its own drawing in `garments.js` or `formal.js`.
 
+**Closet (C7)**
+- Items live in the browser's IndexedDB (`store/closet.js`, database `quickDresser`), on this device only. "Delete all my data" deletes the database as well as the `quickDresser.` keys.
+- To see the closet empty again in dev, use Info → "Delete all my data", or delete the `quickDresser` database in the browser's dev tools.
+- Browser checks use generated test photos (drawn on a canvas in the page), never the private photos in `test-garments/`.
+- The in-app browser pane blocks the camera, so the camera path is checked on the iPhone, on the live site.
+
 **Keep private:** `test-garments/`, `test-selfie/`, `reference/Art/` and `*.HEIC` stay ignored. Check `git status` before every commit.

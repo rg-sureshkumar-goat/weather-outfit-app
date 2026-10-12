@@ -4,9 +4,12 @@
 // selfie step offers "Set it up by hand" only. One layout file serves both
 // widths; CSS switches at 900 px (R31).
 //
-// showSetup(root, { storage, onDone })
+// showSetup(root, { storage, onDone, edit, onCancel })
 //   storage   where the avatar values are saved (R24)
 //   onDone    called with the saved values after "Looks good"
+//   edit      saved avatar values: opens the review with them ("Edit
+//             avatar" in the Closet, R26), without the step count
+//   onCancel  Back from that review
 
 import { renderAvatar, AVATAR_VIEWBOX } from '../art/avatar.js';
 import { MONK_TONES, HAIR_COLORS } from '../art/palette.js';
@@ -32,7 +35,7 @@ const steps = (n) => `<p class="steps"><span class="dots" aria-hidden="true">${[
 
 const frame = (n, body) => `
   <div class="setup">
-    <header class="setup-bar"><span class="logo">Quick Dresser</span>${steps(n)}</header>
+    <header class="setup-bar"><span class="logo">Quick Dresser</span>${n ? steps(n) : '<p class="steps">Edit avatar</p>'}</header>
     <main class="setup-main">${body}</main>
   </div>`;
 
@@ -130,7 +133,7 @@ function previewZoom(box) {
   };
 }
 
-export function showSetup(root, { storage, onDone }) {
+export function showSetup(root, { storage, onDone, edit = null, onCancel }) {
   let gender = null;
   let draft = null;
 
@@ -192,7 +195,7 @@ export function showSetup(root, { storage, onDone }) {
   // body; the others zoom the preview to the head and shoulders.
   function reviewStep({ tab = 'body', focus = null } = {}) {
     let activeTab = tab;
-    root.innerHTML = frame(3, `
+    root.innerHTML = frame(edit ? null : 3, `
       <section class="setup-step step-review" aria-labelledby="setup-title">
         <h1 id="setup-title" tabindex="-1">Does this look like you?</h1>
         <div class="review">
@@ -267,7 +270,7 @@ export function showSetup(root, { storage, onDone }) {
       showPreview();
     });
 
-    root.querySelector('[data-back]').addEventListener('click', startStep);
+    root.querySelector('[data-back]').addEventListener('click', edit ? onCancel : startStep);
     root.querySelector('[data-save]').addEventListener('click', () => onDone(saveAvatar(storage, draft)));
 
     zoom.to(activeTab === 'body' ? 'body' : 'face', { animate: false });
@@ -277,5 +280,12 @@ export function showSetup(root, { storage, onDone }) {
     centerChosen(root.querySelector(`#panel-${activeTab}`));
   }
 
-  genderStep();
+  // Edit avatar (R26) starts at the review with the saved values.
+  if (edit) {
+    draft = edit;
+    gender = edit.gender;
+    reviewStep();
+  } else {
+    genderStep();
+  }
 }

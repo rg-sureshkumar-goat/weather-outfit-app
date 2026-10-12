@@ -118,7 +118,8 @@ function content() {
 
     <section id="info-data" aria-labelledby="h-data">
       <h2 id="h-data">Your data</h2>
-      <p>"Delete all my data" removes your location, avatar, closet and saved outfits from this device, then starts setup again.</p>
+      <p><b>One device at a time:</b> your closet, avatar and location stay on the device that saved them. Your phone and your laptop each keep their own, and so do Safari and the Home Screen app on the same phone.</p>
+      <p>"Delete all my data" removes your location, avatar, closet (with its photos) and saved outfits from this device, then starts setup again.</p>
       <div data-delete-area>
         <button type="button" class="btn btn-danger" data-delete>${ICONS.trash}<span>Delete all my data</span></button>
       </div>
@@ -166,7 +167,7 @@ export function showInfo(root, { storage, location, onTab, onChangeLocation, onB
     area.innerHTML = `
       <div class="confirm card" role="group" aria-labelledby="confirm-title">
         <p id="confirm-title" class="confirm-title">Delete everything on this device?</p>
-        <p>Your location, avatar, closet and saved outfits will be removed. This can't be undone.</p>
+        <p>Your location, avatar, closet (with its photos) and saved outfits will be removed from this device. This can't be undone.</p>
         <div class="confirm-actions">
           <button type="button" class="btn btn-outline" data-cancel>Cancel</button>
           <button type="button" class="btn btn-danger" data-confirm>${ICONS.trash}<span>Delete</span></button>
