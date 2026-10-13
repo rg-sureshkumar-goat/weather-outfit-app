@@ -94,7 +94,8 @@ function collaredShirt(body, { base, print }, { name, long, polo = false }) {
   })();
   const torso = piece({
     name,
-    parts: [torsoPath(body, opts), collarWing(body, -1), collarWing(body, 1)],
+    parts: [torsoPath(body, opts)],
+    collar: [collarWing(body, -1), collarWing(body, 1)],
     base,
     print,
     shade: [{ d: torsoShadow(body, opts), tone: 'shadow', opacity: 0.85 }],

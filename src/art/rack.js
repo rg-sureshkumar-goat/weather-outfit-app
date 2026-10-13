@@ -4,11 +4,14 @@
 // and accessories rest on the rack's floor instead of hanging. With no
 // items, the hangers hang empty.
 //
-// rackHeader(items, { width }) -> SVG string
-//   items   up to 3 { type, colors: { base } }, newest first
-//   width   the drawing's width in px units (the height is fixed)
+// rackHeader(items, { width, photos }) -> SVG string
+//   items     up to 3 { id, type, colors: { base } }, newest first
+//   width     the drawing's width in px units (the height is fixed)
+//   photos    { [item id]: vision/pattern.js photoLook() }: a photographed
+//             item (R44) is filled with a square of its fabric, repeating
 
 import { shades } from './paint.js';
+import { uid } from './draw.js';
 import { GARMENT_TYPES } from '../content/garments.js';
 import { TYPE_ICON_PATHS } from './typeIcons.js';
 
@@ -34,15 +37,25 @@ function shelf(cx) {
 // A hanger hooked on the rail at x.
 const hanger = (x) => `<path d="M${x} ${RAIL_Y + 2}c0-5 6-5 6-1s-6 4-6 9M${x} ${RAIL_Y + 10}l-30 16h60z" fill="none" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
 
-// An item's type shape at (x, y) and `scale`, filled with its base color.
-function garment(item, x, y, scale) {
+// An item's type shape at (x, y) and `scale`, filled with its base color,
+// or, for a photographed item, a square of its fabric repeating at about its
+// real size on the 24-unit icon.
+function garment(item, x, y, scale, look) {
   const base = item.colors?.base ?? '#d6d0c6';
   const line = shades(base).line;
   const paths = TYPE_ICON_PATHS[item.type] ?? TYPE_ICON_PATHS.tee;
-  return `<g transform="translate(${x - 12 * scale} ${y}) scale(${scale})" fill="${base}" stroke="${line}" stroke-width="${2 / scale * 2.2}" stroke-linejoin="round" stroke-linecap="round">${paths}</g>`;
+  let fill = base;
+  let defs = '';
+  if (look) {
+    const id = uid('rack-pattern');
+    const t = (look.patchBox.w / look.width) * 24 * 2;
+    defs = `<defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="${t}" height="${t}"><image href="${look.patch}" width="${t}" height="${t}" preserveAspectRatio="none"/></pattern></defs>`;
+    fill = `url(#${id})`;
+  }
+  return `<g transform="translate(${x - 12 * scale} ${y}) scale(${scale})" fill="${fill}" stroke="${line}" stroke-width="${2 / scale * 2.2}" stroke-linejoin="round" stroke-linecap="round">${defs}${paths}</g>`;
 }
 
-export function rackHeader(items = [], { width = 340 } = {}) {
+export function rackHeader(items = [], { width = 340, photos = null } = {}) {
   const cx = width / 2;
   const slots = [cx - 96, cx, cx + 96];
   const rail = `<path d="M${cx - 150} ${RAIL_Y}h300" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>`
@@ -53,9 +66,9 @@ export function rackHeader(items = [], { width = 340 } = {}) {
     const group = item && GARMENT_TYPES[item.type]?.group;
     if (group === 'shoes' || group === 'accessories') {
       // Shoes and accessories rest on the floor under an empty hanger.
-      return hanger(x) + garment(item, x, FLOOR_Y - 62, 2.6);
+      return hanger(x) + garment(item, x, FLOOR_Y - 62, 2.6, photos?.[item.id]);
     }
-    return hanger(x) + (item ? garment(item, x, RAIL_Y + 20, 3.4) : '');
+    return hanger(x) + (item ? garment(item, x, RAIL_Y + 20, 3.4, photos?.[item.id]) : '');
   }).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${HEIGHT}" aria-hidden="true" focusable="false">${shelf(cx)}${rail}${hung}</svg>`;
 }

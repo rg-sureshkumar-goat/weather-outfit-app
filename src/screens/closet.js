@@ -8,6 +8,7 @@
 // showCloset(root, ctx)
 //   ctx.items         the closet, newest first (store/closet.js)
 //   ctx.photoUrl(item) an object URL for the item's photo
+//   ctx.photos         the items' photo looks (R44), by id, for the rack
 //   ctx.location      the saved location (for the laptop's top bar)
 //   ctx.selectedId    an item to open, if any
 //   ctx.onTab, ctx.onChangeLocation, ctx.onInfo
@@ -89,7 +90,7 @@ export function showCloset(root, ctx) {
               <h1 tabindex="-1">Closet</h1>
               <button type="button" class="btn btn-outline btn-small" data-edit-avatar>${ICONS.person}<span>Edit avatar</span></button>
             </div>
-            <section class="rack card" aria-label="Newest items">${rackHeader(ctx.items.slice(0, 3), { width: 340 })}</section>
+            <section class="rack card" aria-label="Newest items">${rackHeader(ctx.items.slice(0, 3), { width: 340, photos: ctx.photos })}</section>
             ${ctx.items.length ? groups() : empty}
           </div>
           <aside class="closet-detail card" aria-label="Item detail" data-detail>${detail(item)}</aside>

@@ -46,7 +46,7 @@ When the Developer directs the Agent to save the transcript, save the entire cur
 
 # Project
 
-**Quick Dresser.** A static single-page app: Vite and plain JavaScript modules, no UI framework. Source of truth: `spec.md` (R1–R43) and `plan.md` (checkpoints C0–C12, plus C6a–C6d, C7 art, C7a–C7d and C8a–C8b). Needs Node 22.12 or newer (developed on Node 24).
+**Quick Dresser.** A static single-page app: Vite and plain JavaScript modules, no UI framework. Source of truth: `spec.md` (R1–R44) and `plan.md` (checkpoints C0–C12, plus C6a–C6d, C7 art, C7a–C7d and C8a–C8b). Needs Node 22.12 or newer (developed on Node 24).
 
 **Run locally**
 - `npm install`, once.
@@ -104,5 +104,11 @@ Every garment is one drawing fitted from body measurements, so it fits all 12 bo
 - With MediaPipe 1.0.1, use `InteractiveSegmenterLegacy`, which runs the 6.2 MB model; the newer `InteractiveSegmenter` expects a different one. Handing the model over as bytes (`modelAssetBuffer`) fails, so the downloaded file goes in as a blob URL.
 - `SIZES` in `segmenter.js` drives the progress bar and must match the files; a test fails if a MediaPipe update changes them.
 - Wait for an image's `load` event, not `img.decode()`, which never settles while the page is hidden.
+
+**The item's look on the avatar (C8b, R44)**
+- Photo fit, built: `src/vision/pattern.js` `photoLook(cutout)` takes out a hanger, evens the lighting and returns what `renderAvatar(look, outfit, { photos })` needs: `fit({ parts, box })`, the photo fitted to a garment drawing row by row (cached per drawing), and `patch`, a square of the fabric for shoes, hats, scarves and the rack. Pure parts are tested in `tests/pattern.test.js`; the photos themselves are checked in the browser.
+- In `art/draw.js`, `piece()` fills a garment's base-colored parts with the photo while `withPhoto()` is active (set by `drawItem` in `avatar.js`), and leaves off the drawn collar points, seams, buttons and pockets. Fills sit outside the clip, because browsers can cancel overlapping parts of a clip shape (collar points on a torso).
+- `main.js` makes each item's photo look once when the app opens; Today redraws when they're ready (`root.redrawToday`).
+- Drawn patterns (steps 2–5 in plan.md C8b) are still to come. Reading a plaid's exact stripes failed on the flannel (spec Revisions), so they'll be standard patterns in the item's own colors.
 
 **Keep private:** `test-garments/`, `test-selfie/`, `reference/Art/` and `*.HEIC` stay ignored. Check `git status` before every commit.

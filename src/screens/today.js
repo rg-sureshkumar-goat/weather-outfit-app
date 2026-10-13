@@ -14,6 +14,7 @@
 //                          per location per visit, refresh skips the cache
 //   ctx.onChangeLocation, ctx.onInfo, ctx.onTab(name)
 //   ctx.closet             the User's items as the outfit rules see them
+//   ctx.photos()           the items as photographed on the avatar (R44), by id
 //   ctx.photoFor(id)       an item's photo, { url, cutout }, or null;
 //                          ctx.onOpenItem(id) opens the item
 //   ctx.testWeather        the fixture name in dev (?fixture=), if any
@@ -239,7 +240,7 @@ export function showToday(root, ctx) {
       ? `<section class="card refresh-error" role="alert"><p>Couldn't refresh the forecast. Showing the one from ${timeLabel(fetchedAt)}.</p><button type="button" class="btn btn-small" data-retry>${ICONS.retry}<span>Retry</span></button></section>`
       : '';
     const sky = skyFor(state.dayWeather?.icon);
-    const avatarSvg = renderAvatar(lookOf(ctx.avatar), state.outfit, { title: outfitDescription(state) });
+    const avatarSvg = renderAvatar(lookOf(ctx.avatar), state.outfit, { title: outfitDescription(state), photos: ctx.photos?.() });
 
     frame(`<main class="layout">
       <div class="col-left">
@@ -320,5 +321,9 @@ export function showToday(root, ctx) {
   // The shell calls this when the app comes back to the foreground after a
   // while, so the weather stays current.
   root.refreshToday = () => load(true);
+  // And this once the items' photo looks are ready (R44).
+  root.redrawToday = () => {
+    if (data) renderMain();
+  };
   load();
 }

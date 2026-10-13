@@ -14,6 +14,9 @@
 // name. Save waits for the cut-out. With no usable outline, the whole photo
 // is kept and a note suggests a retake.
 //
+// With a cut-out, the preview shows the item as photographed (R44): its
+// photo fitted to the drawing, made once per cut-out.
+//
 // showAdd(root, ctx) -> dispose()   (stops the camera)
 //   ctx.location, ctx.avatar        the top bar and the preview
 //   ctx.existing, ctx.photoUrl      an item to edit, and its photo's URL
@@ -30,6 +33,7 @@ import { ClosetFullError, NAME_MAX } from '../store/closet.js';
 import { preparePhoto, cutOut, frameFromVideo } from '../vision/photo.js';
 import { loadSegmenter, segmenterLoaded } from '../vision/segmenter.js';
 import { MAX_COLORS } from '../vision/colors.js';
+import { photoLook } from '../vision/pattern.js';
 import { ICONS, GARMENT_ICONS } from './icons.js';
 import { esc, tabs, topBar, bindChrome } from './chrome.js';
 import { suitsHtml } from './closet.js';
@@ -91,6 +95,10 @@ export function showAdd(root, ctx) {
   let ownUrl = null; // the object URL this screen made, revoked on dispose
   let photoToken = 0; // which photo a finishing cut-out belongs to
   let disposed = false;
+  // The preview's photo look (R44), made from the cut-out once.
+  let look = null;
+  let lookPhoto = null;
+  let lookToken = 0;
 
   const stopCamera = () => {
     stream?.getTracks().forEach((t) => t.stop());
@@ -348,11 +356,29 @@ export function showAdd(root, ctx) {
   function updatePreview() {
     const box = root.querySelector('[data-preview]');
     if (!box || !s.type || !s.colors) return;
-    const look = { ...lookOf(ctx.avatar), ...(s.type === 'glasses' ? { glasses: true } : {}) };
-    const svg = renderAvatar(look, previewOutfit(s.type, s.colors), { title: `Your avatar wearing the ${GARMENT_TYPES[s.type].label.toLowerCase()}` })
+    const avatarLook = { ...lookOf(ctx.avatar), ...(s.type === 'glasses' ? { glasses: true } : {}) };
+    const svg = renderAvatar(avatarLook, previewOutfit(s.type, s.colors), { title: `Your avatar wearing the ${GARMENT_TYPES[s.type].label.toLowerCase()}`, photos: look ? { preview: look } : null })
       .replace(/viewBox="[^"]*"/, `viewBox="${previewView(s.type)}"`);
     box.querySelector('svg')?.remove();
     box.insertAdjacentHTML('afterbegin', svg);
+  }
+
+  // Makes the preview's photo look for a new cut-out, then redraws it.
+  async function refreshLook() {
+    const token = ++lookToken;
+    if (!s.cutout || !s.photo) {
+      look = null;
+    } else if (lookPhoto !== s.photo) {
+      try {
+        const made = await photoLook(s.photo);
+        if (token !== lookToken || disposed) return;
+        look = made;
+        lookPhoto = s.photo;
+      } catch {
+        look = null; // drawn in its colors instead
+      }
+    }
+    if (token === lookToken && !disposed) updatePreview();
   }
 
   function updateSave() {
@@ -376,6 +402,7 @@ export function showAdd(root, ctx) {
     photoToken += 1;
     setPhoto(null, false);
     Object.assign(s, { cut: 'idle', colors: null, colorsEdited: false, message: null, step: 'photo' });
+    look = null;
     if (!wide.matches) s.cameraOn = true;
     render();
   }
@@ -393,6 +420,7 @@ export function showAdd(root, ctx) {
       if (token !== photoToken || disposed) return;
       setPhoto(photo, false);
       Object.assign(s, { colors, colorsEdited: false, cut: 'working' });
+      look = null;
       if (!s.nameEdited && s.type) s.name = suggestName(s.type, colors.base);
       stopCamera();
       if (!wide.matches) s.step = 'type';
@@ -433,6 +461,7 @@ export function showAdd(root, ctx) {
       }
     }
     refresh();
+    refreshLook();
   }
 
   async function attachCamera() {
@@ -612,5 +641,7 @@ export function showAdd(root, ctx) {
   if (!editing && !segmenterLoaded()) s.modelShare = 0;
   render();
   if (!editing) loadSegmenter(showProgress).catch(() => showProgress(null));
+  // Editing an item with a cut-out shows its photo look on the preview.
+  if (editing) refreshLook();
   return dispose;
 }

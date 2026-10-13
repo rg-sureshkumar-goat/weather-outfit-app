@@ -16,8 +16,10 @@ import { hair } from './hair.js';
 import { TEMPLATES } from './garments.js';
 import { FORMAL } from './formal.js';
 import { ACCESSORIES, glasses } from './accessories.js';
-import { uid } from './draw.js';
+import { uid, withPhoto } from './draw.js';
 import { itemColors } from './palette.js';
+import { GARMENT_TYPES } from '../content/garments.js';
+import { patternMode } from '../vision/pattern.js';
 
 const ALL = { ...TEMPLATES, ...FORMAL, ...ACCESSORIES };
 
@@ -26,11 +28,41 @@ const ALL = { ...TEMPLATES, ...FORMAL, ...ACCESSORIES };
 // keeps the same size there.
 export const AVATAR_VIEWBOX = '0 30 400 940';
 
-function drawItem(item, body, extras) {
+// An item as photographed (R44): `look` is from vision/pattern.js
+// photoLook(). Its photo is fitted to the whole garment (all its pieces in
+// the base color, inside the box around them), over a repeating square of
+// its fabric that softens the edges. Shoes, hats and scarves show only the
+// repeating square.
+function photoDefs(look, ids, box, parts) {
+  const tw = look.patchBox.w * (box.w / look.width) * 2;
+  const th = look.patchBox.h * (box.h / look.height) * 2;
+  const fit = ids.fitId
+    ? `<pattern id="${ids.fitId}" patternUnits="userSpaceOnUse" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}"><image href="${look.fit({ parts, box })}" width="${box.w}" height="${box.h}" preserveAspectRatio="none"/></pattern>`
+    : '';
+  const patch = `<pattern id="${ids.patchId}" patternUnits="userSpaceOnUse" x="${box.x}" y="${box.y}" width="${tw}" height="${th}"><image href="${look.patch}" width="${tw}" height="${th}" preserveAspectRatio="none"/></pattern>`;
+  return `<defs>${fit}${patch}</defs>`;
+}
+
+function drawItem(item, body, extras, photos) {
   if (!item) return null;
   const template = ALL[item.type];
   if (!template) return null;
-  return template.draw(body, itemColors(item), extras);
+  const colors = itemColors(item);
+  const look = photos?.[item.id];
+  const type = GARMENT_TYPES[item.type];
+  const mode = look && type ? patternMode(item.type, type.group) : 'none';
+  if (mode === 'none') return template.draw(body, colors, extras);
+  const ids = { fitId: mode === 'fit' ? uid('fit') : null, patchId: uid('patch') };
+  const { out, boxes, parts } = withPhoto({ base: colors.base, ...ids }, () => template.draw(body, colors, extras));
+  if (!out || boxes.length === 0) return out;
+  const x0 = Math.min(...boxes.map((b) => b.x0));
+  const y0 = Math.min(...boxes.map((b) => b.y0));
+  const box = { x: x0, y: y0, w: Math.max(...boxes.map((b) => b.x1)) - x0, h: Math.max(...boxes.map((b) => b.y1)) - y0 };
+  // The definitions go with a layer that's always drawn (inner sleeves aren't).
+  const defs = photoDefs(look, ids, box, parts);
+  if (out.torso) return { ...out, torso: defs + out.torso };
+  if (out.svg) return { ...out, svg: defs + out.svg };
+  return out;
 }
 
 // look: { body: 'A'|'B', bodyType (bodies.js BODY_TYPES; default
@@ -41,6 +73,8 @@ function drawItem(item, body, extras) {
 // outfit: { top, bottom, shoes, outer, rain, dress, neckwear, vest, scarf, hat,
 //           glasses (frame color only),
 //           eyewear } items (any may be missing)
+// photos:   { [item id]: vision/pattern.js photoLook() } for items shown as
+//           photographed (R44); the others draw in their base and print
 // Hair under a hat: everything above the hat's band, within the hat, is
 // hidden. Outside the hat the edge slopes down and away, so thick hair (an
 // afro) puffs out below the hat instead of ending in a flat cut.
@@ -57,20 +91,21 @@ function underHat(head, band, svg) {
   return `<clipPath id="${id}"><path d="${d}"/></clipPath><g clip-path="url(#${id})">${svg}</g>`;
 }
 
-export function renderAvatar(look, outfit = {}, { title = '' } = {}) {
+export function renderAvatar(look, outfit = {}, { title = '', photos = null } = {}) {
   const body = bodyFor(look.body, look.bodyType);
   const h = hair(look.hair.style, body.head, look.hair.color, look.features?.shape);
-  const dress = drawItem(outfit.dress, body);
-  const top = dress ? null : drawItem(outfit.top, body);
-  const bottom = dress ? null : drawItem(outfit.bottom, body);
-  const outer = drawItem(outfit.outer, body);
-  const rain = drawItem(outfit.rain, body);
+  const draw = (item, extras) => drawItem(item, body, extras, photos);
+  const dress = draw(outfit.dress);
+  const top = dress ? null : draw(outfit.top);
+  const bottom = dress ? null : draw(outfit.bottom);
+  const outer = draw(outfit.outer);
+  const rain = draw(outfit.rain);
   // Sandals and heels show the foot, so shoes get the skin color.
-  const shoes = drawItem(outfit.shoes, body, { skin: look.skin });
-  const neckwear = drawItem(outfit.neckwear, body);
-  const vest = drawItem(outfit.vest, body);
-  const scarf = drawItem(outfit.scarf, body);
-  const hat = drawItem(outfit.hat, body);
+  const shoes = draw(outfit.shoes, { skin: look.skin });
+  const neckwear = draw(outfit.neckwear);
+  const vest = draw(outfit.vest);
+  const scarf = draw(outfit.scarf);
+  const hat = draw(outfit.hat);
   const band = hat?.band;
   const eyewear = drawItem(outfit.eyewear, body);
 

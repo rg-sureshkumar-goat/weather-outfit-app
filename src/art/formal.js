@@ -43,7 +43,8 @@ function dressShirt(body, { base, print }) {
   const buttons = [0, 1, 2, 3, 4].map((i) => dot(lerp(placketTop, placketBottom, 0.14 + i * 0.19), 2.2)).join(' ');
   const torso = piece({
     name: 'shirt',
-    parts: [torsoPath(body, opts), wing(-1), wing(1)],
+    parts: [torsoPath(body, opts)],
+    collar: [wing(-1), wing(1)],
     base,
     print,
     shade: [{ d: torsoShadow(body, opts), tone: 'shadow', opacity: 0.8 }],

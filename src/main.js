@@ -17,6 +17,7 @@ import { showSetup } from './screens/setup.js';
 import { showInfo } from './screens/info.js';
 import { loadAvatar } from './store/avatar.js';
 import { createCloset, outfitItem } from './store/closet.js';
+import { photoLook } from './vision/pattern.js';
 import { showCloset } from './screens/closet.js';
 import { showAdd } from './screens/add.js';
 
@@ -57,6 +58,31 @@ function photoUrl(item) {
   photoUrls.set(item.id, { photo: item.photo, url });
   return url;
 }
+
+// Each cut-out closet item as photographed on the avatar (R44), made once
+// from its cut-out and kept while the photo stays the same.
+const looks = new Map(); // item id -> { key, look }
+
+async function refreshLooks() {
+  let changed = false;
+  for (const item of closetItems) {
+    if (!item.cutout || !item.photo) continue;
+    const key = item.photo.size;
+    if (looks.get(item.id)?.key === key) continue;
+    try {
+      looks.set(item.id, { key, look: await photoLook(item.photo) });
+      changed = true;
+    } catch {
+      // Drawn in its colors instead.
+    }
+  }
+  for (const id of looks.keys()) {
+    if (!closetItems.some((i) => i.id === id)) looks.delete(id);
+  }
+  return changed;
+}
+
+const photosNow = () => Object.fromEntries([...looks].map(([id, { look }]) => [id, look]));
 
 async function refreshCloset() {
   closetItems = await closet.list();
@@ -115,6 +141,7 @@ function go(name, opts = {}) {
       ...chrome,
       items: closetItems,
       photoUrl,
+      photos: photosNow(),
       selectedId: opts.selectedId,
       onAdd: () => go('add'),
       onEdit: (item) => go('edit-item', { item }),
@@ -124,6 +151,7 @@ function go(name, opts = {}) {
       onDelete: async (item) => {
         await closet.remove(item.id);
         await refreshCloset();
+        await refreshLooks();
         go('closet');
       },
     });
@@ -138,6 +166,7 @@ function go(name, opts = {}) {
       onSave: (values) => (existing ? closet.update(existing.id, values) : closet.add(values)),
       onDone: async (item) => {
         await refreshCloset();
+        await refreshLooks();
         go('closet', { selectedId: item.id });
       },
       onCancel: () => go('closet', { selectedId: existing?.id }),
@@ -164,6 +193,7 @@ function go(name, opts = {}) {
       onDeleted: async () => {
         await closet.clear();
         await refreshCloset();
+        await refreshLooks();
         cache.clear();
         go('today');
       },
@@ -180,6 +210,8 @@ function go(name, opts = {}) {
     onInfo: () => go('info'),
     onChangeLocation: changeLocation,
     closet: closetItems.map(outfitItem),
+    // Read at each drawing, so photos made after Today opened show (R44).
+    photos: photosNow,
     // "Wearing" shows the User's cut-outs or photos and opens the item (P5).
     photoFor: (id) => {
       const item = closetItems.find((i) => i.id === id);
@@ -196,5 +228,11 @@ document.addEventListener('visibilitychange', () => {
   else if (screen === 'today' && hiddenAt && Date.now() - hiddenAt > 30 * 60 * 1000) app.refreshToday?.();
 });
 
-// The closet loads before the first screen, so Today starts with it.
-refreshCloset().catch(() => {}).finally(() => go('today'));
+// The closet loads before the first screen, so Today starts with it. The
+// items' photo looks are made next; Today redraws once they're ready (R44).
+refreshCloset().catch(() => {}).finally(() => {
+  go('today');
+  refreshLooks().then((changed) => {
+    if (changed && screen === 'today') app.redrawToday?.();
+  }).catch(() => {});
+});
