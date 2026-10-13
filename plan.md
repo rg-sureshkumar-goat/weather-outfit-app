@@ -87,8 +87,8 @@ Summarize the structure, data flow, dependencies, task order, and main risks.
 - [ ] Create or source the assets listed in `spec.md`, starting early (art rounds in C2, C5, C7 and C10)
 - [x] **C0 · Setup and deploy pipeline.** Vite and Vitest setup, the folders, a script that copies the MediaPipe runtime, the deploy workflow, the web app manifest with a placeholder icon (R38), `npm run phone` for Wi-Fi previews, and the "Project" section of `AGENTS.md` (run, test, deploy). *Done when:* `npm run dev`, `npm test`, `npm run build` and `npm run phone` all run, and a placeholder page loads at the Pages URL over HTTPS. *Developer:* turn on Pages (Settings → Pages → Source: GitHub Actions), open the Wi-Fi preview on your iPhone, and after the deploy add the live site to your Home Screen.
 - [x] **C1 · Recommendation engine.** Forecast request and parsing (R1), window values, band, reminders and icon (R8, R10), missing data (R29), starter outfit candidates from the gender's set (R9, R11, R40), wordings with fill-ins (R12), independent picks, Shuffle and saved picks (R13, R14), and `buildState()` (R7). Fixtures saved from at least 4 real places. *Done when:* tests pass for every R8 threshold edge, R10's 3-rain-hour day, 3 distinct starter outfits per band for each gender, a gender change re-picking only starter slots, R13's 30 draws, R14's return, reload, location-change and next-day cases, and R29's missing UV.
-- [x ] **C2 · Art round 1: character and layers.** Both bodies (A, B) and both face-detail sets in 10 Monk tones, 2 hairstyles (Long straight and Short crop, the gender defaults), and templates for the tee, crop top, light jacket, shorts, pants and all five shoes (sneakers, boots, sandals, clogs, heels), fitted to both bodies, with base and print colors (R17, R40). Includes natural-body passes requested by the Developer (sloped shoulders, tapering limbs, then a natural weight-shift pose and curves), a spaghetti-strap top, and mockup templates for everything the occasion and accessory phases need: blazer, suit, tuxedo, dress shirt with tie or bow tie, formal and banquet dresses, hoodie, sweater, cap, sun hat, beanie, scarf, glasses and sunglasses. The layer order is fixed for every slot. The Developer picks the font, the names for Body and Face A and B, and how garments fit both bodies. *Done when:* a local-only art page shows both bodies in all 10 tones wearing starter outfits, and the Developer approves the style. *Decided in C2:* Nunito font; Body and Face labeled Female and Male; one drawing per garment fitted from body measurements. *Note:* with only five garment types drawn at first, the art page shows each body in every tone wearing that set's starter items; full starter outfits appear once C7 draws the remaining types.
-- [x ] **C3 · Location setup (P2, L2).** US-only search (R2), "Use my location" with rounded coordinates and one Nominatim lookup (R3), messages for denied permission, non-US positions and failed lookups, and one saved location (R4). *Done when:* the R2–R4 checks pass, including "Toronto" and a simulated Toronto position, and the network log shows one Nominatim request per tap. *Done 2026-10-11:* the not-found message points to ZIP or device location (R2 revised); results are cities and towns whose name contains the typed text. *Developer:* test "Use my location" (Allow and Don't Allow) on the iPhone on the live site.
+- [x] **C2 · Art round 1: character and layers.** Both bodies (A, B) and both face-detail sets in 10 Monk tones, 2 hairstyles (Long straight and Short crop, the gender defaults), and templates for the tee, crop top, light jacket, shorts, pants and all five shoes (sneakers, boots, sandals, clogs, heels), fitted to both bodies, with base and print colors (R17, R40). Includes natural-body passes requested by the Developer (sloped shoulders, tapering limbs, then a natural weight-shift pose and curves), a spaghetti-strap top, and mockup templates for everything the occasion and accessory phases need: blazer, suit, tuxedo, dress shirt with tie or bow tie, formal and banquet dresses, hoodie, sweater, cap, sun hat, beanie, scarf, glasses and sunglasses. The layer order is fixed for every slot. The Developer picks the font, the names for Body and Face A and B, and how garments fit both bodies. *Done when:* a local-only art page shows both bodies in all 10 tones wearing starter outfits, and the Developer approves the style. *Decided in C2:* Nunito font; Body and Face labeled Female and Male; one drawing per garment fitted from body measurements. *Note:* with only five garment types drawn at first, the art page shows each body in every tone wearing that set's starter items; full starter outfits appear once C7 draws the remaining types.
+- [x] **C3 · Location setup (P2, L2).** US-only search (R2), "Use my location" with rounded coordinates and one Nominatim lookup (R3), messages for denied permission, non-US positions and failed lookups, and one saved location (R4). *Done when:* the R2–R4 checks pass, including "Toronto" and a simulated Toronto position, and the network log shows one Nominatim request per tap. *Done 2026-10-11:* the not-found message points to ZIP or device location (R2 revised); results are cities and towns whose name contains the typed text. *Developer:* test "Use my location" (Allow and Don't Allow) on the iPhone on the live site.
 - [x] **C4 · Today (P1a, P1b, L1).** All from one state: the avatar in a starter outfit, weather icon, temperatures, Now or Forecast, summary, reminders, Wearing list, the 7-day strip on the phone and week list on the laptop, Shuffle and the Open-Meteo credit (R5–R7, R9). Loading, missing-data and error states with Retry (R28–R30). The layout switches at 900 px (R31), and the phone controls sit in the thumb zone (R32). Icons are placeholders until C10. *Done when:* the R5–R7 and R28–R30 checks pass with live weather and fixtures, and Mon → Tue → Mon and Shuffle → reload behave as R14 says.
 - [x] **C5 · Female or male, avatar review and first run (P9, L9, P8, L8).** First decide with the Developer whether face shapes and more body sizes join the spec (requested in the C2 review, 2026-10-11; body sizes are out of scope today). Art round 2: all 11 hairstyles in 8 colors, stubble, beard and glasses (glasses frames already drawn in C2). The female-or-male step and its defaults (R40). Review controls with a live preview, including the single Gender choice that sets body and face (R24, R40), the "Set it up by hand" path, and the first-run order of female or male, setup, location, then Today (R22, without the selfie yet). Avatar values are saved. *Done when:* each control updates the preview, the values survive a reload, a fresh install walks through the steps in order, and the R40 checks pass.
 - [x] **C6 · Info (P6, L6).** Creator, sources with links, how outfits are picked, privacy with retention periods, credits (R27, R34, R36), and "Delete all my data" with an in-page confirmation (R35). *Done when:* every link opens its source, Delete then Confirm empties storage and starts setup, and Cancel changes nothing.
@@ -112,8 +112,10 @@ Summarize the structure, data flow, dependencies, task order, and main risks.
 - [ ] Use the approved screen drawings to guide layout and interaction work
 - [ ] Keep one recommendation state driving every visual and written output
 - [ ] Test and fix each checkpoint against the specification before starting the next
-- [ ] Commit meaningful working checkpoints
-- [ ] Deploy to a public HTTPS URL
+- [x] Commit meaningful working checkpoints
+- [x] Deploy to a public HTTPS URL
+
+**Status at submission (2026-10-12):** C0–C8b are built and deployed. C7a–C7d (occasions and weather-linked accessories, R41–R42), C9 (selfie reading, R23 and R25), C10 (final icons and scenery), C11 (the accessibility pass: audit, keyboard-only run, VoiceOver, R33) and C12 (release candidate) are not built: the Developer chose to wrap up with what's built (2026-10-12). The final check below covers what's built.
 
 ### Verify and revise
 
@@ -126,6 +128,38 @@ Summarize the structure, data flow, dependencies, task order, and main risks.
 - [ ] Test with three peers and record each session
 - [ ] Add the chosen improvement to this checklist, and update `spec.md` if the intended result changes
 - [ ] Implement, verify, and redeploy at least one meaningful revision
+
+#### Final check (2026-10-12)
+
+Each requirement against its acceptance check, for what's built. *Live* means checked on the deployed site on 2026-10-12 (commit 0ca9c60, in the browser pane at 320–1440 px); *tests* means `npm test` (273 tests pass); *earlier* means checked at the named checkpoint and not repeated.
+
+| R | Result | How it was checked |
+|---|---|---|
+| R1 | Pass | Live: the network log shows only the app's host and `api.open-meteo.com` for weather. Tests: response parsing |
+| R2 | Pass | Tests with saved responses: "Austin", "78705", "Toronto" (US only) and "Saskatoon" (not found) |
+| R3 | Pass | Tests: one Nominatim lookup with rounded coordinates; a Toronto position is outside the US. Device test 2026-10-11 |
+| R4 | Pass | Live: one saved location entry, kept after a reload. Tests |
+| R5 | Pass | Live: each of the 7 days updates the label, date and temperatures to match the strip. Tests: after 9 pm |
+| R6 | Pass | Live at 1280 × 800: location, date, Now or Forecast, °F and the Open-Meteo credit are all visible without scrolling. Phone (P1a, P1b): earlier, C4 |
+| R7, R8, R10–R14 | Pass | Tests: one state for every output, every rule's threshold edges, all 29 weather codes, outfit and wording variations, 30 independent draws, saved picks |
+| R9, R21 | Pass | Live: an empty closet shows the prompt, and "Wearing" labels each item "Starter item". Dev, C8b: added shirts are worn and labeled "Your closet" |
+| R15 | Pass | Live: with the camera blocked, the message appears and choosing a photo still works. The camera itself: the Developer, on the phone |
+| R16–R20 | Pass | Earlier, C7 and C8a (cut-out of a hanging flannel and a flat-laid shirt, the retake note, no upload). Dev, C8b: add, edit, delete with confirmation, the rack and groups. Tests: storage, colors, storage-full |
+| R22, R24, R26, R40, R43 | Pass | Earlier, C5–C6d and C7 art (first run, review controls, Edit avatar, all 12 bodies on the art page). Tests |
+| R23, R25 | Not built | C9 (selfie reading) |
+| R27, R36 | Pass | Live: creator, sources, how outfits are picked, privacy, Delete all my data and credits (MediaPipe and MagicTouch, Monk Skin Tone Scale, Nunito, data sources). All 19 external links open (the CDC page refuses scripts but opens in a browser) |
+| R28 | Pass | Earlier, C4 |
+| R29, R30 | Pass | Tests: no UV, a missing day 7, missing codes; offline and service errors. Dev: a failed forecast shows the message and Retry |
+| R31 | Pass | Live at 320, 899, 900 and 1440 px: the layout switches at 900 px, with no sideways scroll |
+| R32 | Pass | Live: every primary control is at least 44 px (only the inline Open-Meteo credit link is smaller, as text in a sentence). Thumb reach: device test 2026-10-11 |
+| R33 | Not checked | C11 (the automated audit, keyboard-only run and VoiceOver) is not built |
+| R34 | Pass | Live: the full run's hosts are the app's own, Open-Meteo's weather and place search; Nominatim only on a "Use my location" tap (tests) |
+| R35 | Pass | Tests: it removes every saved key and the closet. The in-page confirmation: earlier, C6 |
+| R37 | Pass | Live: Today downloads no model; opening Add item downloads MagicTouch and the MediaPipe runtime once |
+| R38 | Partly | Live over HTTPS; device tests 2026-10-11. The C8 cut-out and drawn looks still need a check on the iPhone (camera, Add item, Today) |
+| R39 | Not done | The three peer tests (Usability testing, below) |
+| R41, R42 | Not built | C7a–C7d |
+| R44 | Pass | Dev and tests, 2026-10-12 (C8b): the flannel reads as a plaid, the green shirt as solid; Show as, pockets, button color and color edits. The reader's limits rest on two real photos |
 
 ### Deliver
 
@@ -147,9 +181,35 @@ The Developer records each check of the deployed app here (R38).
 
 Before testing, record the purpose, a few realistic tasks, non-leading prompts, and a consistent note format. For each session, use a non-identifying label and record the task, what the tester did or said, successes, barriers or questions, and possible changes. Keep observations separate from interpretations. After all three sessions, summarize the strongest findings and the improvement they support.
 
+*Draft by the Agent (2026-10-12), for the Developer to review and approve before testing.*
+
+**Purpose:** see whether a first-time User can get a weather-ready outfit for a day, add one of their own clothes, and understand what the avatar shows, without help.
+
+**Setup:** the live site on the tester's own phone (or a provided one), with no saved data; a garment of the tester's choice nearby. Each session about 15 minutes, recorded with the tester's consent.
+
+**Tasks:**
+1. Set the app up for yourself and your city.
+2. Find out what to wear tomorrow, and why.
+3. You don't like that outfit. Get a different one for the same day.
+4. Add a piece of your own clothing from a photo.
+5. Find that item on the avatar on a day it suits.
+6. Find out where the weather information comes from.
+
+**Prompts** (non-leading): "What are you looking at now?" · "What do you expect to happen if you tap that?" · "What would you do next?" · "Was anything unexpected?" Answer questions with "What do you think it does?"; don't name buttons or screens.
+
+**Note format, per session:**
+
+| Session | Task | What the tester did or said | Succeeded? | Barriers or questions | Possible change |
+|---|---|---|---|---|---|
+| P1 | | | | | |
+
+**After three sessions:** the strongest findings, the improvement chosen, its evidence, and the change recorded in Revisions (R39).
+
 ## Revisions
 
 Record material plan changes and why they were made.
+
+- **2026-10-12 — Wrapped up with C0–C8b built.** The Developer chose to submit what's built (C0–C8b, deployed) rather than build C7a–C7d and C9–C12 first. The final check under "Verify and revise" records each requirement's result; R23, R25, R33, R41 and R42 depend on the checkpoints not built, and R38's phone check of the C8 features, R39's peer tests and the debrief are the Developer's to do.
 
 - **2026-10-10 — Woman or man in setup (spec.md R40).** The Developer added a gender step that sets the avatar's body, face details, default hairstyle and starter outfits. Plan changes:
   - C1 builds starter candidates from the gender's set.
