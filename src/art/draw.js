@@ -17,18 +17,23 @@ export function solid(parts, fill, line, width = 2.4) {
   return under + over;
 }
 
-// The item being drawn as photographed (R44), set by avatar.js around one
-// garment: pieces in the item's base color fill with its photo and report
-// their outlines, so the photo can be fitted to the whole garment.
-let photographing = null;
+// The item being drawn in its own look (R44), set by avatar.js around one
+// garment. Pieces in the item's base color fill with it and report their
+// outlines, so avatar.js can place it on the whole garment:
+// - 'photo': every piece shares the photo's fills (`fills`, pattern ids);
+//   the drawn collar points, seams and details are left off, so the
+//   garment's own show
+// - 'weave': each piece gets its own drawn pattern (so a sleeve's can turn
+//   along it), then the shared fuzz (`fills`); the drawn details stay
+let own = null;
 
-export function withPhoto({ base, fitId, patchId }, draw) {
-  photographing = { base, fitId, patchId, boxes: [], parts: [] };
+export function withLook({ base, mode, fills }, draw) {
+  own = { base, mode, fills, pieces: [] };
   try {
     const out = draw();
-    return { out, boxes: photographing.boxes, parts: photographing.parts };
+    return { out, pieces: own.pieces };
   } finally {
-    photographing = null;
+    own = null;
   }
 }
 
@@ -55,15 +60,15 @@ function printPattern(id, color) {
 // - parts: closed paths that make the silhouette
 // - collar: drawn collar points, part of the silhouette too
 // - shade: [{ d, tone: 'shadow' | 'deep' | 'light', opacity }] areas
-// - lines: [{ d, tone, width }] folds, seams and details
-// Shading and lines are clipped to the silhouette. In a garment drawn as
-// photographed (withPhoto), pieces in its base color show the photo instead
-// of the print: a repeating square of its fabric, then the fitted photo.
-// Their drawn collar points, seams and pockets are left off, so the
-// garment's own show.
+// - lines: [{ d, tone, width }] folds, seams and details; a line can bring
+//   its own `fill` and `stroke` colors (buttons in the shirt's button color)
+// Shading and lines are clipped to the silhouette. In a garment drawn in its
+// own look (withLook), pieces in its base color show that instead of the
+// print.
 export function piece({ parts: body, collar = [], base, print = null, shade = [], lines = [], outline = 2.4, name = 'piece' }) {
   const s = shades(base);
-  const photographed = photographing && base === photographing.base;
+  const mine = own && base === own.base;
+  const photographed = mine && own.mode === 'photo';
   const parts = photographed ? body : [...body, ...collar];
   const clip = uid(`${name}-clip`);
   let defs = `<clipPath id="${clip}">${parts.map((d) => path(d, '')).join('')}</clipPath>`;
@@ -72,22 +77,23 @@ export function piece({ parts: body, collar = [], base, print = null, shade = []
   // torso, browsers can cancel the clip's overlapping parts out, which hid
   // these fills there.
   let fills = '';
-  if (photographed) {
-    photographing.boxes.push(...parts.map(boxOf).filter(Boolean));
-    photographing.parts.push(...parts);
-    fills = [photographing.patchId, photographing.fitId].filter(Boolean).map((id) => parts.map((d) => path(d, `fill="url(#${id})"`)).join('')).join('');
+  if (mine) {
+    const ids = own.mode === 'weave' ? [uid(`${name}-weave`), ...own.fills] : own.fills;
+    own.pieces.push({ ids, parts, boxes: parts.map(boxOf).filter(Boolean) });
+    fills = ids.map((id) => parts.map((d) => path(d, `fill="url(#${id})"`)).join('')).join('');
   } else if (print) {
     const pat = uid(`${name}-print`);
     defs += printPattern(pat, print);
     fills = parts.map((d) => path(d, `fill="url(#${pat})"`)).join('');
   }
-  // Over a photo, shading darkens what's under it instead of covering it,
-  // and the drawn seams, pockets and buttons are left off.
-  let overlay = shade.map((a) => path(a.d, photographed
+  // Over a photo or a pattern, shading darkens what's under it instead of
+  // covering it; over a photo, the drawn seams, pockets and buttons are left
+  // off.
+  let overlay = shade.map((a) => path(a.d, mine
     ? `fill="${s[a.tone]}" opacity="${(a.opacity ?? 1) * 0.55}" style="mix-blend-mode:multiply"`
     : `fill="${s[a.tone]}" opacity="${a.opacity ?? 1}"`)).join('');
   overlay += (photographed ? [] : lines)
-    .map((l) => path(l.d, `fill="none" stroke="${s[l.tone || 'deep']}" stroke-width="${l.width ?? 2.2}" stroke-linecap="round" stroke-linejoin="round" opacity="${l.opacity ?? 1}"`))
+    .map((l) => path(l.d, `fill="${l.fill ?? 'none'}" stroke="${l.stroke ?? s[l.tone || 'deep']}" stroke-width="${l.width ?? 2.2}" stroke-linecap="round" stroke-linejoin="round" opacity="${l.opacity ?? 1}"`))
     .join('');
   return `<g><defs>${defs}</defs>${solid(parts, base, s.line, outline)}${fills}<g clip-path="url(#${clip})">${overlay}</g></g>`;
 }

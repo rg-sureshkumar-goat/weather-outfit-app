@@ -67,9 +67,9 @@ describe('the closet on this device (R18)', () => {
     expect(await createCloset(backend).list()).toEqual([]);
   });
 
-  it('outfits see the item without its photo, marked as the User\'s', async () => {
+  it('outfits see the item without its photo, marked as the User\'s, with how the avatar draws it (R44)', async () => {
     const item = await createCloset(memoryBackend()).add(tee);
-    expect(outfitItem(item)).toEqual({ id: item.id, type: 'tee', name: 'Navy tee', colors: { base: '#26344f', print: null, more: [] }, source: 'closet' });
+    expect(outfitItem(item)).toEqual({ id: item.id, type: 'tee', name: 'Navy tee', colors: { base: '#26344f', print: null, more: [] }, show: null, pattern: null, details: null, source: 'closet' });
   });
 });
 
@@ -168,5 +168,41 @@ describe('outfits use the User\'s items (R9, R14, R20)', () => {
         expect(Object.values(c).map((i) => i?.id)).not.toContain('item-3');
       }
     }
+  });
+});
+
+describe('how an item looks on the avatar is kept with it (R18, R44)', () => {
+  const plaid = {
+    kind: 'plaid',
+    repeat: 0.11,
+    roles: { ground: '#172535', light: '#E9EAE4', accent: '#285977', extra: [] },
+    sources: { ground: '#253241', light: '#d8d9d6', accent: '#2d4d63', extra: [] },
+  };
+  const shirt = { type: 'longSleeveShirt', name: 'Plaid shirt', colors: { base: '#68727b', print: '#253241', more: ['#d8d9d6', '#2d4d63'] }, photo: 'png', cutout: true };
+
+  it('saves Show as, the pattern reading and the shirt\'s details, and edits change them', async () => {
+    const closet = createCloset(memoryBackend());
+    const item = await closet.add({ ...shirt, show: 'drawn', pattern: { ...plaid, why: 'not kept' }, details: { pockets: 2, flaps: true, buttons: '#DFDCBD' } });
+    expect(item.show).toBe('drawn');
+    expect(item.pattern).toEqual(plaid);
+    expect(item.details).toEqual({ pockets: 2, flaps: true, buttons: '#dfdcbd' });
+    const edited = await closet.update(item.id, { ...shirt, show: 'photo', pattern: plaid, details: { flaps: false, buttons: null } });
+    expect(edited.show).toBe('photo');
+    // No pocket choice means the standard drawing.
+    expect(edited.details).toEqual({ flaps: false, buttons: null });
+    expect(outfitItem(edited)).toMatchObject({ show: 'photo', pattern: plaid });
+  });
+
+  it('without a cut-out there is no Show as or reading, though a shirt keeps its pockets; invalid looks are refused', async () => {
+    const closet = createCloset(memoryBackend());
+    const whole = await closet.add({ ...shirt, cutout: false, show: 'drawn', pattern: plaid, details: { pockets: 1, flaps: false, buttons: null } });
+    expect(whole.show).toBeNull();
+    expect(whole.pattern).toBeNull();
+    expect(whole.details.pockets).toBe(1);
+    await expect(closet.add({ ...shirt, show: 'sketch' })).rejects.toThrow();
+    await expect(closet.add({ ...shirt, pattern: { ...plaid, repeat: 0 } })).rejects.toThrow();
+    await expect(closet.add({ ...shirt, pattern: { kind: 'stripes', repeat: 0.1, roles: plaid.roles, sources: plaid.sources } })).rejects.toThrow();
+    await expect(closet.add({ ...shirt, details: { pockets: 3 } })).rejects.toThrow();
+    await expect(closet.add({ ...shirt, details: { buttons: 'cream' } })).rejects.toThrow();
   });
 });

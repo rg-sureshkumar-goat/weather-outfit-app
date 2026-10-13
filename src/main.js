@@ -66,7 +66,8 @@ const looks = new Map(); // item id -> { key, look }
 async function refreshLooks() {
   let changed = false;
   for (const item of closetItems) {
-    if (!item.cutout || !item.photo) continue;
+    // Only items shown as their photo need one (R44).
+    if (!item.cutout || !item.photo || item.show === 'drawn') continue;
     const key = item.photo.size;
     if (looks.get(item.id)?.key === key) continue;
     try {

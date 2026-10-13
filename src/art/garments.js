@@ -18,7 +18,7 @@ import { SHOES } from './shoes.js';
 import { halfWidthAt, posed, torsoSide } from './bodies.js';
 import { legProfile, profileSlice } from './figure.js';
 import { limb, along, smoothClosed, curveThrough, pt, lerp } from './shapes.js';
-import { P, line, curve, dot, collarWing, torsoPoints, torsoPath, shoulderFromNeck, setInSleeve, endBand, torsoShadow, bustLines, hipBlock, legStart } from './fit.js';
+import { P, line, curve, dot, collarWing, torsoPoints, torsoPath, shoulderFromNeck, setInSleeve, endBand, torsoShadow, bustLines, hipBlock, legStart, chestPockets, shirtButtons } from './fit.js';
 
 // ---- Tops ------------------------------------------------------------------
 
@@ -78,8 +78,10 @@ const longSleeve = (body, colors) => ({
 // - the long-sleeve button shirt: full sleeves with a buttoned cuff
 // - the long-sleeve polo: a short placket of two buttons and ribbed cuffs
 // The shirts' hems sit out over the bottoms. Body B's shirts have a chest
-// pocket; on Body A it would cross the bust shaping.
-function collaredShirt(body, { base, print }, { name, long, polo = false }) {
+// pocket; on Body A it would cross the bust shaping. An item's details
+// (R44) can change that: { pockets: 0–2, flaps, buttons: color or null }
+// (fit.js chestPockets); a polo keeps its pocketless front.
+function collaredShirt(body, { base, print }, { name, long, polo = false, details = null }) {
   const hemY = body.hip.y + (body.bust ? (polo ? 6 : 10) : (polo ? 22 : 26));
   const opts = { hemY, ease: (polo ? 9 : 10) * body.fit, neckWidth: 3, neckDrop: 10 };
   const { cx, l, r } = torsoPoints(body, opts);
@@ -87,9 +89,10 @@ function collaredShirt(body, { base, print }, { name, long, polo = false }) {
   const placketTop = posed(body, 0, cx, n.bottom + 10);
   const placketBottom = posed(body, 0, cx, polo ? body.chest.y - 4 : hemY - 4);
   const buttons = (polo ? [0.35, 0.75] : [0.2, 0.44, 0.68, 0.92]).map((t) => dot(lerp(placketTop, placketBottom, t), 2.4)).join(' ');
+  // The chest pocket sits on the wearer's left (the viewer's right).
   const pocket = (() => {
-    const a = posed(body, -1, cx - 58, body.chest.y - 6);
-    const b = posed(body, -1, cx - 26, body.chest.y - 6);
+    const a = posed(body, 1, cx + 26, body.chest.y - 6);
+    const b = posed(body, 1, cx + 58, body.chest.y - 6);
     return `M ${pt(a)} L ${pt(P(a.x, a.y + 30))} Q ${pt(P((a.x + b.x) / 2, a.y + 36))} ${pt(P(b.x, b.y + 30))} L ${pt(b)}`;
   })();
   const torso = piece({
@@ -101,9 +104,11 @@ function collaredShirt(body, { base, print }, { name, long, polo = false }) {
     shade: [{ d: torsoShadow(body, opts), tone: 'shadow', opacity: 0.85 }],
     lines: [
       { d: `M ${placketTop.x - 6} ${placketTop.y} L ${placketBottom.x - 6} ${placketBottom.y} M ${placketTop.x + 6} ${placketTop.y} L ${placketBottom.x + 6} ${placketBottom.y}${polo ? ` M ${placketBottom.x - 6} ${placketBottom.y} L ${placketBottom.x + 6} ${placketBottom.y}` : ''}`, tone: 'shadow', width: 1.8 },
-      { d: buttons, tone: 'deep', width: 1.6 },
+      shirtButtons(buttons, details?.buttons ?? null),
       ...[-1, 1].map((side) => ({ d: collarWing(body, side), tone: 'shadow', width: 1.8 })),
-      ...(body.bust || polo ? [] : [{ d: pocket, tone: 'deep', width: 2 }]),
+      ...(polo ? [] : Number.isInteger(details?.pockets)
+        ? chestPockets(body, details.pockets, Boolean(details.flaps), details.buttons ?? null)
+        : body.bust ? [] : [{ d: pocket, tone: 'deep', width: 2 }]),
       { d: curve([P(r.armpit.x - 10, r.armpit.y + 14), P(r.waist.x - 20, r.waist.y - 16), P(r.waist.x - 28, r.waist.y + 24)]), width: 2 },
       polo
         ? { d: `M ${pt(P(l.hem.x + 3, hemY - 10))} L ${pt(P(r.hem.x - 3, hemY - 10))}`, tone: 'shadow', width: 2.2, opacity: 0.8 }
@@ -125,7 +130,7 @@ function collaredShirt(body, { base, print }, { name, long, polo = false }) {
       lines: long
         ? [
           { d: endBand(pts, widths, polo ? 8 : 14), tone: 'deep', width: 2 },
-          ...(polo ? [{ d: endBand(pts, widths, 4), tone: 'shadow', width: 1.4 }] : [{ d: dot(P(end.x + s * 6, end.y - 8), 1.8), tone: 'deep', width: 1.6 }]),
+          ...(polo ? [{ d: endBand(pts, widths, 4), tone: 'shadow', width: 1.4 }] : [shirtButtons(dot(P(end.x + s * 6, end.y - 8), 1.8), details?.buttons ?? null)]),
         ]
         : [{ d: endBand(pts, widths, 9), tone: 'deep', width: 2 }],
     });
@@ -133,9 +138,9 @@ function collaredShirt(body, { base, print }, { name, long, polo = false }) {
   return { torso, sleeves, hemY, ...(long ? { longSleeves: true } : {}) };
 }
 
-const buttonUpShort = (body, colors) => collaredShirt(body, colors, { name: 'buttonup', long: false });
-const longSleeveShirt = (body, colors) => collaredShirt(body, colors, { name: 'shirt-long', long: true });
-const longSleevePolo = (body, colors) => collaredShirt(body, colors, { name: 'polo', long: true, polo: true });
+const buttonUpShort = (body, colors, extras) => collaredShirt(body, colors, { name: 'buttonup', long: false, details: extras?.details });
+const longSleeveShirt = (body, colors, extras) => collaredShirt(body, colors, { name: 'shirt-long', long: true, details: extras?.details });
+const longSleevePolo = (body, colors, extras) => collaredShirt(body, colors, { name: 'polo', long: true, polo: true, details: extras?.details });
 
 // A blouse: softer and looser than a tee, a rounded neckline with a small
 // tie bow, gathers below the neckline, and full sleeves gathered into a

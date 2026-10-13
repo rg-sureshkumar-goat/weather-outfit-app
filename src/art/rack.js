@@ -8,10 +8,13 @@
 //   items     up to 3 { id, type, colors: { base } }, newest first
 //   width     the drawing's width in px units (the height is fixed)
 //   photos    { [item id]: vision/pattern.js photoLook() }: a photographed
-//             item (R44) is filled with a square of its fabric, repeating
+//             item (R44) is filled with a square of its fabric, repeating;
+//             a drawn one (item.show 'drawn') with its plaid, check or
+//             stripes (art/weave.js)
 
 import { shades } from './paint.js';
 import { uid } from './draw.js';
+import { iconWeave, showAs } from './weave.js';
 import { GARMENT_TYPES } from '../content/garments.js';
 import { TYPE_ICON_PATHS } from './typeIcons.js';
 
@@ -38,15 +41,18 @@ function shelf(cx) {
 const hanger = (x) => `<path d="M${x} ${RAIL_Y + 2}c0-5 6-5 6-1s-6 4-6 9M${x} ${RAIL_Y + 10}l-30 16h60z" fill="none" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
 
 // An item's type shape at (x, y) and `scale`, filled with its base color,
-// or, for a photographed item, a square of its fabric repeating at about its
-// real size on the 24-unit icon.
+// its drawn pattern, or a square of its photographed fabric, each at about
+// its real size on the 24-unit icon.
 function garment(item, x, y, scale, look) {
-  const base = item.colors?.base ?? '#d6d0c6';
+  const shown = showAs(item, look);
+  const base = shown === 'weave' ? item.pattern.roles.ground : (item.colors?.base ?? '#d6d0c6');
   const line = shades(base).line;
   const paths = TYPE_ICON_PATHS[item.type] ?? TYPE_ICON_PATHS.tee;
   let fill = base;
   let defs = '';
-  if (look) {
+  if (shown === 'weave') {
+    ({ defs, fill } = iconWeave(item.pattern, 22));
+  } else if (shown === 'photo') {
     const id = uid('rack-pattern');
     const t = (look.patchBox.w / look.width) * 24 * 2;
     defs = `<defs><pattern id="${id}" patternUnits="userSpaceOnUse" width="${t}" height="${t}"><image href="${look.patch}" width="${t}" height="${t}" preserveAspectRatio="none"/></pattern></defs>`;

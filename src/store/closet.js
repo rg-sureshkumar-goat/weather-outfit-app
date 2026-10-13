@@ -11,6 +11,13 @@
 //                                // background), or the whole photo (JPEG)
 //                                // when there was no usable cut-out
 //     cutout,                    // true when photo is a cut-out (R16)
+//     show,                      // with a cut-out: 'drawn' or 'photo', how
+//                                // the avatar shows it (R44)
+//     pattern,                   // with a cut-out: its pattern reading
+//                                // (vision/reading.js), or null
+//     details,                   // a button shirt's { pockets (0–2, or
+//                                // absent for the standard drawing), flaps,
+//                                // buttons (color or null) }, or null
 //     added }                    // ISO date and time
 //
 // Saving is one write: if storage is full, nothing is half-saved and a
@@ -119,6 +126,37 @@ export function checkValues({ type, name, colors }) {
   };
 }
 
+// How an item looks on the avatar (R44), checked: `show` and `pattern` only
+// with a cut-out; `details` for any item. Throws on anything invalid.
+const KINDS = ['solid', 'plaid', 'check', 'stripes', 'other'];
+const roleColors = (roles) => roles
+  && HEX.test(roles.ground ?? '')
+  && [roles.light, roles.accent].every((c) => c == null || HEX.test(c))
+  && Array.isArray(roles.extra) && roles.extra.length <= MAX_COLORS && roles.extra.every((c) => HEX.test(c));
+export function checkLook({ show, pattern, details }, cutout) {
+  const out = { show: null, pattern: null, details: null };
+  if (cutout) {
+    if (show != null && show !== 'drawn' && show !== 'photo') throw new Error('Show as is Drawn or Photo.');
+    out.show = show ?? null;
+    if (pattern != null) {
+      if (!KINDS.includes(pattern.kind)) throw new Error('The pattern reading is not valid.');
+      const woven = ['plaid', 'check', 'stripes'].includes(pattern.kind);
+      if (woven && !(pattern.repeat > 0 && pattern.repeat <= 1 && roleColors(pattern.roles) && roleColors(pattern.sources))) throw new Error('The pattern reading is not valid.');
+      if (pattern.kind === 'stripes' && pattern.along !== 'down' && pattern.along !== 'across') throw new Error('The pattern reading is not valid.');
+      out.pattern = woven
+        ? { kind: pattern.kind, ...(pattern.kind === 'stripes' ? { along: pattern.along } : {}), repeat: pattern.repeat, roles: pattern.roles, sources: pattern.sources }
+        : { kind: pattern.kind };
+    }
+  }
+  if (details != null) {
+    const { pockets, flaps, buttons } = details;
+    if (pockets != null && ![0, 1, 2].includes(pockets)) throw new Error('Pockets are none, one or two.');
+    if (buttons != null && !HEX.test(buttons)) throw new Error('The button color is not a color.');
+    out.details = { ...(pockets != null ? { pockets } : {}), flaps: Boolean(flaps), buttons: buttons ? buttons.toLowerCase() : null };
+  }
+  return out;
+}
+
 const valid = (item) => item && GARMENT_TYPES[item.type] && HEX.test(item.colors?.base ?? '') && item.id;
 
 export function createCloset(backend = deviceBackend()) {
@@ -136,19 +174,22 @@ export function createCloset(backend = deviceBackend()) {
       const items = (await backend.getAll()).filter(valid);
       return items.sort((a, b) => String(b.added).localeCompare(String(a.added)));
     },
-    async add({ photo, cutout, ...values }) {
-      return write({ id: newId(), ...checkValues(values), photo: photo ?? null, cutout: Boolean(cutout && photo), added: new Date().toISOString() });
+    async add({ photo, cutout, show, pattern, details, ...values }) {
+      const hasCutout = Boolean(cutout && photo);
+      return write({ id: newId(), ...checkValues(values), photo: photo ?? null, cutout: hasCutout, ...checkLook({ show, pattern, details }, hasCutout), added: new Date().toISOString() });
     },
-    // Edit (R20): type, name and colors; the photo, cut-out and date stay.
-    async update(id, values) {
+    // Edit (R20): type, name, colors and how it looks; the photo, cut-out
+    // and date stay.
+    async update(id, { show, pattern, details, ...values }) {
       const current = await backend.get(id);
       if (!current) throw new Error('That item is no longer in the closet.');
-      return write({ ...current, ...checkValues(values) });
+      return write({ ...current, ...checkValues(values), ...checkLook({ show, pattern, details }, current.cutout) });
     },
     remove: (id) => backend.delete(id),
     clear: () => backend.destroy(),
   };
 }
 
-// The item as the outfit rules see it (R9): no photo, marked as the User's.
-export const outfitItem = ({ id, type, name, colors }) => ({ id, type, name, colors, source: 'closet' });
+// The item as the outfit rules see it (R9): no photo, marked as the User's,
+// with how the avatar draws it (R44).
+export const outfitItem = ({ id, type, name, colors, show, pattern, details }) => ({ id, type, name, colors, show, pattern, details, source: 'closet' });

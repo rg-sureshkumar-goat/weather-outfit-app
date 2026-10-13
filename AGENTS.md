@@ -106,9 +106,11 @@ Every garment is one drawing fitted from body measurements, so it fits all 12 bo
 - Wait for an image's `load` event, not `img.decode()`, which never settles while the page is hidden.
 
 **The item's look on the avatar (C8b, R44)**
-- Photo fit, built: `src/vision/pattern.js` `photoLook(cutout)` takes out a hanger, evens the lighting and returns what `renderAvatar(look, outfit, { photos })` needs: `fit({ parts, box })`, the photo fitted to a garment drawing row by row (cached per drawing), and `patch`, a square of the fabric for shoes, hats, scarves and the rack. Pure parts are tested in `tests/pattern.test.js`; the photos themselves are checked in the browser.
-- In `art/draw.js`, `piece()` fills a garment's base-colored parts with the photo while `withPhoto()` is active (set by `drawItem` in `avatar.js`), and leaves off the drawn collar points, seams, buttons and pockets. Fills sit outside the clip, because browsers can cancel overlapping parts of a clip shape (collar points on a torso).
-- `main.js` makes each item's photo look once when the app opens; Today redraws when they're ready (`root.redrawToday`).
-- Drawn patterns (steps 2–5 in plan.md C8b) are still to come. Reading a plaid's exact stripes failed on the flannel (spec Revisions), so they'll be standard patterns in the item's own colors.
+- Each item with a cut-out has `show` ('drawn' or 'photo'), `pattern` (its reading) and, for button shirts, `details` ({ pockets, flaps, buttons }), stored with it (`store/closet.js` `checkLook`). `art/weave.js` `showAs(item, photo)` decides what's drawn; an item saved before readings shows its photo until it's edited.
+- Reading, in Add item only (`src/vision/`): `reading.js` `readPattern` sorts a cut-out into solid, plaid, check, stripes or other, with its repeat size and color roles; `details.js` `readShirtButtons` reads button color. Pure parts are tested on generated garments (`tests/reading.test.js`, `tests/details.test.js`); the Developer's photos are checked in the browser.
+- Drawn: `art/weave.js` builds a standard plaid, check or stripes in the item's colors; `fit.js` `chestPockets` and `shirtButtons` draw a button shirt's details.
+- Photo: `vision/pattern.js` `photoLook(cutout)` fits the photo to the drawing; `main.js` makes one only for items shown as Photo, and Today redraws when they're ready (`root.redrawToday`).
+- In `art/draw.js`, `withLook()` (set by `drawItem` in `avatar.js`) fills a garment's base-colored parts with its photo or pattern; fills sit outside the clip, because browsers can cancel overlapping parts of a clip shape (collar points on a torso).
+- What failed and why is in spec.md Revisions (2026-10-12): exact plaid stripes, small prints, and pockets can't be read reliably from a photo.
 
 **Keep private:** `test-garments/`, `test-selfie/`, `reference/Art/` and `*.HEIC` stay ignored. Check `git status` before every commit.

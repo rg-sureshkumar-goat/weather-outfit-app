@@ -386,7 +386,9 @@ const maskOf = (rgba) => {
   return mask;
 };
 
-async function pixelsOf(blob, width) {
+// A cut-out's pixels at up to `width` wide, with its mask (also used by
+// vision/reading.js).
+export async function pixelsOf(blob, width) {
   const bitmap = await createImageBitmap(blob);
   const w = Math.min(width, bitmap.width);
   const h = Math.max(1, Math.round((bitmap.height * w) / bitmap.width));

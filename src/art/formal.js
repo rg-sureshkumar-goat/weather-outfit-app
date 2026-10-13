@@ -7,7 +7,7 @@ import { piece } from './draw.js';
 import { posed, torsoSide } from './bodies.js';
 import { legProfile, profileSlice } from './figure.js';
 import { limb, along, curveThrough, pt, lerp } from './shapes.js';
-import { P, curve, dot, collarWing, torsoPoints, torsoPath, shoulderFromNeck, setInSleeve, endBand, torsoShadow, bustLines, hipBlock, legStart } from './fit.js';
+import { P, curve, dot, collarWing, torsoPoints, torsoPath, shoulderFromNeck, setInSleeve, endBand, torsoShadow, bustLines, hipBlock, legStart, chestPockets, shirtButtons } from './fit.js';
 
 function longSleeves(body, base, print, name, { extra = 14, cuffButtons = 0 } = {}) {
   return ['left', 'right'].map((side) => {
@@ -31,7 +31,10 @@ function longSleeves(body, base, print, name, { extra = 14, cuffButtons = 0 } = 
 
 // ---- Dress shirt, tie, bow tie ----------------------------------------------------
 
-function dressShirt(body, { base, print }) {
+// Its details (R44): chest pockets (none by default) and button color, as on
+// the other button shirts (garments.js collaredShirt).
+function dressShirt(body, { base, print }, extras) {
+  const details = extras?.details;
   const hemY = body.hip.y + 14;
   const opts = { hemY, ease: 7 * body.fit, neckWidth: 3, neckDrop: 10 };
   const { cx } = torsoPoints(body, opts);
@@ -50,8 +53,9 @@ function dressShirt(body, { base, print }) {
     shade: [{ d: torsoShadow(body, opts), tone: 'shadow', opacity: 0.8 }],
     lines: [
       { d: `M ${placketTop.x - 6} ${placketTop.y} L ${placketBottom.x - 6} ${placketBottom.y} M ${placketTop.x + 6} ${placketTop.y} L ${placketBottom.x + 6} ${placketBottom.y}`, tone: 'shadow', width: 1.6 },
-      { d: buttons, tone: 'deep', width: 1.6 },
+      shirtButtons(buttons, details?.buttons ?? null),
       ...[-1, 1].map((s) => ({ d: wing(s), tone: 'shadow', width: 1.8 })),
+      ...(Number.isInteger(details?.pockets) ? chestPockets(body, details.pockets, Boolean(details.flaps), details.buttons ?? null) : []),
       ...bustLines(body),
     ],
   });

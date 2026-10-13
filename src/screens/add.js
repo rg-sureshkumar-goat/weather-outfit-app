@@ -14,14 +14,17 @@
 // name. Save waits for the cut-out. With no usable outline, the whole photo
 // is kept and a note suggests a retake.
 //
-// With a cut-out, the preview shows the item as photographed (R44): its
-// photo fitted to the drawing, made once per cut-out.
+// With a cut-out, the app reads the item's pattern and buttons (R44) and
+// shows it Drawn in the app's style or as its Photo fitted to the drawing:
+// it picks one, and "Show as" changes it. Button shirts get a choice of
+// chest pockets. Color edits carry into a drawn pattern.
 //
 // showAdd(root, ctx) -> dispose()   (stops the camera)
 //   ctx.location, ctx.avatar        the top bar and the preview
 //   ctx.existing, ctx.photoUrl      an item to edit, and its photo's URL
 //   ctx.onTab, ctx.onChangeLocation, ctx.onInfo
-//   ctx.onSave({ type, name, colors, photo, cutout }) -> Promise<item>
+//   ctx.onSave({ type, name, colors, photo, cutout, show, pattern, details })
+//                                   -> Promise<item>
 //                                   may throw store/closet.js ClosetFullError
 //   ctx.onDone(item), ctx.onCancel()
 
@@ -34,15 +37,30 @@ import { preparePhoto, cutOut, frameFromVideo } from '../vision/photo.js';
 import { loadSegmenter, segmenterLoaded } from '../vision/segmenter.js';
 import { MAX_COLORS } from '../vision/colors.js';
 import { photoLook } from '../vision/pattern.js';
+import { readPattern, followColorEdit } from '../vision/reading.js';
+import { readShirtButtons } from '../vision/details.js';
 import { ICONS, GARMENT_ICONS } from './icons.js';
-import { esc, tabs, topBar, bindChrome } from './chrome.js';
+import { esc, tabs, topBar, bindChrome, segs } from './chrome.js';
 import { suitsHtml } from './closet.js';
 
 const wide = matchMedia('(min-width: 900px)');
 
+// Button shirts get a choice of chest pockets (R44).
+const BUTTON_SHIRTS = new Set(['buttonUpShort', 'longSleeveShirt', 'dressShirt']);
+// Readings the app draws by default; anything else shows as its photo.
+const DRAWN_KINDS = new Set(['solid', 'plaid', 'check', 'stripes']);
+
+// What "Drawn" shows for a reading.
+const DRAWN_NOTES = {
+  solid: 'Drawn flat, in its colors.',
+  plaid: 'Drawn as a plaid in its own colors.',
+  check: 'Drawn as a check in its own colors.',
+  stripes: 'Drawn as stripes in its own colors.',
+};
+
 // The avatar wearing the item, with plain basics in the other slots.
-function previewOutfit(type, colors) {
-  const item = { id: 'preview', type, colors, name: '', source: 'closet' };
+function previewOutfit(type, colors, look) {
+  const item = { id: 'preview', type, colors, name: '', source: 'closet', ...look };
   const plain = (t, base) => ({ type: t, colors: { base, print: null }, source: 'closet' });
   const basics = { top: plain('tee', '#f4f2ee'), bottom: plain('pants', '#3b4a63'), shoes: plain('sneakers', '#f4f2ee') };
   const slot = GARMENT_TYPES[type].slot;
@@ -85,6 +103,13 @@ export function showAdd(root, ctx) {
     // unavailable (the model didn't load). Editing keeps the saved image.
     cut: editing ? 'kept' : 'idle',
     cutout: ctx.existing?.cutout ?? false,
+    // How the avatar shows it (R44): the pattern reading, Drawn or Photo,
+    // and a button shirt's details. `reading` while the app reads them; an
+    // item saved before the app read patterns is read when it's edited.
+    show: ctx.existing?.show ?? null,
+    pattern: ctx.existing?.pattern ?? null,
+    details: ctx.existing?.details ?? null,
+    reading: Boolean(ctx.existing?.cutout && ctx.existing.photo && !ctx.existing.pattern),
     modelShare: null, // 0–1 while the model downloads
     cameraOn: false,
     message: null, // about the camera or the photo
@@ -208,6 +233,29 @@ export function showAdd(root, ctx) {
       ${colorCount() < MAX_COLORS ? `<label class="color-swatch is-add"><input type="color" value="#ffffff" data-add-more aria-label="Add another color"><span aria-hidden="true">+</span></label>` : ''}
     </div>`;
 
+  // The standard drawing's chest pockets: one on Body B's shirts, none on
+  // Body A's or on a dress shirt (art/garments.js, formal.js).
+  const pocketsNow = () => s.details?.pockets ?? (s.type === 'dressShirt' || lookOf(ctx.avatar).body === 'A' ? 0 : 1);
+
+  // What the chosen look shows.
+  const lookNote = () => (s.show === 'drawn'
+    ? (DRAWN_NOTES[s.pattern?.kind] ?? 'Drawn flat, in its base and print colors: its print can’t be drawn.')
+    : 'Its photo, fitted to the drawing.');
+
+  // How the avatar shows the item (R44), and a button shirt's pockets.
+  const lookControls = () => {
+    let out = '';
+    if (s.cutout && s.reading) out += '<p class="muted look-note">Reading its pattern…</p>';
+    else if (s.cutout) {
+      out += segs('show', 'Show as', [['drawn', 'Drawn'], ['photo', 'Photo']], s.show ?? 'photo') + `<p class="muted look-note" data-look-note>${lookNote()}</p>`;
+    }
+    if (BUTTON_SHIRTS.has(s.type)) {
+      out += segs('pockets', 'Chest pockets', [[0, 'None'], [1, 'One'], [2, 'Two']], pocketsNow());
+      if (pocketsNow() > 0) out += segs('flaps', 'Pocket flaps', [['no', 'No'], ['yes', 'Yes']], s.details?.flaps ? 'yes' : 'no');
+    }
+    return out ? `<div class="look-controls">${out}</div>` : '';
+  };
+
   // P4d: preview, colors, name and what it suits.
   const confirmBody = () => `
     <div class="confirm-grid">
@@ -215,6 +263,7 @@ export function showAdd(root, ctx) {
       <figure class="confirm-avatar" data-preview><figcaption>On your avatar</figcaption></figure>
     </div>
     ${wide.matches ? '' : cutNote('confirm')}
+    ${lookControls()}
     <h3 class="field-title">Colors</h3>
     <div class="color-row">${colorPicker('base', 'Base')}${colorPicker('print', 'Print')}</div>
     <h3 class="field-title" id="more-colors-title">Other colors</h3>
@@ -232,11 +281,13 @@ export function showAdd(root, ctx) {
   const saveLabel = () => {
     if (s.busy) return 'Saving…';
     if (s.cut === 'working' && s.type) return 'Cutting out…';
+    if (s.reading && s.type) return 'Reading its pattern…';
     return editing ? 'Save changes' : 'Save to closet';
   };
 
-  // Save waits for the cut-out, so the closet keeps the cut-out image.
-  const ready = () => Boolean(s.photo && s.type && s.name.trim() && !s.busy && s.cut !== 'working');
+  // Save waits for the cut-out and its reading, so the closet keeps the
+  // cut-out image and how to draw it.
+  const ready = () => Boolean(s.photo && s.type && s.name.trim() && !s.busy && s.cut !== 'working' && !s.reading);
 
   // The phone's step header (P4c, P4d): back, title and step count.
   const stepBar = (n) => `
@@ -310,7 +361,7 @@ export function showAdd(root, ctx) {
   // A selector that finds the focused control again after a re-render.
   function focusKey(el) {
     if (!el || !root.contains(el)) return null;
-    if (el.name === 'type') return `input[name="type"][value="${el.value}"]`;
+    if (el.type === 'radio') return `input[name="${el.name}"][value="${el.value}"]`;
     const data = [...el.attributes].find((a) => a.name.startsWith('data-'));
     return data ? `[${data.name}]` : null;
   }
@@ -357,18 +408,19 @@ export function showAdd(root, ctx) {
     const box = root.querySelector('[data-preview]');
     if (!box || !s.type || !s.colors) return;
     const avatarLook = { ...lookOf(ctx.avatar), ...(s.type === 'glasses' ? { glasses: true } : {}) };
-    const svg = renderAvatar(avatarLook, previewOutfit(s.type, s.colors), { title: `Your avatar wearing the ${GARMENT_TYPES[s.type].label.toLowerCase()}`, photos: look ? { preview: look } : null })
+    const svg = renderAvatar(avatarLook, previewOutfit(s.type, s.colors, { show: s.cutout ? s.show : null, pattern: s.pattern, details: s.details }), { title: `Your avatar wearing the ${GARMENT_TYPES[s.type].label.toLowerCase()}`, photos: look ? { preview: look } : null })
       .replace(/viewBox="[^"]*"/, `viewBox="${previewView(s.type)}"`);
     box.querySelector('svg')?.remove();
     box.insertAdjacentHTML('afterbegin', svg);
   }
 
-  // Makes the preview's photo look for a new cut-out, then redraws it.
+  // Makes the preview's photo look for a new cut-out shown as its photo,
+  // then redraws it.
   async function refreshLook() {
     const token = ++lookToken;
     if (!s.cutout || !s.photo) {
       look = null;
-    } else if (lookPhoto !== s.photo) {
+    } else if (s.show !== 'drawn' && lookPhoto !== s.photo) {
       try {
         const made = await photoLook(s.photo);
         if (token !== lookToken || disposed) return;
@@ -401,7 +453,7 @@ export function showAdd(root, ctx) {
   function retake() {
     photoToken += 1;
     setPhoto(null, false);
-    Object.assign(s, { cut: 'idle', colors: null, colorsEdited: false, message: null, step: 'photo' });
+    Object.assign(s, { cut: 'idle', colors: null, colorsEdited: false, show: null, pattern: null, details: null, reading: false, message: null, step: 'photo' });
     look = null;
     if (!wide.matches) s.cameraOn = true;
     render();
@@ -419,7 +471,7 @@ export function showAdd(root, ctx) {
       const { photo, colors, canvas } = await preparePhoto(file);
       if (token !== photoToken || disposed) return;
       setPhoto(photo, false);
-      Object.assign(s, { colors, colorsEdited: false, cut: 'working' });
+      Object.assign(s, { colors, colorsEdited: false, cut: 'working', show: null, pattern: null, details: null });
       look = null;
       if (!s.nameEdited && s.type) s.name = suggestName(s.type, colors.base);
       stopCamera();
@@ -459,7 +511,27 @@ export function showAdd(root, ctx) {
         s.colors = result.colors;
         if (!s.nameEdited && s.type) s.name = suggestName(s.type, s.colors.base);
       }
+      s.reading = true;
     }
+    refresh();
+    if (result) await readLook(result, token);
+  }
+
+  // Reads the cut-out's pattern and buttons (R44), then shows it Drawn when
+  // the app can draw it, or as its Photo.
+  async function readLook(result, token, { keepShow = false } = {}) {
+    let pattern = { kind: 'other' };
+    let buttons = null;
+    try {
+      [pattern, { buttons }] = await Promise.all([readPattern(result.photo, result.colors), readShirtButtons(result.photo, result.colors)]);
+    } catch {
+      // Unread: it shows as its photo.
+    }
+    if (token !== photoToken || disposed) return;
+    s.pattern = pattern;
+    s.details = { ...s.details, buttons };
+    if (!keepShow || !s.show) s.show = DRAWN_KINDS.has(pattern.kind) ? 'drawn' : 'photo';
+    s.reading = false;
     refresh();
     refreshLook();
   }
@@ -544,6 +616,7 @@ export function showAdd(root, ctx) {
     root.querySelector('[data-cancel-edit]')?.addEventListener('click', () => ctx.onCancel());
 
     root.querySelectorAll('[data-color]').forEach((input) => input.addEventListener('input', () => {
+      s.pattern = followColorEdit(s.pattern, s.colors[input.dataset.color], input.value);
       s.colors = { ...s.colors, [input.dataset.color]: input.value };
       s.colorsEdited = true;
       if (!s.nameEdited && input.dataset.color === 'base') {
@@ -563,6 +636,7 @@ export function showAdd(root, ctx) {
       root.querySelector(`[data-color="${input.dataset.color}"]`)?.focus({ preventScroll: true });
     }));
     root.querySelector('[data-no-print]')?.addEventListener('click', () => {
+      s.pattern = followColorEdit(s.pattern, s.colors.print, null);
       s.colors = { ...s.colors, print: null };
       s.colorsEdited = true;
       render({ focus: false });
@@ -571,14 +645,17 @@ export function showAdd(root, ctx) {
     root.querySelectorAll('[data-more]').forEach((input) => {
       input.addEventListener('input', () => {
         const more = [...s.colors.more];
+        s.pattern = followColorEdit(s.pattern, more[Number(input.dataset.more)], input.value);
         more[Number(input.dataset.more)] = input.value;
         s.colors = { ...s.colors, more };
         s.colorsEdited = true;
         input.closest('.color-swatch').style.background = input.value;
+        updatePreview();
       });
     });
     root.querySelectorAll('[data-remove-more]').forEach((btn) => btn.addEventListener('click', () => {
       const i = Number(btn.dataset.removeMore);
+      s.pattern = followColorEdit(s.pattern, s.colors.more[i], null);
       s.colors = { ...s.colors, more: s.colors.more.filter((_, j) => j !== i) };
       s.colorsEdited = true;
       render({ focus: false, keepScroll: true });
@@ -591,6 +668,23 @@ export function showAdd(root, ctx) {
       render({ focus: false, keepScroll: true });
       root.querySelector(`[data-more="${s.colors.more.length - 1}"]`)?.focus({ preventScroll: true });
     });
+    // Show as, chest pockets and their flaps (R44).
+    root.querySelectorAll('input[name="show"]').forEach((input) => input.addEventListener('change', () => {
+      s.show = input.value;
+      const note = root.querySelector('[data-look-note]');
+      if (note) note.textContent = lookNote();
+      updatePreview();
+      refreshLook();
+    }));
+    root.querySelectorAll('input[name="pockets"]').forEach((input) => input.addEventListener('change', () => {
+      s.details = { ...s.details, pockets: Number(input.value) };
+      render({ focus: false, keepScroll: true });
+      root.querySelector(`input[name="pockets"][value="${input.value}"]`)?.focus({ preventScroll: true });
+    }));
+    root.querySelectorAll('input[name="flaps"]').forEach((input) => input.addEventListener('change', () => {
+      s.details = { ...s.details, flaps: input.value === 'yes' };
+      updatePreview();
+    }));
     root.querySelector('[data-name]')?.addEventListener('input', (e) => {
       s.name = e.target.value;
       s.nameEdited = true;
@@ -603,7 +697,7 @@ export function showAdd(root, ctx) {
       s.saveError = null;
       updateSave();
       try {
-        const item = await ctx.onSave({ type: s.type, name: s.name, colors: s.colors, photo: s.photo, cutout: s.cutout });
+        const item = await ctx.onSave({ type: s.type, name: s.name, colors: s.colors, photo: s.photo, cutout: s.cutout, show: s.cutout ? s.show : null, pattern: s.cutout ? s.pattern : null, details: s.details });
         dispose();
         ctx.onDone(item);
       } catch (e) {
@@ -641,7 +735,10 @@ export function showAdd(root, ctx) {
   if (!editing && !segmenterLoaded()) s.modelShare = 0;
   render();
   if (!editing) loadSegmenter(showProgress).catch(() => showProgress(null));
-  // Editing an item with a cut-out shows its photo look on the preview.
-  if (editing) refreshLook();
+  // Editing an item with a cut-out shows its look on the preview, reading
+  // it first if it was saved before the app read patterns (any choice made
+  // stays).
+  if (s.reading) readLook({ photo: s.photo, colors: s.colors }, photoToken, { keepShow: true });
+  else if (editing) refreshLook();
   return dispose;
 }

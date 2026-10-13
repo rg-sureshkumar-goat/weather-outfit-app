@@ -40,3 +40,13 @@ export function bindChrome(root, { onTab, onChangeLocation, onInfo }) {
   root.querySelectorAll('[data-location]').forEach((b) => b.addEventListener('click', () => onChangeLocation()));
   root.querySelectorAll('[data-info]').forEach((b) => b.addEventListener('click', () => onInfo()));
 }
+
+// A group of radio buttons drawn as segments, chips or swatches; the native
+// inputs keep keyboard and screen-reader support (R33). Used by setup (P8,
+// L8) and Add item (P4d, L4).
+export const radios = (name, options, checked, render) => options
+  .map(([value, label]) => `<label class="opt opt-${name}"><input type="radio" name="${name}" value="${value}" ${String(value) === String(checked) ? 'checked' : ''}>${render(value, label)}</label>`)
+  .join('');
+export const group = (legend, inner, attrs = '') => `<fieldset class="ctrl" ${attrs}><legend>${legend}</legend>${inner}</fieldset>`;
+export const segs = (name, legend, options, checked) =>
+  group(legend, `<div class="segs">${radios(name, options, checked, (v, l) => `<span class="seg">${l}</span>`)}</div>`);

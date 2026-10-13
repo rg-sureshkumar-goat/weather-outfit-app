@@ -19,6 +19,7 @@ import { STARTER_SETS } from '../content/starters.js';
 import { GENDER_NAMES, BODY_TYPE_NAMES, HAIRSTYLE_NAMES, HAIR_COLOR_NAMES, BEARD_NAMES, MOUSTACHE_NAMES, FEATURE_NAMES } from '../content/avatarOptions.js';
 import { GENDERS, bodyTypesFor, defaultAvatar, withGender, saveAvatar, lookOf, describeAvatar } from '../store/avatar.js';
 import { ICONS } from './icons.js';
+import { radios, group, segs } from './chrome.js';
 
 // The previews wear a tee, a bottom and sneakers from the gender's starter
 // set, so the body shows clearly.
@@ -39,19 +40,10 @@ const frame = (n, body) => `
     <main class="setup-main">${body}</main>
   </div>`;
 
-// A group of radio buttons drawn as chips or swatches; the native inputs
-// keep keyboard and screen-reader support (R33).
-const radios = (name, options, checked, render) => options
-  .map(([value, label]) => `<label class="opt opt-${name}"><input type="radio" name="${name}" value="${value}" ${String(value) === String(checked) ? 'checked' : ''}>${render(value, label)}</label>`)
-  .join('');
-
 // ---- Review controls (P8, L8; R43) --------------------------------------------
 
 // One labelled group per choice: segments, a row of named chips, or color
 // swatches. A swatch with no color is "None".
-const group = (legend, inner, attrs = '') => `<fieldset class="ctrl" ${attrs}><legend>${legend}</legend>${inner}</fieldset>`;
-const segs = (name, legend, options, checked) =>
-  group(legend, `<div class="segs">${radios(name, options, checked, (v, l) => `<span class="seg">${l}</span>`)}</div>`);
 const chips = (name, legend, options, checked) =>
   group(legend, `<div class="chips-row">${radios(name, options, checked, (v, l) => `<span class="chip">${l}</span>`)}</div>`);
 const swatches = (name, legend, options, checked, colorOf, cls = '') =>

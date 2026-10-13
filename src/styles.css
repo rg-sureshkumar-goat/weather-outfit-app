@@ -1378,6 +1378,19 @@ input {
   text-align: center;
 }
 
+/* How the avatar shows the item (R44): Show as, chest pockets and flaps, as
+   segments (the setup screen's), each with a line of explanation. */
+.look-controls {
+  display: grid;
+  gap: 14px;
+  margin: 4px 0 18px;
+}
+
+.look-note {
+  margin: -6px 0 0;
+  font-size: 14px;
+}
+
 .color-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

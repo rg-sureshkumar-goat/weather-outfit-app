@@ -162,3 +162,46 @@ export function bustLines(body) {
     opacity: 0.8,
   }));
 }
+
+// ---- Button shirt details (R44; C8b step 4) --------------------------------------
+
+// Chest pockets on a button shirt, as detail lines for piece(): `count` 0–2
+// (one sits on the viewer's right, the wearer's left, as on most shirts and
+// the standard drawing; the Developer's choice, 2026-10-12), each a
+// stitched pocket, with a flap closed by a button when `flaps`. On a body
+// with a bust they sit higher and narrower, clear of its shaping.
+// `button` colors the flap buttons (a hex color), or null for the
+// drawing's own dark buttons.
+export function chestPockets(body, count, flaps, button) {
+  const cx = body.head.cx;
+  const half = body.chest.half;
+  const w = half * (body.bust ? 0.5 : 0.52);
+  const h = w * (body.bust ? 1 : 0.95);
+  const flapH = flaps ? w * 0.24 : 0;
+  const top = body.chest.y - (body.bust ? 34 : 14);
+  const pocket = (s) => {
+    const mid = cx + s * half * (body.bust ? 0.6 : 0.55);
+    const at = (dx, dy) => posed(body, s, mid + dx, top + dy);
+    // The bag: down both sides to a slight point at the bottom.
+    const bag = `M ${pt(at(-w / 2, flapH))} L ${pt(at(-w / 2, h - 5))} L ${pt(at(0, h))} L ${pt(at(w / 2, h - 5))} L ${pt(at(w / 2, flapH))}`;
+    const lines = [{ d: flaps ? bag : `${bag} M ${pt(at(-w / 2, 0))} L ${pt(at(w / 2, 0))}`, tone: 'deep', width: 1.8 }];
+    if (flaps) {
+      const flap = `M ${pt(at(-w / 2 - 1, 0))} L ${pt(at(w / 2 + 1, 0))} L ${pt(at(w / 2 + 1, flapH - 2))} Q ${pt(at(w / 2 + 1, flapH + 1))} ${pt(at(w / 2 - 2, flapH + 1))} L ${pt(at(-w / 2 + 2, flapH + 1))} Q ${pt(at(-w / 2 - 1, flapH + 1))} ${pt(at(-w / 2 - 1, flapH - 2))} Z`;
+      lines.push(
+        { d: `M ${pt(at(-w / 2 + 2, flapH + 3))} L ${pt(at(w / 2 - 2, flapH + 3))}`, tone: 'shadow', width: 2.6, opacity: 0.5 },
+        { d: flap, tone: 'deep', width: 1.8 },
+        shirtButtons(dot(at(0, flapH * 0.55), 2.3), button),
+      );
+    }
+    return lines;
+  };
+  return (count >= 2 ? [-1, 1] : count === 1 ? [1] : []).flatMap(pocket);
+}
+
+// Buttons as a detail line: dark dots in the drawing's own colors, or
+// filled in the shirt's button color (`color`) with a darker rim.
+export function shirtButtons(d, color) {
+  return color ? { d, fill: color, stroke: rimOf(color), width: 1 } : { d, tone: 'deep', width: 1.6 };
+}
+
+const rimOf = (hex) => `#${[1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * 0.55).toString(16).padStart(2, '0')).join('')}`;

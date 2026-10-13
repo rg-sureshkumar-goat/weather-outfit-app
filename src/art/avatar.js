@@ -16,7 +16,8 @@ import { hair } from './hair.js';
 import { TEMPLATES } from './garments.js';
 import { FORMAL } from './formal.js';
 import { ACCESSORIES, glasses } from './accessories.js';
-import { uid, withPhoto } from './draw.js';
+import { uid, withLook } from './draw.js';
+import { weaveDefs, showAs } from './weave.js';
 import { itemColors } from './palette.js';
 import { GARMENT_TYPES } from '../content/garments.js';
 import { patternMode } from '../vision/pattern.js';
@@ -47,19 +48,29 @@ function drawItem(item, body, extras, photos) {
   if (!item) return null;
   const template = ALL[item.type];
   if (!template) return null;
-  const colors = itemColors(item);
-  const look = photos?.[item.id];
+  const photo = photos?.[item.id];
   const type = GARMENT_TYPES[item.type];
-  const mode = look && type ? patternMode(item.type, type.group) : 'none';
-  if (mode === 'none') return template.draw(body, colors, extras);
-  const ids = { fitId: mode === 'fit' ? uid('fit') : null, patchId: uid('patch') };
-  const { out, boxes, parts } = withPhoto({ base: colors.base, ...ids }, () => template.draw(body, colors, extras));
+  const fit = type ? patternMode(item.type, type.group) : 'none';
+  const mode = fit === 'none' ? null : showAs(item, photo);
+  // A woven item's outline and shading follow its ground color.
+  const colors = mode === 'weave' ? { ...itemColors(item), base: item.pattern.roles.ground, print: null } : itemColors(item);
+  // Shirt details (pockets, button color) go to the drawing with the other
+  // extras.
+  const more = item.details ? { ...extras, details: item.details } : extras;
+  if (!mode) return template.draw(body, colors, more);
+  const ids = mode === 'photo'
+    ? [uid('patch'), ...(fit === 'fit' ? [uid('fit')] : [])]
+    : [uid('fuzz')];
+  const { out, pieces } = withLook({ base: colors.base, mode, fills: ids }, () => template.draw(body, colors, more));
+  const boxes = pieces.flatMap((p) => p.boxes);
   if (!out || boxes.length === 0) return out;
   const x0 = Math.min(...boxes.map((b) => b.x0));
   const y0 = Math.min(...boxes.map((b) => b.y0));
   const box = { x: x0, y: y0, w: Math.max(...boxes.map((b) => b.x1)) - x0, h: Math.max(...boxes.map((b) => b.y1)) - y0 };
+  const defs = mode === 'photo'
+    ? photoDefs(photo, { patchId: ids[0], fitId: ids[1] ?? null }, box, pieces.flatMap((p) => p.parts))
+    : weaveDefs(item.pattern, pieces, box);
   // The definitions go with a layer that's always drawn (inner sleeves aren't).
-  const defs = photoDefs(look, ids, box, parts);
   if (out.torso) return { ...out, torso: defs + out.torso };
   if (out.svg) return { ...out, svg: defs + out.svg };
   return out;
